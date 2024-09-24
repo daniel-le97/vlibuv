@@ -1,0 +1,31 @@
+# Binaries for programs and plugins
+main
+vlibuv
+*.exe
+*.exe~
+*.so
+*.dylib
+*.dll
+./src/src
+
+src/thirdparty/*
+!src/thirdparty/src
+!src/thirdparty/include
+!src/thirdparty/LICENSE*
+!src/thirdparty/README*
+
+# Ignore binary output folders
+bin/
+
+# Ignore common editor/system specific metadata
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# ENV
+.env
+
+# vweb and database
+*.db
+*.js
