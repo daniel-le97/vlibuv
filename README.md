@@ -1,6 +1,9 @@
 # vlang libuv bindings
 
-note this is not fully complete, most structs and functions have been declared for the C side of things, but no v wrappers yet.
+## WIP
+note this is not fully complete
+
+most structs have been redeclared and about 85% of the libuv api is done
 
 ## features
 1. compiles libuv from source with the v build system
