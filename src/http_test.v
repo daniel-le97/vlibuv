@@ -1,4 +1,4 @@
-module main
+module test
 
 // Define a struct for the HTTP server
 struct HttpServer {

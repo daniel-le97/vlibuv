@@ -28,6 +28,7 @@
 #include "uv/tree.h"
 #include "winapi.h"
 #include "winsock.h"
+#include <stdlib.h>
 
 #ifdef _MSC_VER
 # define INLINE __inline
@@ -38,24 +39,8 @@
 #endif
 
 
-#ifdef _DEBUG
+int uv__dup(uv_os_fd_t fd, uv_os_fd_t* dupfd);
 
-extern UV_THREAD_LOCAL int uv__crt_assert_enabled;
-
-#define UV_BEGIN_DISABLE_CRT_ASSERT()                           \
-  {                                                             \
-    int uv__saved_crt_assert_enabled = uv__crt_assert_enabled;  \
-    uv__crt_assert_enabled = FALSE;
-
-
-#define UV_END_DISABLE_CRT_ASSERT()                             \
-    uv__crt_assert_enabled = uv__saved_crt_assert_enabled;      \
-  }
-
-#else
-#define UV_BEGIN_DISABLE_CRT_ASSERT()
-#define UV_END_DISABLE_CRT_ASSERT()
-#endif
 
 /*
  * TCP
@@ -189,11 +174,9 @@ void uv__poll_endgame(uv_loop_t* loop, uv_poll_t* handle);
 /*
  * Loop watchers
  */
-void uv__loop_watcher_endgame(uv_loop_t* loop, uv_handle_t* handle);
-
-void uv__prepare_invoke(uv_loop_t* loop);
-void uv__check_invoke(uv_loop_t* loop);
-void uv__idle_invoke(uv_loop_t* loop);
+void uv__run_prepare(uv_loop_t* loop);
+void uv__run_check(uv_loop_t* loop);
+void uv__run_idle(uv_loop_t* loop);
 
 void uv__once_init(void);
 
@@ -203,9 +186,7 @@ void uv__once_init(void);
  */
 void uv__async_close(uv_loop_t* loop, uv_async_t* handle);
 void uv__async_endgame(uv_loop_t* loop, uv_async_t* handle);
-
-void uv__process_async_wakeup_req(uv_loop_t* loop, uv_async_t* handle,
-    uv_req_t* req);
+void uv__process_async_wakeup_req(uv_loop_t* loop, uv_req_t* req);
 
 
 /*

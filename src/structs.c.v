@@ -6,6 +6,77 @@ pub enum Mode {
 	nowait
 }
 
+pub enum Uv_handle_type {
+	unknown_handle = 0
+	async
+	check
+	fs_event
+	fs_poll
+	handle
+	idle
+	pipe
+	poll
+	prepare
+	process
+	stream
+	tcp
+	timer
+	tty
+	udp
+	signal
+	file
+	handle_type_max
+}
+
+// Define the UV request type enum
+pub enum Uv_req_type {
+	unknown_req = 0
+	req
+	connect
+	write
+	shutdown
+	udp_send
+	fs
+	work
+	getaddrinfo
+	getnameinfo
+	random
+	// req_type_private
+	req_type_max
+}
+
+pub enum Uv_membership {
+	leave_group = 0
+	join_group
+}
+
+pub enum Uv_fs_event_flags {
+	/*
+   * By default, if the fs event watcher is given a directory name, we will
+   * watch for all events in that directory. This flags overrides this behavior
+   * and makes fs_event report only changes to the directory entry itself. This
+   * flag does not affect individual files watched.
+   * This flag is currently not implemented yet on any backend.
+   */
+	fs_event_watch_entry = 1
+
+	/*
+   * By default uv_fs_event will try to use a kernel interface such as inotify
+   * or kqueue to detect events. This may not work on remote filesystems such
+   * as NFS mounts. This flag makes fs_event fall back to calling stat() on a
+   * regular interval.
+   * This flag is currently not implemented yet on any backend.
+   */
+	fs_event_stat = 2
+
+	/*
+   * By default, event watcher, when watching directory, is not registering
+   * (is ignoring) changes in it's subdirectories.
+   * This flag will override this behaviour on platforms that support it.
+   */
+	fs_event_recursive = 4
+}
+
 // Loop, handle, and stream types
 @[typedef]
 pub struct C.uv_loop_t {}

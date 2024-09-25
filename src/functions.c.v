@@ -14,11 +14,10 @@ fn C.uv_update_time(loop &C.uv_loop_t)
 fn C.uv_now(loop &C.uv_loop_t) u64
 fn C.uv_backend_fd(loop &C.uv_loop_t) int
 fn C.uv_backend_timeout(loop &C.uv_loop_t) int
-fn C.uv_run(loop &C.uv_loop_t, mode int) int
 fn C.uv_walk(loop &C.uv_loop_t, walk_cb fn (handle &C.uv_handle_t, arg voidptr), arg voidptr)
 fn C.uv_loop_size() usize
-fn C.uv_handle_size(type, int) usize
-fn C.uv_req_size(type, int) usize
+fn C.uv_handle_size(Uv_handle_type, int) usize
+fn C.uv_req_size(Uv_req_type, int) usize
 
 fn C.uv_timer_init(loop &C.uv_loop_t, handle &C.uv_timer_t) int
 fn C.uv_timer_start(handle &C.uv_timer_t, cb fn (handle &C.uv_timer_t), timeout u64, repeat u64) int
@@ -52,10 +51,12 @@ fn C.uv_async_send(handle &C.uv_async_t) int
 
 fn C.uv_getaddrinfo(loop &C.uv_loop_t, req &C.uv_getaddrinfo_t, cb fn (req &C.uv_getaddrinfo_t, status int, res &C.addrinfo), node &char, service &char, hints &C.addrinfo) int
 fn C.uv_freeaddrinfo(addr &C.addrinfo)
+fn C.uv_ip4_addr(&char, int, &C.sockaddr) int
 
 fn C.uv_spawn(loop &C.uv_loop_t, handle &C.uv_process_t, options &C.uv_process_options_t) int
 fn C.uv_process_kill(handle &C.uv_process_t, signum int) int
 fn C.uv_kill(pid int, signum int) int
+
 fn C.uv_pipe_init(loop &C.uv_loop_t, handle &C.uv_pipe_t, ipc int) int
 fn C.uv_pipe_open(handle &C.uv_pipe_t, file int) int
 fn C.uv_pipe_bind(handle &C.uv_pipe_t, name &char) int
@@ -66,10 +67,14 @@ fn C.uv_pipe_pending_instances(handle &C.uv_pipe_t, count int)
 fn C.uv_pipe_pending_count(handle &C.uv_pipe_t) int
 fn C.uv_pipe_pending_type(handle &C.uv_pipe_t) int
 fn C.uv_pipe_chmod(handle &C.uv_pipe_t, flags int) int
+
 fn C.uv_tty_init(loop &C.uv_loop_t, handle &C.uv_tty_t, fd int, readable int) int
 fn C.uv_tty_set_mode(handle &C.uv_tty_t, mode int) int
 fn C.uv_tty_reset_mode() int
 fn C.uv_tty_get_winsize(handle &C.uv_tty_t, width &int, height &int) int
+
+
+// needed still, skipped to tcp
 fn C.uv_guess_handle(file int) int
 fn C.uv_handle_size(type, int) usize
 fn C.uv_req_size(type, int) usize
@@ -101,7 +106,7 @@ fn C.uv_udp_init(loop &C.uv_loop_t, handle &C.uv_udp_t) int
 fn C.uv_udp_open(handle &C.uv_udp_t, sock int) int
 fn C.uv_udp_bind(handle &C.uv_udp_t, addr &C.sockaddr, flags u32) int
 fn C.uv_udp_getsockname(handle &C.uv_udp_t, name &C.sockaddr, namelen &int) int
-fn C.uv_udp_set_membership(handle &C.uv_udp_t, multicast_addr &char, interface_addr &char, membership int) int
+fn C.uv_udp_set_membership(handle &C.uv_udp_t, multicast_addr &char, interface_addr &char, membership Uv_membership) int
 fn C.uv_udp_set_multicast_loop(handle &C.uv_udp_t, on int) int
 fn C.uv_udp_set_multicast_ttl(handle &C.uv_udp_t, ttl int) int
 fn C.uv_udp_set_multicast_interface(handle &C.uv_udp_t, interface_addr &char) int
@@ -140,13 +145,13 @@ fn C.uv_fs_realpath(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C
 fn C.uv_fs_chown(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, uid u32, gid u32, cb fn (req &C.uv_fs_t))
 fn C.uv_fs_fchown(loop &C.uv_loop_t, req &C.uv_fs_t, file int, uid u32, gid u32, cb fn (req &C.uv_fs_t))
 fn C.uv_fs_event_init(loop &C.uv_loop_t, handle &C.uv_fs_event_t) int
-fn C.uv_fs_event_start(handle &C.uv_fs_event_t, cb fn (handle &C.uv_fs_event_t, filename &char, events int, status int), path &char, flags u32) int
+fn C.uv_fs_event_start(handle &C.uv_fs_event_t, cb fn (handle &C.uv_fs_event_t, filename &char, events int, status int), path &&char, flags int) int
 fn C.uv_fs_event_stop(handle &C.uv_fs_event_t) int
 fn C.uv_fs_poll_init(loop &C.uv_loop_t, handle &C.uv_fs_poll_t) int
 fn C.uv_fs_poll_start(handle &C.uv_fs_poll_t, cb fn (handle &C.uv_fs_poll_t, status int, prev &C.uv_stat_t, curr &C.uv_stat_t), path &char, interval u32) int
 fn C.uv_fs_poll_stop(handle &C.uv_fs_poll_t) int
 
-fn C.uv_ip4_addr(&char, int, &C.sockaddr) int
+
 
 fn C.uv_queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int))
 

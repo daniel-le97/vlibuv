@@ -20,6 +20,7 @@
 
 #include <assert.h>
 #include <signal.h>
+#include <stdlib.h>
 
 #include "uv.h"
 #include "internal.h"
@@ -91,7 +92,7 @@ int uv__signal_dispatch(int signum) {
 
   for (handle = RB_NFIND(uv_signal_tree_s, &uv__signal_tree, &lookup);
        handle != NULL && handle->signum == signum;
-       handle = RB_NEXT(uv_signal_tree_s, handle)) {
+       handle = RB_NEXT(uv_signal_tree_s, &uv__signal_tree, handle)) {
     unsigned long previous = InterlockedExchange(
             (volatile LONG*) &handle->pending_signum, signum);
 
@@ -150,7 +151,7 @@ int uv_signal_init(uv_loop_t* loop, uv_signal_t* handle) {
   handle->signum = 0;
   handle->signal_cb = NULL;
 
-  UV_REQ_INIT(&handle->signal_req, UV_SIGNAL_REQ);
+  UV_REQ_INIT(loop, &handle->signal_req, UV_SIGNAL_REQ);
   handle->signal_req.data = handle;
 
   return 0;

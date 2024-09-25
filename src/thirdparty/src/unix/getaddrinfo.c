@@ -109,7 +109,7 @@ static void uv__getaddrinfo_done(struct uv__work* w, int status) {
   uv_getaddrinfo_t* req;
 
   req = container_of(w, uv_getaddrinfo_t, work_req);
-  uv__req_unregister(req->loop);
+  uv__req_unregister(req->loop, req);
 
   /* See initialization in uv_getaddrinfo(). */
   if (req->hints)
@@ -178,7 +178,6 @@ int uv_getaddrinfo(uv_loop_t* loop,
     return UV_ENOMEM;
 
   uv__req_init(loop, req, UV_GETADDRINFO);
-  req->loop = loop;
   req->cb = cb;
   req->addrinfo = NULL;
   req->hints = NULL;

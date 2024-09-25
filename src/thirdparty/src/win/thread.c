@@ -22,6 +22,8 @@
 #include <assert.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <process.h> /* _beginthreadex */
+#include <errno.h> /* _beginthreadex errors */
 
 #if defined(__MINGW64_VERSION_MAJOR)
 /* MemoryBarrier expands to __mm_mfence in some cases (x86+sse2), which may
@@ -32,23 +34,46 @@
 #include "uv.h"
 #include "internal.h"
 
-typedef void (*uv__once_cb)(void);
 
-typedef struct {
-  uv__once_cb callback;
-} uv__once_data_t;
+static void uv__once_inner(uv_once_t* guard, void (*callback)(void)) {
+  DWORD result;
+  HANDLE existing_event, created_event;
 
-static BOOL WINAPI uv__once_inner(INIT_ONCE *once, void* param, void** context) {
-  uv__once_data_t* data = param;
+  created_event = CreateEvent(NULL, 1, 0, NULL);
+  if (created_event == 0) {
+    /* Could fail in a low-memory situation? */
+    uv_fatal_error(GetLastError(), "CreateEvent");
+  }
 
-  data->callback();
+  existing_event = InterlockedCompareExchangePointer(&guard->event,
+                                                     created_event,
+                                                     NULL);
 
-  return TRUE;
+  if (existing_event == NULL) {
+    /* We won the race */
+    callback();
+
+    result = SetEvent(created_event);
+    assert(result);
+    guard->ran = 1;
+
+  } else {
+    /* We lost the race. Destroy the event we created and wait for the existing
+     * one to become signaled. */
+    CloseHandle(created_event);
+    result = WaitForSingleObject(existing_event, INFINITE);
+    assert(result == WAIT_OBJECT_0);
+  }
 }
 
-void uv_once(uv_once_t* guard, uv__once_cb callback) {
-  uv__once_data_t data = { .callback = callback };
-  InitOnceExecuteOnce(&guard->init_once, uv__once_inner, (void*) &data, NULL);
+
+void uv_once(uv_once_t* guard, void (*callback)(void)) {
+  /* Fast case - avoid WaitForSingleObject. */
+  if (guard->ran) {
+    return;
+  }
+
+  uv__once_inner(guard, callback);
 }
 
 
@@ -158,6 +183,7 @@ int uv_thread_create_ex(uv_thread_t* tid,
   return UV_EIO;
 }
 
+
 int uv_thread_setaffinity(uv_thread_t* tid,
                           char* cpumask,
                           char* oldmask,
@@ -201,6 +227,7 @@ int uv_thread_setaffinity(uv_thread_t* tid,
   return 0;
 }
 
+
 int uv_thread_getaffinity(uv_thread_t* tid,
                           char* cpumask,
                           size_t mask_size) {
@@ -230,9 +257,18 @@ int uv_thread_getaffinity(uv_thread_t* tid,
   return 0;
 }
 
+
 int uv_thread_getcpu(void) {
   return GetCurrentProcessorNumber();
 }
+
+
+int uv_thread_detach(uv_thread_t* tid) {
+  CloseHandle(*tid);
+  *tid = 0;
+  return 0;
+}
+
 
 uv_thread_t uv_thread_self(void) {
   uv_thread_t key;
@@ -302,17 +338,9 @@ void uv_mutex_unlock(uv_mutex_t* mutex) {
   LeaveCriticalSection(mutex);
 }
 
-/* Ensure that the ABI for this type remains stable in v1.x */
-#ifdef _WIN64
-STATIC_ASSERT(sizeof(uv_rwlock_t) == 80);
-#else
-STATIC_ASSERT(sizeof(uv_rwlock_t) == 48);
-#endif
-
 int uv_rwlock_init(uv_rwlock_t* rwlock) {
   memset(rwlock, 0, sizeof(*rwlock));
-  InitializeSRWLock(&rwlock->read_write_lock_);
-
+  InitializeSRWLock(rwlock);
   return 0;
 }
 
@@ -324,12 +352,12 @@ void uv_rwlock_destroy(uv_rwlock_t* rwlock) {
 
 
 void uv_rwlock_rdlock(uv_rwlock_t* rwlock) {
-  AcquireSRWLockShared(&rwlock->read_write_lock_);
+  AcquireSRWLockShared(rwlock);
 }
 
 
 int uv_rwlock_tryrdlock(uv_rwlock_t* rwlock) {
-  if (!TryAcquireSRWLockShared(&rwlock->read_write_lock_))
+  if (!TryAcquireSRWLockShared(rwlock))
     return UV_EBUSY;
 
   return 0;
@@ -337,17 +365,17 @@ int uv_rwlock_tryrdlock(uv_rwlock_t* rwlock) {
 
 
 void uv_rwlock_rdunlock(uv_rwlock_t* rwlock) {
-  ReleaseSRWLockShared(&rwlock->read_write_lock_);
+  ReleaseSRWLockShared(rwlock);
 }
 
 
 void uv_rwlock_wrlock(uv_rwlock_t* rwlock) {
-  AcquireSRWLockExclusive(&rwlock->read_write_lock_);
+  AcquireSRWLockExclusive(rwlock);
 }
 
 
 int uv_rwlock_trywrlock(uv_rwlock_t* rwlock) {
-  if (!TryAcquireSRWLockExclusive(&rwlock->read_write_lock_))
+  if (!TryAcquireSRWLockExclusive(rwlock))
     return UV_EBUSY;
 
   return 0;
@@ -355,7 +383,7 @@ int uv_rwlock_trywrlock(uv_rwlock_t* rwlock) {
 
 
 void uv_rwlock_wrunlock(uv_rwlock_t* rwlock) {
-  ReleaseSRWLockExclusive(&rwlock->read_write_lock_);
+  ReleaseSRWLockExclusive(rwlock);
 }
 
 
@@ -401,35 +429,35 @@ int uv_sem_trywait(uv_sem_t* sem) {
 
 
 int uv_cond_init(uv_cond_t* cond) {
-  InitializeConditionVariable(&cond->cond_var);
+  InitializeConditionVariable(cond);
   return 0;
 }
 
 
 void uv_cond_destroy(uv_cond_t* cond) {
-  /* nothing to do */
+  /* Nothing to do. */
   (void) &cond;
 }
 
 
 void uv_cond_signal(uv_cond_t* cond) {
-  WakeConditionVariable(&cond->cond_var);
+  WakeConditionVariable(cond);
 }
 
 
 void uv_cond_broadcast(uv_cond_t* cond) {
-  WakeAllConditionVariable(&cond->cond_var);
+  WakeAllConditionVariable(cond);
 }
 
 
 void uv_cond_wait(uv_cond_t* cond, uv_mutex_t* mutex) {
-  if (!SleepConditionVariableCS(&cond->cond_var, mutex, INFINITE))
+  if (!SleepConditionVariableCS(cond, mutex, INFINITE))
     abort();
 }
 
 
 int uv_cond_timedwait(uv_cond_t* cond, uv_mutex_t* mutex, uint64_t timeout) {
-  if (SleepConditionVariableCS(&cond->cond_var, mutex, (DWORD)(timeout / 1e6)))
+  if (SleepConditionVariableCS(cond, mutex, (DWORD)(timeout / 1e6)))
     return 0;
   if (GetLastError() != ERROR_TIMEOUT)
     abort();

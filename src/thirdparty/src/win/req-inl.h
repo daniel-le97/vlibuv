@@ -53,16 +53,16 @@
   (uv__ntstatus_to_winsock_error(GET_REQ_STATUS((req))))
 
 
-#define REGISTER_HANDLE_REQ(loop, handle)                               \
+#define REGISTER_HANDLE_REQ(loop, handle, req)                          \
   do {                                                                  \
     INCREASE_ACTIVE_COUNT((loop), (handle));                            \
-    uv__req_register((loop));                                           \
+    uv__req_register((loop), (req));                                    \
   } while (0)
 
-#define UNREGISTER_HANDLE_REQ(loop, handle)                             \
+#define UNREGISTER_HANDLE_REQ(loop, handle, req)                        \
   do {                                                                  \
     DECREASE_ACTIVE_COUNT((loop), (handle));                            \
-    uv__req_unregister((loop));                                         \
+    uv__req_unregister((loop), (req));                                  \
   } while (0)
 
 
@@ -80,11 +80,6 @@
                                   &((req)->u.io.overlapped))) {         \
     uv_fatal_error(GetLastError(), "PostQueuedCompletionStatus");       \
   }
-
-
-INLINE static uv_req_t* uv__overlapped_to_req(OVERLAPPED* overlapped) {
-  return container_of(overlapped, uv_req_t, u.io.overlapped);
-}
 
 
 INLINE static void uv__insert_pending_req(uv_loop_t* loop, uv_req_t* req) {
@@ -186,7 +181,7 @@ INLINE static void uv__process_reqs(uv_loop_t* loop) {
         break;
 
       case UV_WAKEUP:
-        uv__process_async_wakeup_req(loop, (uv_async_t*) req->data, req);
+        uv__process_async_wakeup_req(loop, req);
         break;
 
       case UV_SIGNAL_REQ:

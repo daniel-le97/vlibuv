@@ -20,8 +20,6 @@
  */
 
 #include <assert.h>
-#include <io.h>
-#include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -182,35 +180,24 @@ void uv__console_init(void) {
 }
 
 
-int uv_tty_init(uv_loop_t* loop, uv_tty_t* tty, uv_file fd, int unused) {
+int uv_tty_init(uv_loop_t* loop, uv_tty_t* tty, uv_os_fd_t handle, int unused) {
   BOOL readable;
   DWORD NumberOfEvents;
-  HANDLE handle;
   CONSOLE_SCREEN_BUFFER_INFO screen_buffer_info;
   CONSOLE_CURSOR_INFO cursor_info;
   (void)unused;
 
-  uv__once_init();
-  handle = (HANDLE) uv__get_osfhandle(fd);
   if (handle == INVALID_HANDLE_VALUE)
     return UV_EBADF;
 
-  if (fd <= 2) {
-    /* In order to avoid closing a stdio file descriptor 0-2, duplicate the
-     * underlying OS handle and forget about the original fd.
-     * We could also opt to use the original OS handle and just never close it,
-     * but then there would be no reliable way to cancel pending read operations
-     * upon close.
+  if (handle == UV_STDIN_FD || handle == UV_STDOUT_FD || handle == UV_STDERR_FD) {
+    /* In order to avoid closing a stdio pseudo-handle, or having it get replaced under us,
+     * duplicate the underlying OS handle and forget about the original one.
      */
-    if (!DuplicateHandle(INVALID_HANDLE_VALUE,
-                         handle,
-                         INVALID_HANDLE_VALUE,
-                         &handle,
-                         0,
-                         FALSE,
-                         DUPLICATE_SAME_ACCESS))
-      return uv_translate_sys_error(GetLastError());
-    fd = -1;
+    int dup_err = uv__dup(handle, &handle);
+    if (dup_err)
+      return dup_err;
+    /* TODO(vtjnash): need to close this dup on error */
   }
 
   readable = GetNumberOfConsoleInputEvents(handle, &NumberOfEvents);
@@ -245,15 +232,12 @@ int uv_tty_init(uv_loop_t* loop, uv_tty_t* tty, uv_file fd, int unused) {
   uv__connection_init((uv_stream_t*) tty);
 
   tty->handle = handle;
-  tty->u.fd = fd;
   tty->reqs_pending = 0;
   tty->flags |= UV_HANDLE_BOUND;
 
   if (readable) {
     /* Initialize TTY input specific fields. */
     tty->flags |= UV_HANDLE_TTY_READABLE | UV_HANDLE_READABLE;
-    /* TODO: remove me in v2.x. */
-    tty->tty.rd.unused_ = NULL;
     tty->tty.rd.read_line_buffer = uv_null_buf_;
     tty->tty.rd.read_raw_wait = NULL;
 
@@ -695,7 +679,7 @@ void uv_process_tty_read_raw_req(uv_loop_t* loop, uv_tty_t* handle,
 
   DWORD records_left, records_read;
   uv_buf_t buf;
-  _off_t buf_used;
+  ssize_t buf_used;
 
   assert(handle->type == UV_TTY);
   assert(handle->flags & UV_HANDLE_TTY_READABLE);
@@ -2177,13 +2161,13 @@ int uv__tty_write(uv_loop_t* loop,
                  uv_write_cb cb) {
   DWORD error;
 
-  UV_REQ_INIT(req, UV_WRITE);
+  UV_REQ_INIT(loop, req, UV_WRITE);
   req->handle = (uv_stream_t*) handle;
   req->cb = cb;
 
   handle->reqs_pending++;
   handle->stream.conn.write_reqs_pending++;
-  REGISTER_HANDLE_REQ(loop, handle);
+  REGISTER_HANDLE_REQ(loop, handle, req);
 
   req->u.io.queued_bytes = 0;
 
@@ -2219,7 +2203,7 @@ void uv__process_tty_write_req(uv_loop_t* loop, uv_tty_t* handle,
   int err;
 
   handle->write_queue_size -= req->u.io.queued_bytes;
-  UNREGISTER_HANDLE_REQ(loop, handle);
+  UNREGISTER_HANDLE_REQ(loop, handle, req);
 
   if (req->cb) {
     err = GET_REQ_ERROR(req);
@@ -2239,16 +2223,10 @@ void uv__process_tty_write_req(uv_loop_t* loop, uv_tty_t* handle,
 
 
 void uv__tty_close(uv_tty_t* handle) {
-  assert(handle->u.fd == -1 || handle->u.fd > 2);
   if (handle->flags & UV_HANDLE_READING)
     uv__tty_read_stop(handle);
 
-  if (handle->u.fd == -1)
-    CloseHandle(handle->handle);
-  else
-    _close(handle->u.fd);
-
-  handle->u.fd = -1;
+  CloseHandle(handle->handle);
   handle->handle = INVALID_HANDLE_VALUE;
   handle->flags &= ~(UV_HANDLE_READABLE | UV_HANDLE_WRITABLE);
   uv__handle_closing(handle);
@@ -2263,7 +2241,7 @@ void uv__process_tty_shutdown_req(uv_loop_t* loop, uv_tty_t* stream, uv_shutdown
   assert(req);
 
   stream->stream.conn.shutdown_req = NULL;
-  UNREGISTER_HANDLE_REQ(loop, stream);
+  UNREGISTER_HANDLE_REQ(loop, stream, req);
 
   /* TTY shutdown is really just a no-op */
   if (req->cb) {
@@ -2380,8 +2358,8 @@ static DWORD WINAPI uv__tty_console_resize_watcher_thread(void* param) {
     /* Make sure to not overwhelm the system with resize events */
     Sleep(33);
     WaitForSingleObject(uv__tty_console_resized, INFINITE);
-    ResetEvent(uv__tty_console_resized);
     uv__tty_console_signal_resize();
+    ResetEvent(uv__tty_console_resized);
   }
   return 0;
 }

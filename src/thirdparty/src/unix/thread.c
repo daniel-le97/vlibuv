@@ -262,7 +262,8 @@ int uv_thread_getaffinity(uv_thread_t* tid,
                           size_t mask_size) {
   return UV_ENOTSUP;
 }
-#endif /* defined(__linux__) || defined(UV_BSD_H) */
+#endif /* defined(UV__CPU_AFFINITY_SUPPORTED) */
+
 
 int uv_thread_getcpu(void) {
 #if UV__CPU_AFFINITY_SUPPORTED
@@ -278,9 +279,16 @@ int uv_thread_getcpu(void) {
 #endif
 }
 
+
+int uv_thread_detach(uv_thread_t* tid) {
+  return UV__ERR(pthread_detach(*tid));
+}
+
+
 uv_thread_t uv_thread_self(void) {
   return pthread_self();
 }
+
 
 int uv_thread_join(uv_thread_t *tid) {
   return UV__ERR(pthread_join(*tid, NULL));

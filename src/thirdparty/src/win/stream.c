@@ -209,14 +209,14 @@ int uv_shutdown(uv_shutdown_t* req, uv_stream_t* handle, uv_shutdown_cb cb) {
     return UV_ENOTCONN;
   }
 
-  UV_REQ_INIT(req, UV_SHUTDOWN);
+  UV_REQ_INIT(loop, req, UV_SHUTDOWN);
   req->handle = handle;
   req->cb = cb;
 
   handle->flags &= ~UV_HANDLE_WRITABLE;
   handle->stream.conn.shutdown_req = req;
   handle->reqs_pending++;
-  REGISTER_HANDLE_REQ(loop, handle);
+  REGISTER_HANDLE_REQ(loop, handle, req);
 
   if (handle->stream.conn.write_reqs_pending == 0) {
     if (handle->type == UV_NAMED_PIPE)

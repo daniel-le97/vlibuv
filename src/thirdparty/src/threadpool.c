@@ -356,7 +356,7 @@ static void uv__queue_done(struct uv__work* w, int err) {
   uv_work_t* req;
 
   req = container_of(w, uv_work_t, work_req);
-  uv__req_unregister(req->loop);
+  uv__req_unregister(req->loop, req);
 
   if (req->after_work_cb == NULL)
     return;
@@ -373,7 +373,6 @@ int uv_queue_work(uv_loop_t* loop,
     return UV_EINVAL;
 
   uv__req_init(loop, req, UV_WORK);
-  req->loop = loop;
   req->work_cb = work_cb;
   req->after_work_cb = after_work_cb;
   uv__work_submit(loop,

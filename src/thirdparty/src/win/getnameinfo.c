@@ -20,7 +20,6 @@
 */
 
 #include <assert.h>
-#include <stdio.h>
 
 #include "uv.h"
 #include "internal.h"
@@ -82,7 +81,7 @@ static void uv__getnameinfo_done(struct uv__work* w, int status) {
   char* service;
 
   req = container_of(w, uv_getnameinfo_t, work_req);
-  uv__req_unregister(req->loop);
+  uv__req_unregister(req->loop, req);
   host = service = NULL;
 
   if (status == UV_ECANCELED) {
@@ -123,12 +122,11 @@ int uv_getnameinfo(uv_loop_t* loop,
     return UV_EINVAL;
   }
 
-  UV_REQ_INIT(req, UV_GETNAMEINFO);
-  uv__req_register(loop);
+  UV_REQ_INIT(loop, req, UV_GETNAMEINFO);
+  uv__req_register(loop, req);
 
   req->getnameinfo_cb = getnameinfo_cb;
   req->flags = flags;
-  req->loop = loop;
   req->retcode = 0;
 
   if (getnameinfo_cb) {

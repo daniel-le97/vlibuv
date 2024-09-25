@@ -82,7 +82,7 @@ static void uv__random_done(struct uv__work* w, int status) {
   uv_random_t* req;
 
   req = container_of(w, uv_random_t, work_req);
-  uv__req_unregister(req->loop);
+  uv__req_unregister(req->loop, req);
 
   if (status == 0)
     status = req->status;
@@ -107,7 +107,6 @@ int uv_random(uv_loop_t* loop,
     return uv__random(buf, buflen);
 
   uv__req_init(loop, req, UV_RANDOM);
-  req->loop = loop;
   req->status = 0;
   req->cb = cb;
   req->buf = buf;

@@ -53,8 +53,7 @@
 
 #if defined(__APPLE__)
 # include <sys/filio.h>
-# include <sys/sysctl.h>
-#endif /* defined(__APPLE__) */
+# endif /* defined(__APPLE__) */
 
 
 #if defined(__APPLE__) && !TARGET_OS_IPHONE
@@ -95,33 +94,15 @@ extern char** environ;
 # define uv__accept4 accept4
 #endif
 
-#if defined(__FreeBSD__)
-# include <sys/param.h>
-# include <sys/cpuset.h>
-#endif
-
-#if defined(__NetBSD__)
-# include <sched.h>
-#endif
-
 #if defined(__linux__) && defined(__SANITIZE_THREAD__) && defined(__clang__)
 # include <sanitizer/linux_syscall_hooks.h>
 #endif
 
 static void uv__run_pending(uv_loop_t* loop);
 
-/* Verify that uv_buf_t is ABI-compatible with struct iovec. */
-STATIC_ASSERT(sizeof(uv_buf_t) == sizeof(struct iovec));
-STATIC_ASSERT(sizeof(((uv_buf_t*) 0)->base) ==
-              sizeof(((struct iovec*) 0)->iov_base));
-STATIC_ASSERT(sizeof(((uv_buf_t*) 0)->len) ==
-              sizeof(((struct iovec*) 0)->iov_len));
-STATIC_ASSERT(offsetof(uv_buf_t, base) == offsetof(struct iovec, iov_base));
-STATIC_ASSERT(offsetof(uv_buf_t, len) == offsetof(struct iovec, iov_len));
 
 
-/* https://github.com/libuv/libuv/issues/1674 */
-int uv_clock_gettime(uv_clock_id clock_id, uv_timespec64_t* ts) {
+int uv_clock_gettime(uv_clock_id clock_id, uv_timespec_t* ts) {
   struct timespec t;
   int r;
 
@@ -166,7 +147,7 @@ void uv_close(uv_handle_t* handle, uv_close_cb close_cb) {
     break;
 
   case UV_TTY:
-    uv__tty_close((uv_tty_t*)handle);
+    uv__stream_close((uv_stream_t*)handle);
     break;
 
   case UV_TCP:
@@ -383,7 +364,7 @@ int uv_is_closing(const uv_handle_t* handle) {
 }
 
 
-int uv_backend_fd(const uv_loop_t* loop) {
+uv_os_fd_t uv_backend_fd(const uv_loop_t* loop) {
   return loop->backend_fd;
 }
 
@@ -430,15 +411,6 @@ int uv_run(uv_loop_t* loop, uv_run_mode mode) {
   r = uv__loop_alive(loop);
   if (!r)
     uv__update_time(loop);
-
-  /* Maintain backwards compatibility by processing timers before entering the
-   * while loop for UV_RUN_DEFAULT. Otherwise timers only need to be executed
-   * once, which should be done after polling in order to maintain proper
-   * execution order of the conceptual event loop. */
-  if (mode == UV_RUN_DEFAULT && r != 0 && loop->stop_flag == 0) {
-    uv__update_time(loop);
-    uv__run_timers(loop);
-  }
 
   while (r != 0 && loop->stop_flag == 0) {
     can_sleep =
@@ -1218,6 +1190,7 @@ static int uv__getpwuid_r(uv_passwd_t *pwd, uid_t uid) {
   size_t name_size;
   size_t homedir_size;
   size_t shell_size;
+  size_t gecos_size;
   int r;
 
   if (pwd == NULL)
@@ -1249,11 +1222,24 @@ static int uv__getpwuid_r(uv_passwd_t *pwd, uid_t uid) {
   if (result == NULL)
     return UV_ENOENT;
 
-  /* Allocate memory for the username, shell, and home directory */
+  /* Allocate memory for the username, gecos, shell, and home directory. */
   name_size = strlen(pw.pw_name) + 1;
   homedir_size = strlen(pw.pw_dir) + 1;
   shell_size = strlen(pw.pw_shell) + 1;
-  pwd->username = uv__malloc(name_size + homedir_size + shell_size);
+
+#ifdef __MVS__
+  gecos_size = 0; /* pw_gecos does not exist on zOS. */
+#else
+  if (pw.pw_gecos != NULL)
+    gecos_size = strlen(pw.pw_gecos) + 1;
+  else
+    gecos_size = 0;
+#endif
+
+  pwd->username = uv__malloc(name_size +
+                             homedir_size +
+                             shell_size +
+                             gecos_size);
 
   if (pwd->username == NULL) {
     uv__free(buf);
@@ -1270,6 +1256,18 @@ static int uv__getpwuid_r(uv_passwd_t *pwd, uid_t uid) {
   /* Copy the shell */
   pwd->shell = pwd->homedir + homedir_size;
   memcpy(pwd->shell, pw.pw_shell, shell_size);
+
+  /* Copy the gecos field */
+#ifdef __MVS__
+  pwd->gecos = NULL;  /* pw_gecos does not exist on zOS. */
+#else
+  if (pw.pw_gecos == NULL) {
+    pwd->gecos = NULL;
+  } else {
+    pwd->gecos = pwd->shell + shell_size;
+    memcpy(pwd->gecos, pw.pw_gecos, gecos_size);
+  }
+#endif
 
   /* Copy the uid and gid */
   pwd->uid = pw.pw_uid;
@@ -1516,14 +1514,6 @@ int uv_os_gethostname(char* buffer, size_t* size) {
 }
 
 
-uv_os_fd_t uv_get_osfhandle(int fd) {
-  return fd;
-}
-
-int uv_open_osfhandle(uv_os_fd_t os_fd) {
-  return os_fd;
-}
-
 uv_pid_t uv_os_getpid(void) {
   return getpid();
 }
@@ -1626,7 +1616,6 @@ static int set_nice_for_calling_thread(int priority) {
  * If the function fails, the return value is non-zero.
 */
 int uv_thread_setpriority(uv_thread_t tid, int priority) {
-#if !defined(__GNU__)
   int r;
   int min;
   int max;
@@ -1688,14 +1677,10 @@ int uv_thread_setpriority(uv_thread_t tid, int priority) {
     param.sched_priority = prio;
     r = pthread_setschedparam(tid, policy, &param);
     if (r != 0)
-      return UV__ERR(errno);
+      return UV__ERR(errno);  
   }
 
   return 0;
-#else  /* !defined(__GNU__) */
-  /* Simulate success on systems where thread priority is not implemented. */
-  return 0;
-#endif  /* !defined(__GNU__) */
 }
 
 int uv_os_uname(uv_utsname_t* buffer) {
@@ -1775,7 +1760,7 @@ int uv__getsockpeername(const uv_handle_t* handle,
   return 0;
 }
 
-int uv_gettimeofday(uv_timeval64_t* tv) {
+int uv_gettimeofday(uv_timeval_t* tv) {
   struct timeval time;
 
   if (tv == NULL)
@@ -1879,31 +1864,11 @@ int uv__search_path(const char* prog, char* buf, size_t* buflen) {
   return UV_EINVAL;
 }
 
-#if defined(__linux__) || defined (__FreeBSD__)
-# define uv__cpu_count(cpuset) CPU_COUNT(cpuset)
-#elif defined(__NetBSD__)
-static int uv__cpu_count(cpuset_t *cpuset) {
-  int rc;
-  cpuid_t i;
-
-  rc = 0;
-  for (i = 0;; i++) {
-    int r = cpuset_isset(cpu, set);
-    if (r < 0)
-      break;
-    if (r)
-      rc++;
-  }
-
-  return rc;
-}
-#endif /* __NetBSD__ */
 
 unsigned int uv_available_parallelism(void) {
-  long rc = -1;
-
 #ifdef __linux__
   cpu_set_t set;
+  long rc;
 
   memset(&set, 0, sizeof(set));
 
@@ -1912,127 +1877,29 @@ unsigned int uv_available_parallelism(void) {
    * before falling back to sysconf(_SC_NPROCESSORS_ONLN).
    */
   if (0 == sched_getaffinity(0, sizeof(set), &set))
-    rc = uv__cpu_count(&set);
+    rc = CPU_COUNT(&set);
+  else
+    rc = sysconf(_SC_NPROCESSORS_ONLN);
+
+  if (rc < 1)
+    rc = 1;
+
+  return (unsigned) rc;
 #elif defined(__MVS__)
+  int rc;
+
   rc = __get_num_online_cpus();
   if (rc < 1)
     rc = 1;
 
   return (unsigned) rc;
-#elif defined(__FreeBSD__)
-  cpuset_t set;
+#else  /* __linux__ */
+  long rc;
 
-  memset(&set, 0, sizeof(set));
-
-  if (0 == cpuset_getaffinity(CPU_LEVEL_WHICH, CPU_WHICH_PID, -1, sizeof(set), &set))
-    rc = uv__cpu_count(&set);
-#elif defined(__NetBSD__)
-  cpuset_t* set = cpuset_create();
-  if (set != NULL) {
-    if (0 == sched_getaffinity_np(getpid(), sizeof(set), &set))
-      rc = uv__cpu_count(&set);
-    cpuset_destroy(set);
-  }
-#elif defined(__APPLE__)
-  int nprocs;
-  size_t i;
-  size_t len = sizeof(nprocs);
-  static const char *mib[] = {
-    "hw.activecpu",
-    "hw.logicalcpu",
-    "hw.ncpu"
-  };
-
-  for (i = 0; i < ARRAY_SIZE(mib); i++) {
-    if (0 == sysctlbyname(mib[i], &nprocs, &len, NULL, 0) &&
-	      len == sizeof(nprocs) &&
-	      nprocs > 0) {
-      rc = nprocs;
-      break;
-    }
-  }
-#elif defined(__OpenBSD__)
-  int nprocs;
-  size_t i;
-  size_t len = sizeof(nprocs);
-  static int mib[][2] = {
-# ifdef HW_NCPUONLINE
-    { CTL_HW, HW_NCPUONLINE },
-# endif
-    { CTL_HW, HW_NCPU }
-  };
-
-  for (i = 0; i < ARRAY_SIZE(mib); i++) {
-    if (0 == sysctl(mib[i], ARRAY_SIZE(mib[i]), &nprocs, &len, NULL, 0) &&
-	len == sizeof(nprocs) &&
-        nprocs > 0) {
-      rc = nprocs;
-      break;
-    }
-  }
-#endif /* __linux__ */
-
-  if (rc < 0)
-    rc = sysconf(_SC_NPROCESSORS_ONLN);
-
-#ifdef __linux__
-  {
-    double rc_with_cgroup;
-    uv__cpu_constraint c = {0, 0, 0.0};
-
-    if (uv__get_constrained_cpu(&c) == 0 && c.period_length > 0) {
-      rc_with_cgroup = (double)c.quota_per_period / c.period_length * c.proportions;
-      if (rc_with_cgroup < rc)
-        rc = (long)rc_with_cgroup; /* Casting is safe since rc_with_cgroup < rc < LONG_MAX */
-    }
-  }
-#endif  /* __linux__ */
-
+  rc = sysconf(_SC_NPROCESSORS_ONLN);
   if (rc < 1)
     rc = 1;
 
   return (unsigned) rc;
-}
-
-int uv__sock_reuseport(int fd) {
-  int on = 1;
-#if defined(__FreeBSD__) && __FreeBSD__ >= 12 && defined(SO_REUSEPORT_LB)
-  /* FreeBSD 12 introduced a new socket option named SO_REUSEPORT_LB
-   * with the capability of load balancing, it's the substitution of
-   * the SO_REUSEPORTs on Linux and DragonFlyBSD. */
-  if (setsockopt(fd, SOL_SOCKET, SO_REUSEPORT_LB, &on, sizeof(on)))
-    return UV__ERR(errno);
-#elif (defined(__linux__) || \
-      defined(_AIX73) || \
-      (defined(__DragonFly__) && __DragonFly_version >= 300600) || \
-      (defined(UV__SOLARIS_11_4) && UV__SOLARIS_11_4)) && \
-      defined(SO_REUSEPORT)
-  /* On Linux 3.9+, the SO_REUSEPORT implementation distributes connections
-   * evenly across all of the threads (or processes) that are blocked in
-   * accept() on the same port. As with TCP, SO_REUSEPORT distributes datagrams
-   * evenly across all of the receiving threads (or process).
-   *
-   * DragonFlyBSD 3.6.0 extended SO_REUSEPORT to distribute workload to
-   * available sockets, which made it the equivalent of Linux's SO_REUSEPORT.
-   *
-   * AIX 7.2.5 added the feature that would add the capability to distribute
-   * incoming connections or datagrams across all listening ports for SO_REUSEPORT.
-   *
-   * Solaris 11 supported SO_REUSEPORT, but it's implemented only for
-   * binding to the same address and port, without load balancing.
-   * Solaris 11.4 extended SO_REUSEPORT with the capability of load balancing.
-   */
-  if (setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)))
-    return UV__ERR(errno);
-#else
-  (void) (fd);
-  (void) (on);
-  /* SO_REUSEPORTs do not have the capability of load balancing on platforms
-   * other than those mentioned above. The semantics are completely different,
-   * therefore we shouldn't enable it, but fail this operation to indicate that
-   * UV_[TCP/UDP]_REUSEPORT is not supported on these platforms. */
-  return UV_ENOTSUP;
-#endif
-
-  return 0;
+#endif  /* __linux__ */
 }

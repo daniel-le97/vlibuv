@@ -4125,58 +4125,35 @@ typedef const UNICODE_STRING *PCUNICODE_STRING;
 # define DEVICE_TYPE DWORD
 #endif
 
-typedef struct _FILE_STAT_BASIC_INFORMATION {
-  LARGE_INTEGER FileId;
-  LARGE_INTEGER CreationTime;
-  LARGE_INTEGER LastAccessTime;
-  LARGE_INTEGER LastWriteTime;
-  LARGE_INTEGER ChangeTime;
-  LARGE_INTEGER AllocationSize;
-  LARGE_INTEGER EndOfFile;
-  ULONG FileAttributes;
-  ULONG ReparseTag;
-  ULONG NumberOfLinks;
-  ULONG DeviceType;
-  ULONG DeviceCharacteristics;
-  ULONG Reserved;
-  FILE_ID_128 FileId128;
-  LARGE_INTEGER VolumeSerialNumber;
-} FILE_STAT_BASIC_INFORMATION;
-
-/* MinGW already has a definition for REPARSE_DATA_BUFFER, but mingw-w64 does
- * not.
- */
-#if defined(_MSC_VER) || defined(__MINGW64_VERSION_MAJOR)
-  typedef struct _REPARSE_DATA_BUFFER {
-    ULONG  ReparseTag;
-    USHORT ReparseDataLength;
-    USHORT Reserved;
-    union {
-      struct {
-        USHORT SubstituteNameOffset;
-        USHORT SubstituteNameLength;
-        USHORT PrintNameOffset;
-        USHORT PrintNameLength;
-        ULONG Flags;
-        WCHAR PathBuffer[1];
-      } SymbolicLinkReparseBuffer;
-      struct {
-        USHORT SubstituteNameOffset;
-        USHORT SubstituteNameLength;
-        USHORT PrintNameOffset;
-        USHORT PrintNameLength;
-        WCHAR PathBuffer[1];
-      } MountPointReparseBuffer;
-      struct {
-        UCHAR  DataBuffer[1];
-      } GenericReparseBuffer;
-      struct {
-        ULONG StringCount;
-        WCHAR StringList[1];
-      } AppExecLinkReparseBuffer;
-    };
-  } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
-#endif
+typedef struct _REPARSE_DATA_BUFFER {
+  ULONG  ReparseTag;
+  USHORT ReparseDataLength;
+  USHORT Reserved;
+  union {
+    struct {
+      USHORT SubstituteNameOffset;
+      USHORT SubstituteNameLength;
+      USHORT PrintNameOffset;
+      USHORT PrintNameLength;
+      ULONG Flags;
+      WCHAR PathBuffer[1];
+    } SymbolicLinkReparseBuffer;
+    struct {
+      USHORT SubstituteNameOffset;
+      USHORT SubstituteNameLength;
+      USHORT PrintNameOffset;
+      USHORT PrintNameLength;
+      WCHAR PathBuffer[1];
+    } MountPointReparseBuffer;
+    struct {
+      UCHAR  DataBuffer[1];
+    } GenericReparseBuffer;
+    struct {
+      ULONG StringCount;
+      WCHAR StringList[1];
+    } AppExecLinkReparseBuffer;
+  };
+} REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
 
 typedef struct _IO_STATUS_BLOCK {
   union {
@@ -4242,15 +4219,6 @@ typedef enum _FILE_INFORMATION_CLASS {
   FileNumaNodeInformation,
   FileStandardLinkInformation,
   FileRemoteProtocolInformation,
-  FileRenameInformationBypassAccessCheck,
-  FileLinkInformationBypassAccessCheck,
-  FileVolumeNameInformation,
-  FileIdInformation,
-  FileIdExtdDirectoryInformation,
-  FileReplaceCompletionInformation,
-  FileHardLinkFullIdInformation,
-  FileIdExtdBothDirectoryInformation,
-  FileDispositionInformationEx, /* based on https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ne-wdm-_file_information_class */
   FileMaximumInformation
 } FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 
@@ -4349,10 +4317,6 @@ typedef struct _FILE_ALL_INFORMATION {
 typedef struct _FILE_DISPOSITION_INFORMATION {
   BOOLEAN DeleteFile;
 } FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
-
-typedef struct _FILE_DISPOSITION_INFORMATION_EX {
-  DWORD Flags;
-} FILE_DISPOSITION_INFORMATION_EX, *PFILE_DISPOSITION_INFORMATION_EX;
 
 typedef struct _FILE_PIPE_LOCAL_INFORMATION {
   ULONG NamedPipeType;
@@ -4458,14 +4422,6 @@ typedef struct _FILE_FS_SECTOR_SIZE_INFORMATION {
   ULONG ByteOffsetForPartitionAlignment;
 } FILE_FS_SECTOR_SIZE_INFORMATION, *PFILE_FS_SECTOR_SIZE_INFORMATION;
 
-typedef struct _PROCESS_BASIC_INFORMATION {
-  PVOID Reserved1;
-  PVOID PebBaseAddress;
-  PVOID Reserved2[2];
-  ULONG_PTR UniqueProcessId;
-  ULONG_PTR InheritedFromUniqueProcessId;
-} PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
-
 typedef struct _SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION {
     LARGE_INTEGER IdleTime;
     LARGE_INTEGER KernelTime;
@@ -4477,10 +4433,6 @@ typedef struct _SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION {
 
 #ifndef SystemProcessorPerformanceInformation
 # define SystemProcessorPerformanceInformation 8
-#endif
-
-#ifndef ProcessBasicInformation
-# define ProcessBasicInformation 0
 #endif
 
 #ifndef ProcessConsoleHostProcess
@@ -4654,15 +4606,6 @@ typedef NTSTATUS (NTAPI *sNtQueryInformationProcess)
 # define SYMBOLIC_LINK_FLAG_DIRECTORY 0x1
 #endif
 
-#if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
-  typedef struct _OVERLAPPED_ENTRY {
-      ULONG_PTR lpCompletionKey;
-      LPOVERLAPPED lpOverlapped;
-      ULONG_PTR Internal;
-      DWORD dwNumberOfBytesTransferred;
-  } OVERLAPPED_ENTRY, *LPOVERLAPPED_ENTRY;
-#endif
-
 /* from wincon.h */
 #ifndef ENABLE_INSERT_MODE
 # define ENABLE_INSERT_MODE 0x20
@@ -4782,21 +4725,6 @@ typedef struct _TCP_INITIAL_RTO_PARAMETERS {
 # define  SIO_TCP_INITIAL_RTO _WSAIOW(IOC_VENDOR,17)
 #endif
 
-/* from winnt.h */
-typedef enum _FILE_INFO_BY_NAME_CLASS {
-  FileStatByNameInfo,
-  FileStatLxByNameInfo,
-  FileCaseSensitiveByNameInfo,
-  FileStatBasicByNameInfo,
-  MaximumFileInfoByNameClass
-} FILE_INFO_BY_NAME_CLASS;
-
-typedef BOOL(WINAPI* sGetFileInformationByName)(
-    PCWSTR FileName,
-    FILE_INFO_BY_NAME_CLASS FileInformationClass,
-    PVOID FileInfoBuffer,
-    ULONG FileInfoBufferSize);
-
 /* Ntdll function pointers */
 extern sRtlGetVersion pRtlGetVersion;
 extern sRtlNtStatusToDosError pRtlNtStatusToDosError;
@@ -4816,9 +4744,6 @@ extern sPowerRegisterSuspendResumeNotification pPowerRegisterSuspendResumeNotifi
 
 /* User32.dll function pointer */
 extern sSetWinEventHook pSetWinEventHook;
-
-/* api-ms-win-core-file-l2-1-4.dll function pointers */
-extern sGetFileInformationByName pGetFileInformationByName;
 
 /* ws2_32.dll function pointer */
 /* mingw doesn't have this definition, so let's declare it here locally */

@@ -20,12 +20,11 @@
  */
 
 #include <assert.h>
-#include <io.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <limits.h>
 #include <wchar.h>
+#include <malloc.h>    /* _alloca */
 
 #include "uv.h"
 #include "internal.h"
@@ -34,9 +33,6 @@
 #include <dbghelp.h>
 #include <shlobj.h>
 #include <psapi.h>     /* GetModuleBaseNameW */
-
-
-#define SIGKILL         9
 
 
 typedef struct env_var {
@@ -92,7 +88,6 @@ static void uv__init_global_job_handle(void) {
   info.BasicLimitInformation.LimitFlags =
       JOB_OBJECT_LIMIT_BREAKAWAY_OK |
       JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK |
-      JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION |
       JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
 
   uv_global_job_handle_ = CreateJobObjectW(&attr, NULL);
@@ -136,7 +131,7 @@ static void uv__process_init(uv_loop_t* loop, uv_process_t* handle) {
   handle->process_handle = INVALID_HANDLE_VALUE;
   handle->exit_cb_pending = 0;
 
-  UV_REQ_INIT(&handle->exit_req, UV_PROCESS_EXIT);
+  UV_REQ_INIT(loop, &handle->exit_req, UV_PROCESS_EXIT);
   handle->exit_req.data = handle;
 }
 
@@ -597,9 +592,11 @@ error:
 }
 
 
-static int env_strncmp(const wchar_t* a, int na, const wchar_t* b) {
+int env_strncmp(const wchar_t* a, int na, const wchar_t* b) {
   wchar_t* a_eq;
   wchar_t* b_eq;
+  wchar_t* A;
+  wchar_t* B;
   int nb;
   int r;
 
@@ -614,8 +611,27 @@ static int env_strncmp(const wchar_t* a, int na, const wchar_t* b) {
   assert(b_eq);
   nb = b_eq - b;
 
-  r = CompareStringOrdinal(a, na, b, nb, /*case insensitive*/TRUE);
-  return r - CSTR_EQUAL;
+  A = _alloca((na+1) * sizeof(wchar_t));
+  B = _alloca((nb+1) * sizeof(wchar_t));
+
+  r = LCMapStringW(LOCALE_INVARIANT, LCMAP_UPPERCASE, a, na, A, na);
+  assert(r==na);
+  A[na] = L'\0';
+  r = LCMapStringW(LOCALE_INVARIANT, LCMAP_UPPERCASE, b, nb, B, nb);
+  assert(r==nb);
+  B[nb] = L'\0';
+
+  for (;;) {
+    wchar_t AA = *A++;
+    wchar_t BB = *B++;
+    if (AA < BB) {
+      return -1;
+    } else if (AA > BB) {
+      return 1;
+    } else if (!AA && !BB) {
+      return 0;
+    }
+  }
 }
 
 
@@ -654,7 +670,6 @@ int make_program_env(char* env_block[], WCHAR** dst_ptr) {
   WCHAR* dst_copy;
   WCHAR** ptr_copy;
   WCHAR** env_copy;
-  char* p;
   size_t required_vars_value_len[ARRAY_SIZE(required_vars)];
 
   /* first pass: determine size in UTF-16 */
@@ -670,13 +685,11 @@ int make_program_env(char* env_block[], WCHAR** dst_ptr) {
   }
 
   /* second pass: copy to UTF-16 environment block */
-  len = env_block_count * sizeof(WCHAR*);
-  p = uv__malloc(len + env_len * sizeof(WCHAR));
-  if (p == NULL) {
+  dst_copy = uv__malloc(env_len * sizeof(WCHAR));
+  if (dst_copy == NULL && env_len > 0) {
     return UV_ENOMEM;
   }
-  env_copy = (void*) &p[0];
-  dst_copy = (void*) &p[len];
+  env_copy = _alloca(env_block_count * sizeof(WCHAR*));
 
   ptr = dst_copy;
   ptr_copy = env_copy;
@@ -726,7 +739,7 @@ int make_program_env(char* env_block[], WCHAR** dst_ptr) {
   /* final pass: copy, in sort order, and inserting required variables */
   dst = uv__malloc((1+env_len) * sizeof(WCHAR));
   if (!dst) {
-    uv__free(p);
+    uv__free(dst_copy);
     return UV_ENOMEM;
   }
 
@@ -771,7 +784,7 @@ int make_program_env(char* env_block[], WCHAR** dst_ptr) {
   assert(env_len == (size_t) (ptr - dst));
   *ptr = L'\0';
 
-  uv__free(p);
+  uv__free(dst_copy);
   *dst_ptr = dst;
   return 0;
 }
@@ -914,6 +927,12 @@ int uv_spawn(uv_loop_t* loop,
     return UV_EINVAL;
   }
 
+  if (options->cpumask != NULL) {
+    if (options->cpumask_size < (size_t)uv_cpumask_size()) {
+      return UV_EINVAL;
+    }
+  }
+
   assert(options->file != NULL);
   assert(!(options->flags & ~(UV_PROCESS_DETACHED |
                               UV_PROCESS_SETGID |
@@ -1019,7 +1038,7 @@ int uv_spawn(uv_loop_t* loop,
   startup.hStdOutput = uv__stdio_handle(child_stdio_buffer, 1);
   startup.hStdError = uv__stdio_handle(child_stdio_buffer, 2);
 
-  process_flags = CREATE_UNICODE_ENVIRONMENT;
+  process_flags = CREATE_UNICODE_ENVIRONMENT | CREATE_DEFAULT_ERROR_MODE;
 
   if ((options->flags & UV_PROCESS_WINDOWS_HIDE_CONSOLE) ||
       (options->flags & UV_PROCESS_WINDOWS_HIDE)) {
@@ -1054,6 +1073,12 @@ int uv_spawn(uv_loop_t* loop,
     process_flags |= CREATE_SUSPENDED;
   }
 
+  if (options->cpumask != NULL) {
+    /* Create the child in a suspended state so we have a chance to set
+       its process affinity before it runs.  */
+    process_flags |= CREATE_SUSPENDED;
+  }
+
   if (!CreateProcessW(application_path,
                      arguments,
                      NULL,
@@ -1067,6 +1092,50 @@ int uv_spawn(uv_loop_t* loop,
     /* CreateProcessW failed. */
     err = GetLastError();
     goto done;
+  }
+
+  if (options->cpumask != NULL) {
+    /* The child is currently suspended.  Set its process affinity
+       or terminate it if we can't.  */
+    int i;
+    int cpumasksize;
+    DWORD_PTR sysmask;
+    DWORD_PTR oldmask;
+    DWORD_PTR newmask;
+
+    cpumasksize = uv_cpumask_size();
+
+    if (!GetProcessAffinityMask(info.hProcess, &oldmask, &sysmask)) {
+      err = GetLastError();
+      TerminateProcess(info.hProcess, 1);
+      goto done;
+    }
+
+    newmask = 0;
+    for (i = 0; i < cpumasksize; i++) {
+      if (options->cpumask[i]) {
+        if (oldmask & (((DWORD_PTR)1) << i)) {
+          newmask |= ((DWORD_PTR)1) << i;
+        } else {
+          err = UV_EINVAL;
+          TerminateProcess(info.hProcess, 1);
+          goto done;
+        }
+      }
+    }
+
+    if (!SetProcessAffinityMask(info.hProcess, newmask)) {
+      err = GetLastError();
+      TerminateProcess(info.hProcess, 1);
+      goto done;
+    }
+
+    /* The process affinity of the child is set.  Let it run.  */
+    if (ResumeThread(info.hThread) == ((DWORD)-1)) {
+      err = GetLastError();
+      TerminateProcess(info.hProcess, 1);
+      goto done;
+    }
   }
 
   /* If the process isn't spawned as detached, assign to the global job object
@@ -1289,34 +1358,16 @@ static int uv__kill(HANDLE process_handle, int signum) {
       /* Unconditionally terminate the process. On Windows, killed processes
        * normally return 1. */
       int err;
-      DWORD status;
 
       if (TerminateProcess(process_handle, 1))
         return 0;
 
-      /* If the process already exited before TerminateProcess was called,
+      /* If the process already exited before TerminateProcess was called,.
        * TerminateProcess will fail with ERROR_ACCESS_DENIED. */
       err = GetLastError();
-      if (err == ERROR_ACCESS_DENIED) {
-        /* First check using GetExitCodeProcess() with status different from
-         * STILL_ACTIVE (259). This check can be set incorrectly by the process,
-         * though that is uncommon. */
-        if (GetExitCodeProcess(process_handle, &status) &&
-            status != STILL_ACTIVE) {
-          return UV_ESRCH;
-        }
-
-        /* But the process could have exited with code == STILL_ACTIVE, use then
-         * WaitForSingleObject with timeout zero. This is prone to a race
-         * condition as it could return WAIT_TIMEOUT because the handle might
-         * not have been signaled yet.That would result in returning the wrong
-         * error code here (UV_EACCES instead of UV_ESRCH), but we cannot fix
-         * the kernel synchronization issue that TerminateProcess is
-         * inconsistent with WaitForSingleObject with just the APIs available to
-         * us in user space. */
-        if (WaitForSingleObject(process_handle, 0) == WAIT_OBJECT_0) {
-          return UV_ESRCH;
-        }
+      if (err == ERROR_ACCESS_DENIED &&
+          WaitForSingleObject(process_handle, 0) == WAIT_OBJECT_0) {
+        return UV_ESRCH;
       }
 
       return uv_translate_sys_error(err);
@@ -1324,14 +1375,6 @@ static int uv__kill(HANDLE process_handle, int signum) {
 
     case 0: {
       /* Health check: is the process still alive? */
-      DWORD status;
-
-      if (!GetExitCodeProcess(process_handle, &status))
-        return uv_translate_sys_error(GetLastError());
-
-      if (status != STILL_ACTIVE)
-        return UV_ESRCH;
-
       switch (WaitForSingleObject(process_handle, 0)) {
         case WAIT_OBJECT_0:
           return UV_ESRCH;
