@@ -742,37 +742,16 @@ pub fn pipe_chmod(handle &C.uv_pipe_t, flags int) int {
 	return C.uv_pipe_chmod(handle, flags)
 }
 
-// ANCHOR - this is checked up to line 884 of uv.h
-// timer functions
-
-pub fn timer_init(loop &C.uv_loop_t, handle &C.uv_timer_t) int {
-	return C.uv_timer_init(loop, handle)
-}
-
-pub fn timer_start(handle &C.uv_timer_t, cb fn (handle &C.uv_timer_t), timeout u64, repeat u64) int {
-	return C.uv_timer_start(handle, cb, timeout, repeat)
-}
-
-pub fn timer_stop(handle &C.uv_timer_t) int {
-	return C.uv_timer_stop(handle)
-}
-
-pub fn timer_again(handle &C.uv_timer_t) int {
-	return C.uv_timer_again(handle)
-}
-
-pub fn timer_set_repeat(handle &C.uv_timer_t, repeat u64) {
-	C.uv_timer_set_repeat(handle, repeat)
-}
-
-pub fn timer_get_repeat(handle &C.uv_timer_t) u64 {
-	return C.uv_timer_get_repeat(handle)
-}
-
 // poll functions
 
 pub fn poll_init(loop &C.uv_loop_t, handle &C.uv_poll_t, fd int) int {
 	return C.uv_poll_init(loop, handle, fd)
+}
+
+fn C.uv_poll_init_socket(loop &C.uv_loop_t, handle &C.uv_poll_t, socket int) int
+
+pub fn poll_init_socket(loop &C.uv_loop_t, handle &C.uv_poll_t, socket int) int {
+	return C.uv_poll_init_socket(loop, handle, socket)
 }
 
 pub fn poll_start(handle &C.uv_poll_t, events int, cb fn (handle &C.uv_poll_t, status int, events int)) int {
@@ -781,20 +760,6 @@ pub fn poll_start(handle &C.uv_poll_t, events int, cb fn (handle &C.uv_poll_t, s
 
 pub fn poll_stop(handle &C.uv_poll_t) int {
 	return C.uv_poll_stop(handle)
-}
-
-// signal functions
-
-pub fn signal_init(loop &C.uv_loop_t, handle &C.uv_signal_t) int {
-	return C.uv_signal_init(loop, handle)
-}
-
-pub fn signal_start(handle &C.uv_signal_t, cb fn (handle &C.uv_signal_t, signum int), signum int) int {
-	return C.uv_signal_start(handle, cb, signum)
-}
-
-pub fn signal_stop(handle &C.uv_signal_t) int {
-	return C.uv_signal_stop(handle)
 }
 
 // prepare functions
@@ -849,21 +814,87 @@ pub fn async_send(handle &C.uv_async_t) int {
 	return C.uv_async_send(handle)
 }
 
-// address functions
+// timer functions
 
-// pub fn getaddrinfo(loop &C.uv_loop_t, req &C.uv_getaddrinfo_t, getaddrinfo_cb fn (req &C.uv_getaddrinfo_t, status int, res &C.addrinfo, node &char, service &char, hints &C.addrinfo)) int {
-// 	return C.uv_getaddrinfo(loop, req, getaddrinfo_cb, node, service, hints)
-// }
+pub fn timer_init(loop &C.uv_loop_t, handle &C.uv_timer_t) int {
+	return C.uv_timer_init(loop, handle)
+}
+
+pub fn timer_start(handle &C.uv_timer_t, cb fn (handle &C.uv_timer_t), timeout u64, repeat u64) int {
+	return C.uv_timer_start(handle, cb, timeout, repeat)
+}
+
+pub fn timer_stop(handle &C.uv_timer_t) int {
+	return C.uv_timer_stop(handle)
+}
+
+pub fn timer_again(handle &C.uv_timer_t) int {
+	return C.uv_timer_again(handle)
+}
+
+pub fn timer_set_repeat(handle &C.uv_timer_t, repeat u64) {
+	C.uv_timer_set_repeat(handle, repeat)
+}
+
+pub fn timer_get_repeat(const_handle &C.uv_timer_t) u64 {
+	return C.uv_timer_get_repeat(const_handle)
+}
+
+fn C.uv_timer_get_due_in(const_handle &C.uv_timer_t) u64
+
+pub fn timer_get_due_in(const_handle &C.uv_timer_t) u64 {
+	return C.uv_timer_get_due_in(const_handle)
+}
+
+// address/name functions
+
+fn C.uv_getaddrinfo(loop &C.uv_loop_t, req &C.uv_getaddrinfo_t, cb fn (req &C.uv_getaddrinfo_t, status int, res &C.addrinfo), const_node &char, const_service &char, const_hints &C.addrinfo) int
+
+pub fn getaddrinfo(loop &C.uv_loop_t, req &C.uv_getaddrinfo_t, cb fn (req &C.uv_getaddrinfo_t, status int, res &C.addrinfo), const_node &char, const_service &char, const_hints &C.addrinfo) int {
+	return C.uv_getaddrinfo(loop, req, cb, const_node, const_service, const_hints)
+}
+
+fn C.uv_freeaddrinfo(addr &C.addrinfo)
 
 pub fn freeaddrinfo(ai &C.addrinfo) {
 	C.uv_freeaddrinfo(ai)
 }
 
+fn C.uv_ip4_addr(&char, int, &C.sockaddr) int
+
 pub fn ip4_addr(ip &char, port int, addr &C.sockaddr) int {
 	return C.uv_ip4_addr(ip, port, addr)
 }
 
+fn C.uv_getnameinfo(loop &C.uv_loop_t, req &C.uv_getnameinfo_t, cb fn (req &C.uv_getnameinfo_t, status int, hostname &char, service &char), const_sockaddr &C.sockaddr, flags int) int
+
+pub fn getnameinfo(loop &C.uv_loop_t, req &C.uv_getnameinfo_t, cb fn (req &C.uv_getnameinfo_t, status int, hostname &char, service &char), const_sockaddr &C.sockaddr, flags int) int {
+	return C.uv_getnameinfo(loop, req, cb, const_sockaddr, flags)
+}
+
 // process functions
+
+pub enum Uv_stdio_flags {
+	ignore         = 0x00
+	create_pipe    = 0x01
+	inherit_fd     = 0x02
+	inherit_stream = 0x04
+	readable_pipe  = 0x10
+	writable_pipe  = 0x20
+	nonblock_pipe  = 0x40
+	// overlapped_pipe = 64
+}
+
+pub enum Uv_process_flags {
+	setuid
+	setgid
+	windows_verbatim_arguments
+	detached
+	windows_hide
+	windows_hide_console
+	windows_hide_gui
+	windows_file_path_exact_name
+}
 
 pub fn uv_spawn(loop &C.uv_loop_t, handle &C.uv_process_t, options &C.uv_process_options_t) int {
 	return C.uv_spawn(loop, handle, options)
@@ -875,6 +906,227 @@ pub fn process_kill(handle &C.uv_process_t, signum int) int {
 
 pub fn kill(pid int, signum int) int {
 	return C.uv_kill(pid, signum)
+}
+
+// work functions
+
+pub fn queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int)) {
+	C.uv_queue_work(loop, work, work_cb, after_work_cb)
+}
+
+fn C.uv_cancel(req &C.uv_req_t) int
+
+pub fn cancel(req &C.uv_req_t) int {
+	return C.uv_cancel(req)
+}
+
+// memory functions
+
+fn C.uv_getrusage(rusage &C.uv_rusage_t) int
+
+@[typedef]
+pub struct C.uv_timeval_t {}
+
+@[typedef]
+pub struct C.uv_rusage_t {
+	ru_utime    C.uv_timeval_t
+	ru_stime    C.uv_timeval_t
+	ru_maxrss   u64
+	ru_ixrss    u64
+	ru_idrss    u64
+	ru_isrss    u64
+	ru_minflt   u64
+	ru_majflt   u64
+	ru_nswap    u64
+	ru_inblock  u64
+	ru_oublock  u64
+	ru_msgsnd   u64
+	ru_msgrcv   u64
+	ru_nsignals u64
+	ru_nvcsw    u64
+	ru_nivcsw   u64
+}
+
+fn C.uv_setup_args(argc int, argv &&char) &&char
+
+pub fn setup_args(argc int, argv &&char) &&char {
+	return C.uv_setup_args(argc, argv)
+}
+
+fn C.uv_get_process_title(title &char, size usize) int
+
+pub fn get_process_title(title &char, size usize) int {
+	return C.uv_get_process_title(title, size)
+}
+
+fn C.uv_set_process_title(const_title &char) int
+
+pub fn set_process_title(const_title &char) int {
+	return C.uv_set_process_title(const_title)
+}
+
+fn C.uv_resident_set_memory(rss &usize) int
+
+pub fn resident_set_memory(rss &usize) int {
+	return C.uv_resident_set_memory(rss)
+}
+
+fn C.uv_uptime(uptime &f64) int
+
+pub fn uptime(uptime &f64) int {
+	return C.uv_uptime(uptime)
+}
+
+fn C.uv_get_osfhandle(fd int) int
+
+pub fn get_osfhandle(fd int) int {
+	return C.uv_get_osfhandle(fd)
+}
+
+fn C.uv_set_osfhandle(os_fd int) int
+
+pub fn set_osfhandle(os_fd int) int {
+	return C.uv_set_osfhandle(os_fd)
+}
+
+pub fn getrusage(rusage &C.uv_rusage_t) int {
+	return C.uv_getrusage(rusage)
+}
+
+// os functions
+
+fn C.uv_os_homedir(buf &char, size &usize) int
+
+pub fn os_homedir(buf &char, size &usize) int {
+	return C.uv_os_homedir(buf, size)
+}
+
+fn C.uv_os_tmpdir(buff &char, size &usize) int
+
+pub fn os_tmpdir(buf &char, size &usize) int {
+	return C.uv_os_tmpdir(buf, size)
+}
+
+fn C.uv_os_get_passwd(pwd &C.uv_passwd_t) int
+
+pub fn os_get_passwd(pwd &C.uv_passwd_t) int {
+	return C.uv_os_get_passwd(pwd)
+}
+
+fn C.uv_os_free_passwd(pwd &C.uv_passwd_t)
+
+pub fn os_free_passwd(pwd &C.uv_passwd_t) {
+	C.uv_os_free_passwd(pwd)
+}
+
+@[typedef]
+pub struct C.uv_uid_t {}
+
+fn C.uv_os_get_passwd2(pwd &C.uv_passwd_t, uid C.uv_uid_t) int
+
+pub fn os_get_passwd2(pwd &C.uv_passwd_t, uid C.uv_uid_t) int {
+	return C.uv_os_get_passwd2(pwd, uid)
+}
+
+fn C.uv_os_get_group(group &C.uv_group_t, gid C.uv_uid_t) int
+
+pub fn os_get_group(group &C.uv_group_t, gid C.uv_uid_t) int {
+	return C.uv_os_get_group(group, gid)
+}
+
+fn C.uv_os_free_group(group &C.uv_group_t)
+
+pub fn os_free_group(group &C.uv_group_t) {
+	C.uv_os_free_group(group)
+}
+
+fn C.uv_os_getpid() int
+
+pub fn os_getpid() int {
+	return C.uv_os_getpid()
+}
+
+fn C.uv_os_getppid() int
+
+pub fn os_getppid() int {
+	return C.uv_os_getppid()
+}
+
+fn C.uv_os_getpriority(pid int, priority &int) int
+
+pub fn os_getpriority(pid int, priority &int) int {
+	return C.uv_os_getpriority(pid, priority)
+}
+
+fn C.uv_os_setpriority(pid int, priority int) int
+
+pub fn os_setpriority(pid int, priority int) int {
+	return C.uv_os_setpriority(pid, priority)
+}
+
+// cpu functions
+
+@[typedef]
+pub struct C.uv_thread_t {}
+
+pub enum Uv_thread_priority {
+	highest      = 2
+	above_normal = 1
+	normal       = 0
+	below_normal = -1
+	lowest       = -2
+}
+
+fn C.uv_thread_getpriority(tid &C.uv_thread_t, priority &int) int
+
+pub fn thread_getpriority(tid &C.uv_thread_t, priority &int) int {
+	return C.uv_thread_getpriority(tid, priority)
+}
+
+fn C.uv_thread_setpriority(tid &C.uv_thread_t, priority Uv_thread_priority) int
+
+pub fn thread_setpriority(tid &C.uv_thread_t, priority Uv_thread_priority) int {
+	return C.uv_thread_setpriority(tid, priority)
+}
+
+fn C.uv_available_parallelism() usize
+
+pub fn available_parallelism() usize {
+	return C.uv_available_parallelism()
+}
+
+fn C.uv_cpu_info(cpu_infos &&C.uv_cpu_info_t, count &int) int
+
+pub fn cpu_info(cpu_infos &&C.uv_cpu_info_t, count &int) int {
+	return C.uv_cpu_info(cpu_infos, count)
+}
+
+fn C.uv_free_cpu_info(cpu_infos &&C.uv_cpu_info_t, count int)
+
+pub fn free_cpu_info(cpu_infos &&C.uv_cpu_info_t, count int) {
+	C.uv_free_cpu_info(cpu_infos, count)
+}
+
+fn C.uv_cpumask_size() int
+
+pub fn cpumask_size() int {
+	return C.uv_cpumask_size()
+}
+
+// REVIEW - this is now checked up to line 1337 of 1972
+
+// signal functions
+
+pub fn signal_init(loop &C.uv_loop_t, handle &C.uv_signal_t) int {
+	return C.uv_signal_init(loop, handle)
+}
+
+pub fn signal_start(handle &C.uv_signal_t, cb fn (handle &C.uv_signal_t, signum int), signum int) int {
+	return C.uv_signal_start(handle, cb, signum)
+}
+
+pub fn signal_stop(handle &C.uv_signal_t) int {
+	return C.uv_signal_stop(handle)
 }
 
 // fs functions
@@ -1013,10 +1265,4 @@ pub fn fs_poll_start(handle &C.uv_fs_poll_t, cb fn (handle &C.uv_fs_poll_t, stat
 
 pub fn fs_poll_stop(handle &C.uv_fs_poll_t) int {
 	return C.uv_fs_poll_stop(handle)
-}
-
-// misc functions
-
-pub fn queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int)) {
-	C.uv_queue_work(loop, work, work_cb, after_work_cb)
 }

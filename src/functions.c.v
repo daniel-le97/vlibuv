@@ -49,9 +49,7 @@ fn C.uv_idle_stop(handle &C.uv_idle_t) int
 fn C.uv_async_init(loop &C.uv_loop_t, handle &C.uv_async_t, cb fn (handle &C.uv_async_t)) int
 fn C.uv_async_send(handle &C.uv_async_t) int
 
-fn C.uv_getaddrinfo(loop &C.uv_loop_t, req &C.uv_getaddrinfo_t, cb fn (req &C.uv_getaddrinfo_t, status int, res &C.addrinfo), node &char, service &char, hints &C.addrinfo) int
-fn C.uv_freeaddrinfo(addr &C.addrinfo)
-fn C.uv_ip4_addr(&char, int, &C.sockaddr) int
+
 
 fn C.uv_spawn(loop &C.uv_loop_t, handle &C.uv_process_t, options &C.uv_process_options_t) int
 fn C.uv_process_kill(handle &C.uv_process_t, signum int) int
