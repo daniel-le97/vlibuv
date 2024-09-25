@@ -68,10 +68,7 @@ fn C.uv_pipe_pending_count(handle &C.uv_pipe_t) int
 fn C.uv_pipe_pending_type(handle &C.uv_pipe_t) int
 fn C.uv_pipe_chmod(handle &C.uv_pipe_t, flags int) int
 
-fn C.uv_tty_init(loop &C.uv_loop_t, handle &C.uv_tty_t, fd int, readable int) int
-fn C.uv_tty_set_mode(handle &C.uv_tty_t, mode int) int
-fn C.uv_tty_reset_mode() int
-fn C.uv_tty_get_winsize(handle &C.uv_tty_t, width &int, height &int) int
+
 
 
 // needed still, skipped to tcp
@@ -112,7 +109,7 @@ fn C.uv_udp_set_multicast_ttl(handle &C.uv_udp_t, ttl int) int
 fn C.uv_udp_set_multicast_interface(handle &C.uv_udp_t, interface_addr &char) int
 fn C.uv_udp_set_broadcast(handle &C.uv_udp_t, on int) int
 fn C.uv_udp_set_ttl(handle &C.uv_udp_t, ttl int) int
-fn C.uv_udp_send(req &C.uv_udp_send_t, handle &C.uv_udp_t, bufs &C.uv_buf_t, nbufs u32, addr &C.sockaddr, cb fn (req &C.uv_udp_send_t, status int)) int
+fn C.uv_udp_send(req &C.uv_udp_send_t, handle &C.uv_udp_t, bufs []&C.uv_buf_t, nbufs u32, addr &C.sockaddr, cb fn (req &C.uv_udp_send_t, status int)) int
 fn C.uv_udp_recv_start(handle &C.uv_udp_t, alloc_cb fn (handle &C.uv_handle_t, suggested_size usize, buf &C.uv_buf_t), recv_cb fn (handle &C.uv_udp_t, nread isize, buf &C.uv_buf_t, addr &C.sockaddr, flags u32)) int
 fn C.uv_udp_recv_stop(handle &C.uv_udp_t) int
 
