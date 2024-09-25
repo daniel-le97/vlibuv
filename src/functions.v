@@ -1,15 +1,42 @@
 module main
 
-pub fn loop_new() &C.uv_loop_t {
-	return C.uv_loop_new()
+fn C.uv_version() &u32
+
+pub fn version() &u32 {
+	return C.uv_version()
 }
 
-pub fn loop_delete(loop &C.uv_loop_t) {
-	C.uv_loop_delete(loop)
+fn C.uv_version_string() &char
+
+pub fn version_string() &char {
+	return C.uv_version_string()
 }
 
-pub fn run(loop &C.uv_loop_t, mode Mode) int {
-	return C.uv_run(loop, mode)
+fn C.uv_library_shutdown()
+
+pub fn library_shutdown() {
+	C.uv_library_shutdown()
+}
+
+// typedef void* (*uv_malloc_func)(size_t size);
+pub type Malloc_fn = fn (size usize) &u8
+
+// typedef void* (*uv_realloc_func)(void* ptr, size_t size);
+pub type Realloc_fn = fn (ptr voidptr, size usize) &u8
+
+// typedef void* (*uv_calloc_func)(size_t count, size_t size);
+pub type Calloc_fn = fn (count usize, size usize) &u8
+
+// typedef void (*uv_free_func)(void* ptr);
+pub type Free_fn = fn (ptr voidptr) voidptr
+
+fn C.uv_replace_allocator(malloc Malloc_fn, realloc Realloc_fn, calloc Calloc_fn, free Free_fn) int
+pub fn replace_allocator(malloc_fn Malloc_fn, realloc_cb Realloc_fn, calloc_cb Calloc_fn, free_cb Free_fn) int {
+	return C.uv_replace_allocator(malloc_fn, realloc_cb, calloc_cb, free_cb)
+}
+
+pub fn default_loop() &C.uv_loop_t {
+	return C.uv_default_loop()
 }
 
 pub fn loop_init(loop &C.uv_loop_t) int {
@@ -20,8 +47,36 @@ pub fn loop_close(loop &C.uv_loop_t) int {
 	return C.uv_loop_close(loop)
 }
 
-pub fn default_loop() &C.uv_loop_t {
-	return C.uv_default_loop()
+// this is deprecated, allocate the loop manually and use loop_init instead
+@[deprecated: 'allocate the loop manually and use loop_init instead']
+pub fn loop_new() &C.uv_loop_t {
+	return C.uv_loop_new()
+}
+
+// this function is depracated, use loop_close and free the memory manually instead
+@[deprecated: 'use loop_close and free the memory manually instead']
+pub fn loop_delete(loop &C.uv_loop_t) {
+	C.uv_loop_delete(loop)
+}
+
+pub fn loop_size() usize {
+	return C.uv_loop_size()
+}
+
+fn C.uv_loop_alive(const_loop &C.uv_loop_t) int
+
+pub fn loop_alive(const_loop &C.uv_loop_t) int {
+	return C.uv_loop_alive(const_loop)
+}
+
+// TODO idk how to handle the ... variadic
+// fn C.uv_loop_configure(loop &C.uv_loop_t, option Uv_loop_option, ...) int
+// pub fn loop_configure(loop &C.uv_loop_t, option Uv_loop_option, ...voidptr) int {
+// 	return C.uv_loop_configure(loop, option, ...voidptr)
+// }
+
+pub fn run(loop &C.uv_loop_t, mode Mode) int {
+	return C.uv_run(loop, mode)
 }
 
 pub fn stop(loop &C.uv_loop_t) {
@@ -36,16 +91,16 @@ pub fn unref(handle &C.uv_handle_t) {
 	C.uv_unref(handle)
 }
 
-pub fn has_ref(handle &C.uv_handle_t) int {
-	return C.uv_has_ref(handle)
+pub fn has_ref(const_handle &C.uv_handle_t) int {
+	return C.uv_has_ref(const_handle)
 }
 
 pub fn update_time(loop &C.uv_loop_t) {
 	C.uv_update_time(loop)
 }
 
-pub fn now(loop &C.uv_loop_t) u64 {
-	return C.uv_now(loop)
+pub fn now(const_loop &C.uv_loop_t) u64 {
+	return C.uv_now(const_loop)
 }
 
 pub fn backend_fd(loop &C.uv_loop_t) int {
@@ -56,21 +111,180 @@ pub fn backend_timeout(loop &C.uv_loop_t) int {
 	return C.uv_backend_timeout(loop)
 }
 
+pub type Alloc_cb = fn (handle &C.uv_handle_t, suggested_size usize, buf &C.uv_buf_t)
+
+pub type Read_cb = fn (stream &C.uv_stream_t, nread isize, buf &C.uv_buf_t)
+
+pub type Write_cb = fn (req &C.uv_write_t, status int)
+
+pub type Connect_cb = fn (req &C.uv_connect_t, status int)
+
+pub type Shutdown_cb = fn (req &C.uv_shutdown_t, status int)
+
+pub type Connection_cb = fn (server &C.uv_stream_t, status int)
+
+pub type Close_cb = fn (handle &C.uv_handle_t)
+
+pub type Poll_cb = fn (handle &C.uv_poll_t, status int, events int)
+
+pub type Timer_cb = fn (handle &C.uv_timer_t)
+
+pub type Async_cb = fn (handle &C.uv_async_t)
+
+pub type Prepare_cb = fn (handle &C.uv_prepare_t)
+
+pub type Check_cb = fn (handle &C.uv_check_t)
+
+pub type Idle_cb = fn (handle &C.uv_idle_t)
+
+pub type Exit_cb = fn (handle &C.uv_process_t, exit_status i64, term_signal int)
+
+pub type Walk_cb = fn (handle &C.uv_handle_t, arg voidptr)
+
+pub type Fs_cb = fn (req &C.uv_fs_t)
+
+pub type Work_cb = fn (req &C.uv_work_t)
+
+pub type AfterWork_cb = fn (req &C.uv_work_t, status int)
+
+pub type Getaddrinfo_cb = fn (req &C.uv_getaddrinfo_t, status int, res &C.addrinfo)
+
+pub type Getnameinfo_cb = fn (req &C.uv_getnameinfo_t, status int, hostname &char, service &char)
+
+pub type Random_cb = fn (req &C.uv_random_t, status int, buf voidptr, buflen usize)
+
+pub enum Uv_clock_id {
+	monotonic = 0
+	realtime
+}
+
+pub type FsEvent_cb = fn (handle &C.uv_fs_event_t, const_filename &char, events int, status int)
+
+pub type FsPoll_cb = fn (handle &C.uv_fs_poll_t, status int, const_prev &C.uv_stat_t, const_curr &C.uv_stat_t)
+
+pub type Signal_cb = fn (handle &C.uv_signal_t, signum int)
+
+fn C.uv_translate_sys_error(sys_errno int) int
+
+pub fn translate_sys_error(sys_errno int) int {
+	return C.uv_translate_sys_error(sys_errno)
+}
+
+fn C.uv_strerror(err int) &char
+
+pub fn strerror(err int) &char {
+	return C.uv_strerror(err)
+}
+
+fn C.uv_err_name_r(err int, buff &char, buflen u64) &char
+
+pub fn err_name_r(err int, buff &char, buflen u64) &char {
+	return C.uv_err_name_r(err, buff, buflen)
+}
+
+fn C.uv_err_name(const_err int) &char
+
+pub fn err_name(const_err int) &char {
+	return C.uv_err_name(const_err)
+}
+
+// NOTE this is up to line 429 of uv.h
+
+fn C.uv_shutdown(req &C.uv_shutdown_t, handle &C.uv_stream_t, cb Shutdown_cb) int
+
+pub fn shutdown(req &C.uv_shutdown_t, handle &C.uv_stream_t, cb Shutdown_cb) int {
+	return C.uv_shutdown(req, handle, cb)
+}
+
+// handle functions
+fn C.uv_handle_size(handle_type Uv_handle_type) usize
+
+pub fn handle_size(handle_type Uv_handle_type) usize {
+	return C.uv_handle_size(handle_type)
+}
+
+fn C.uv_handle_get_type(const_handle &C.uv_handle_t) Uv_handle_type
+
+pub fn handle_get_type(const_handle &C.uv_handle_t) Uv_handle_type {
+	return C.uv_handle_get_type(const_handle)
+}
+
+fn C.uv_handle_type_name(handle_type Uv_handle_type) &char
+
+pub fn handle_type_name(const_handle_type Uv_handle_type) &char {
+	return C.uv_handle_type_name(const_handle_type)
+}
+
+fn C.uv_handle_get_data(const_handle &C.uv_handle_t) voidptr
+
+pub fn handle_get_data(const_handle &C.uv_handle_t) voidptr {
+	return C.uv_handle_get_data(const_handle)
+}
+
+fn C.uv_handle_get_loop(const_handle &C.uv_handle_t) &C.uv_loop_t
+
+pub fn handle_get_loop(const_handle &C.uv_handle_t) &C.uv_loop_t {
+	return C.uv_handle_get_loop(const_handle)
+}
+
+fn C.uv_handle_set_data(handle &C.uv_handle_t, data voidptr)
+
+pub fn handle_set_data(handle &C.uv_handle_t, data voidptr) {
+	C.uv_handle_set_data(handle, data)
+}
+
+// request functions
+
+fn C.uv_req_size(req_type Uv_req_type) usize
+
+pub fn req_size(req_type Uv_req_type) usize {
+	return C.uv_req_size(req_type)
+}
+
+fn C.uv_req_get_data(const_req &C.uv_req_t) voidptr
+
+pub fn req_get_data(const_req &C.uv_req_t) voidptr {
+	return C.uv_req_get_data(const_req)
+}
+
+fn C.uv_req_set_data(req &C.uv_req_t, data voidptr)
+
+pub fn req_set_data(req &C.uv_req_t, data voidptr) {
+	C.uv_req_set_data(req, data)
+}
+
+fn C.uv_req_get_type(const_req &C.uv_req_t) Uv_req_type
+
+pub fn req_get_type(const_req &C.uv_req_t) Uv_req_type {
+	return C.uv_req_get_type(const_req)
+}
+
+fn C.uv_req_type_name(req_type Uv_req_type) &char
+
+pub fn req_type_name(const_req_type Uv_req_type) &char {
+	return C.uv_req_type_name(const_req_type)
+}
+
+
+
+
+fn C.uv_is_active(const_handle &C.uv_handle_t) int
+
+pub fn is_active(const_handle &C.uv_handle_t) int {
+	return C.uv_is_active(const_handle)
+}
+
 pub fn walk(loop &C.uv_loop_t, walk_cb fn (handle &C.uv_handle_t, arg voidptr), arg voidptr) {
 	C.uv_walk(loop, walk_cb, arg)
 }
 
-pub fn loop_size() usize {
-	return C.uv_loop_size()
-}
 
-pub fn handle_size(handle_type Uv_handle_type, size int) usize {
-	return C.uv_handle_size(handle_type, size)
-}
+// ANCHOR this is up to line 500 of uv.h
 
-pub fn req_size(req_type Uv_req_type, size int) usize {
-	return C.uv_req_size(req_type, size)
-}
+
+
+
+
 
 // timer functions
 
@@ -220,9 +434,9 @@ pub fn pipe_bind(handle &C.uv_pipe_t, name &char) int {
 	return C.uv_pipe_bind(handle, name)
 }
 
-pub fn pipe_connect(req &C.uv_connect_t, handle &C.uv_pipe_t, name &char, cb fn (req &C.uv_connect_t, status int)) int {
-	return C.uv_pipe_connect(req, handle, name, cb)
-}
+// pub fn pipe_connect(req &C.uv_connect_t, handle &C.uv_pipe_t, name &char, cb fn (req &C.uv_connect_t, status int)) int {
+// 	return C.uv_pipe_connect(req, handle, name, cb)
+// }
 
 pub fn pipe_getsockname(handle &C.uv_pipe_t, name &char, namelen &usize) int {
 	return C.uv_pipe_getsockname(handle, name, namelen)
@@ -502,7 +716,3 @@ pub fn fs_poll_stop(handle &C.uv_fs_poll_t) int {
 pub fn queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int)) {
 	C.uv_queue_work(loop, work, work_cb, after_work_cb)
 }
-
-pub fn replace_allocator(malloc_cb fn (isize) &u8, realloc_cb fn (&u8, isize) &u8, calloc_cb fn (isize, isize) &u8, free_cb fn (voidptr) voidptr) int {
-	return C.uv_replace_allocator(malloc_cb, realloc_cb, calloc_cb, free_cb)
- }

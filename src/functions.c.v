@@ -155,4 +155,3 @@ fn C.uv_fs_poll_stop(handle &C.uv_fs_poll_t) int
 
 fn C.uv_queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int))
 
-fn C.uv_replace_allocator(fn (isize) &u8, fn (&u8, isize) &u8, fn (isize, isize) &u8, fn (voidptr) voidptr) int

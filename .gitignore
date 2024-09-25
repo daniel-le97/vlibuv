@@ -8,6 +8,8 @@ vlibuv
 *.dll
 ./src/src
 
+include/*
+
 src/thirdparty/*
 !src/thirdparty/src
 !src/thirdparty/include

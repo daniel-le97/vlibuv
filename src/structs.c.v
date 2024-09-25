@@ -77,6 +77,12 @@ pub enum Uv_fs_event_flags {
 	fs_event_recursive = 4
 }
 
+pub enum Uv_loop_option {
+	block_signal = 0
+	metrics_idle_time
+	loop_use_io_uring_sqpoll
+}
+
 // Loop, handle, and stream types
 @[typedef]
 pub struct C.uv_loop_t {}
@@ -133,8 +139,19 @@ pub struct C.uv_fs_poll_t {}
 pub struct C.uv_signal_t {}
 
 // Request types
+
+// struct Uv_req_fields {
+// 	req_type Uv_req_type
+// pub mut:
+// 	data voidptr
+// }
+
 @[typedef]
-pub struct C.uv_req_t {}
+pub struct C.uv_req_t {
+	req_type Uv_req_type
+pub mut:
+	data voidptr
+}
 
 @[typedef]
 pub struct C.uv_getaddrinfo_t {}
