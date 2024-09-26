@@ -283,8 +283,6 @@ pub fn walk(loop &C.uv_loop_t, walk_cb fn (handle &C.uv_handle_t, arg voidptr), 
 	C.uv_walk(loop, walk_cb, arg)
 }
 
-// ANCHOR this is up to line 500 of uv.h
-
 fn C.uv_print_all_handles(loop &C.uv_loop_t, file &C.FILE)
 
 pub fn print_all_handles(loop &C.uv_loop_t, file &C.FILE) {
@@ -1113,47 +1111,212 @@ pub fn cpumask_size() int {
 	return C.uv_cpumask_size()
 }
 
-// REVIEW - this is now checked up to line 1337 of 1972
+fn C.uv_interface_addresses(addresses &&C.uv_interface_address_t, count &int) int
 
-// signal functions
-
-pub fn signal_init(loop &C.uv_loop_t, handle &C.uv_signal_t) int {
-	return C.uv_signal_init(loop, handle)
+pub fn interface_addresses(addresses &&C.uv_interface_address_t, count &int) int {
+	return C.uv_interface_addresses(addresses, count)
 }
 
-pub fn signal_start(handle &C.uv_signal_t, cb fn (handle &C.uv_signal_t, signum int), signum int) int {
-	return C.uv_signal_start(handle, cb, signum)
+fn C.uv_free_interface_addresses(addresses &&C.uv_interface_address_t, count &int)
+
+pub fn free_interface_addresses(addresses &C.uv_interface_address_t, count &int) {
+	C.uv_free_interface_addresses(addresses, count)
 }
 
-pub fn signal_stop(handle &C.uv_signal_t) int {
-	return C.uv_signal_stop(handle)
+// env functions
+
+@[typedef]
+pub struct C.uv_env_item_t {
+	name  &char
+	value &char
 }
 
-// fs functions
+fn C.uv_os_environ(env_items &&C.uv_env_item_t) int
 
-pub fn fs_open(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, flags int, mode int, cb fn (req &C.uv_fs_t)) {
-	C.uv_fs_open(loop, req, path, flags, mode, cb)
+pub fn os_environ(env_items &&C.uv_env_item_t) int {
+	return C.uv_os_environ(env_items)
+}
+
+fn C.uv_os_free_environ(env_items &C.uv_env_item_t, count int)
+
+pub fn os_free_environ(env_items &C.uv_env_item_t, count int) {
+	C.uv_os_free_environ(env_items, count)
+}
+
+fn C.uv_os_getenv(const_name &char, buffer &char, size &usize) int
+
+pub fn os_getenv(const_name &char, buffer &char, size &usize) int {
+	return C.uv_os_getenv(const_name, buffer, size)
+}
+
+fn C.uv_os_setenv(const_name &char, const_value &char) int
+
+pub fn os_setenv(const_name &char, const_value &char) int {
+	return C.uv_os_setenv(const_name, const_value)
+}
+
+fn C.uv_os_unsetenv(const_name &char) int
+
+pub fn os_unsetenv(const_name &char) int {
+	return C.uv_os_unsetenv(const_name)
+}
+
+// metrics functions
+
+fn C.uv_os_gethostname(buffer &char, size &usize) int
+
+pub fn os_gethostname(buffer &char, size &usize) int {
+	return C.uv_os_gethostname(buffer, size)
+}
+
+fn C.uv_os_uname(buffer &C.uv_utsname_t) int
+
+pub fn os_uname(buffer &C.uv_utsname_t) int {
+	return C.uv_os_uname(buffer)
+}
+
+fn C.uv_metrics_info(loop &C.uv_loop_t, metrics &C.uv_metrics_t) int
+
+pub fn metrics_info(loop &C.uv_loop_t, metrics &C.uv_metrics_t) int {
+	return C.uv_metrics_info(loop, metrics)
+}
+
+fn C.uv_metrics_idle_time(loop &C.uv_loop_t) u64
+
+pub fn metrics_idle_time(loop &C.uv_loop_t) u64 {
+	return C.uv_metrics_idle_time(loop)
+}
+
+
+// fs helper functions
+
+pub enum Uv_fs_type {
+	fs_unknown = -1
+	fs_custom
+	fs_open
+	fs_close
+	fs_read
+	fs_write
+	fs_sendfile
+	fs_stat
+	fs_lstat
+	fs_fstat
+	fs_ftruncate
+	fs_utime
+	fs_futime
+	fs_access
+	fs_chmod
+	fs_fchmod
+	fs_fsync
+	fs_fdatasync
+	fs_unlink
+	fs_rmdir
+	fs_mkdir
+	fs_mktemp
+	fs_rename
+	fs_scandir
+	fs_link
+	fs_symlink
+	fs_readlink
+	fs_chown
+	fs_fchown
+	fs_realpath
+	fs_copyfile
+	fs_lchown
+	fs_opendir
+	fs_readdir
+	fs_closedir
+	fs_statfs
+	fs_mkstemp
+	fs_lutime
+}
+
+fn C.uv_fs_get_type(const_fs &C.uv_fs_t) Uv_fs_type
+
+pub fn fs_get_type(const_fs &C.uv_fs_t) Uv_fs_type {
+	return C.uv_fs_get_type(const_fs)
+}
+
+fn C.uv_fs_get_results(const_fs &C.uv_fs_t) &usize
+
+pub fn fs_get_results(const_fs &C.uv_fs_t) &usize {
+	return C.uv_fs_get_results(const_fs)
+}
+
+fn C.uv_fs_get_system_error(const_fs &C.uv_fs_t) int
+
+pub fn fs_get_system_error(const_fs &C.uv_fs_t) int {
+	return C.uv_fs_get_system_error(const_fs)
+}
+
+
+fn C.uv_fs_get_ptr(const_fs &C.uv_fs_t) &void
+
+pub fn fs_get_ptr(const_fs &C.uv_fs_t) &void {
+	return C.uv_fs_get_ptr(const_fs)
+}
+
+fn C.uv_fs_get_path(const_fs &C.uv_fs_t) &char
+
+pub fn fs_get_path(const_fs &C.uv_fs_t) &char {
+	return C.uv_fs_get_path(const_fs)
+}
+
+
+fn C.uv_fs_get_statbuf(const_fs &C.uv_fs_t) &C.stat
+
+pub fn fs_get_statbuf(const_fs &C.uv_fs_t) &C.stat {
+	return C.uv_fs_get_statbuf(const_fs)
+}
+
+fn C.uv_fs_req_cleanup(fs &C.uv_fs_t)
+
+pub fn fs_req_cleanup(fs &C.uv_fs_t) {
+	C.uv_fs_req_cleanup(fs)
 }
 
 pub fn fs_close(loop &C.uv_loop_t, req &C.uv_fs_t, file int, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_close(loop, req, file, cb)
 }
 
-pub fn fs_read(loop &C.uv_loop_t, req &C.uv_fs_t, file int, bufs &C.uv_buf_t, nbufs u32, offset i64, cb fn (req &C.uv_fs_t)) {
-	C.uv_fs_read(loop, req, file, bufs, nbufs, offset, cb)
+
+pub fn fs_open(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, flags int, mode int, cb fn (req &C.uv_fs_t)) {
+	C.uv_fs_open(loop, req, path, flags, mode, cb)
 }
 
-pub fn fs_write(loop &C.uv_loop_t, req &C.uv_fs_t, file int, bufs &C.uv_buf_t, nbufs u32, offset i64, cb fn (req &C.uv_fs_t)) {
-	C.uv_fs_write(loop, req, file, bufs, nbufs, offset, cb)
+pub fn fs_read(loop &C.uv_loop_t, req &C.uv_fs_t, file int, bufs &C.uv_buf_t, nbufs u32, offset i64, cb fn (req &C.uv_fs_t)) {
+	C.uv_fs_read(loop, req, file, bufs, nbufs, offset, cb)
 }
 
 pub fn fs_unlink(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_unlink(loop, req, path, cb)
 }
 
+pub fn fs_write(loop &C.uv_loop_t, req &C.uv_fs_t, file int, bufs &C.uv_buf_t, nbufs u32, offset i64, cb fn (req &C.uv_fs_t)) {
+	C.uv_fs_write(loop, req, file, bufs, nbufs, offset, cb)
+}
+
+
+// --------
+
+
+fn C.uv_fs_copyfile(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, const_new_path &char, flags int, cb fn (req &C.uv_fs_t)) int
+
+pub fn fs_copyfile(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, const_new_path &char, flags int, cb fn (req &C.uv_fs_t)) int {
+	return C.uv_fs_copyfile(loop, req, const_path, const_new_path, flags, cb)
+}
+
+
 pub fn fs_mkdir(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, mode int, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_mkdir(loop, req, path, mode, cb)
 }
+
+
+// ANCHOR this is checked up to line 1535 of 1972
+
+// pub fn fs_mkstemp(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, flags int, cb fn (req &C.uv_fs_t)) {
+// 	C.uv_fs_mkstemp(loop, req, path, flags, cb)
+// }
 
 pub fn fs_rmdir(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_rmdir(loop, req, path, cb)
@@ -1243,17 +1406,8 @@ pub fn fs_fchown(loop &C.uv_loop_t, req &C.uv_fs_t, file int, uid u32, gid u32, 
 	C.uv_fs_fchown(loop, req, file, uid, gid, cb)
 }
 
-pub fn fs_event_init(loop &C.uv_loop_t, handle &C.uv_fs_event_t) int {
-	return C.uv_fs_event_init(loop, handle)
-}
 
-pub fn fs_event_start(handle &C.uv_fs_event_t, cb fn (handle &C.uv_fs_event_t, filename &char, events int, status int), path &&char, flags int) int {
-	return C.uv_fs_event_start(handle, cb, path, flags)
-}
-
-pub fn fs_event_stop(handle &C.uv_fs_event_t) int {
-	return C.uv_fs_event_stop(handle)
-}
+// fs poll functions
 
 pub fn fs_poll_init(loop &C.uv_loop_t, handle &C.uv_fs_poll_t) int {
 	return C.uv_fs_poll_init(loop, handle)
@@ -1266,3 +1420,81 @@ pub fn fs_poll_start(handle &C.uv_fs_poll_t, cb fn (handle &C.uv_fs_poll_t, stat
 pub fn fs_poll_stop(handle &C.uv_fs_poll_t) int {
 	return C.uv_fs_poll_stop(handle)
 }
+
+// signal functions
+
+pub fn signal_init(loop &C.uv_loop_t, handle &C.uv_signal_t) int {
+	return C.uv_signal_init(loop, handle)
+}
+
+pub fn signal_start(handle &C.uv_signal_t, cb fn (handle &C.uv_signal_t, signum int), signum int) int {
+	return C.uv_signal_start(handle, cb, signum)
+}
+
+fn C.uv_signal_start_oneshot(signal &C.uv_signal_t, cb fn (signal &C.uv_signal_t, signum int), signum int) int
+
+pub fn signal_start_oneshot(signal &C.uv_signal_t, cb fn (signal &C.uv_signal_t, signum int), signum int) int {
+	return C.uv_signal_start_oneshot(signal, cb, signum)
+}
+
+
+pub fn signal_stop(handle &C.uv_signal_t) int {
+	return C.uv_signal_stop(handle)
+}
+
+
+fn C.uv_loadavg(avg &f64)
+
+pub fn loadavg(avg &f64) {
+	C.uv_loadavg(avg)
+}
+
+
+// fs event functions
+
+// Flags to be passed to uv_fs_event_start().
+pub enum Uv_fs_event_flags {
+
+
+   // By default, if the fs event watcher is given a directory name, we will
+   // watch for all events in that directory. This flags overrides this behavior
+   // and makes fs_event report only changes to the directory entry itself. This
+   // flag does not affect individual files watched.
+   // This flag is currently not implemented yet on any backend.
+	fs_event_watch_entry = 1
+
+   // By default uv_fs_event will try to use a kernel interface such as inotify
+   // or kqueue to detect events. This may not work on remote filesystems such
+   // as NFS mounts. This flag makes fs_event fall back to calling stat() on a
+   // regular interval.
+   // This flag is currently not implemented yet on any backend.
+	fs_event_stat        = 2
+
+   // By default, event watcher, when watching directory, is not registering
+   // (is ignoring) changes in it's subdirectories.
+   // This flag will override this behaviour on platforms that support it.
+	fs_event_recursive   = 4
+}
+
+pub fn fs_event_init(loop &C.uv_loop_t, handle &C.uv_fs_event_t) int {
+	return C.uv_fs_event_init(loop, handle)
+}
+
+pub fn fs_event_start(handle &C.uv_fs_event_t, cb fn (handle &C.uv_fs_event_t, filename &char, events int, status int), path &&char, flags int) int {
+	return C.uv_fs_event_start(handle, cb, path, flags)
+}
+
+pub fn fs_event_stop(handle &C.uv_fs_event_t) int {
+	return C.uv_fs_event_stop(handle)
+}
+
+
+pub fn fs_event_getpath(handle &C.uv_fs_event_t, path &char, size &usize) int {
+	return C.uv_fs_event_getpath(handle, path, size)
+}
+
+
+
+// ipv4 functions
+
+fn C.uv_ip4_name(addr &C.sockaddr_in, ip &char, ip_size usize) int
