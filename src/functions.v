@@ -1311,12 +1311,18 @@ pub fn fs_mkdir(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, mode int, cb fn (
 	C.uv_fs_mkdir(loop, req, path, mode, cb)
 }
 
+fn C.uv_fs_mkdtemp(loop &C.uv_loop_t, req &C.uv_fs_t, const_tpl &char, cb fn (req &C.uv_fs_t)) int
 
-// ANCHOR this is checked up to line 1535 of 1972
+pub fn fs_mkdtemp(loop &C.uv_loop_t, req &C.uv_fs_t, const_tpl &char, cb fn (req &C.uv_fs_t)) int {
+	return C.uv_fs_mkdtemp(loop, req, const_tpl, cb)
+}
 
-// pub fn fs_mkstemp(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, flags int, cb fn (req &C.uv_fs_t)) {
-// 	C.uv_fs_mkstemp(loop, req, path, flags, cb)
-// }
+
+fn C.uv_fs_mkstemp(loop &C.uv_loop_t, req &C.uv_fs_t, const_tpl &char, cb fn (req &C.uv_fs_t)) int
+
+pub fn fs_mkstemp(loop &C.uv_loop_t, req &C.uv_fs_t, const_tpl &char, flags int, cb fn (req &C.uv_fs_t)) {
+	C.uv_fs_mkstemp(loop, req, const_tpl, cb)
+}
 
 pub fn fs_rmdir(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_rmdir(loop, req, path, cb)
@@ -1330,6 +1336,26 @@ pub fn fs_scandir_next(req &C.uv_fs_t, ent &C.uv_dirent_t) int {
 	return C.uv_fs_scandir_next(req, ent)
 }
 
+
+fn C.uv_fs_opendir(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, cb fn (req &C.uv_fs_t)) int
+
+pub fn fs_opendir(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, cb fn (req &C.uv_fs_t)) int {
+	return C.uv_fs_opendir(loop, req, const_path, cb)
+}
+
+
+fn C.uv_fs_readdir(loop &C.uv_loop_t, req &C.uv_fs_t, dir &C.uv_dir_t, cb fn (req &C.uv_fs_t)) int
+
+pub fn fs_readdir(loop &C.uv_loop_t, req &C.uv_fs_t, dir &C.uv_dir_t, cb fn (req &C.uv_fs_t)) int {
+	return C.uv_fs_readdir(loop, req, dir, cb)
+}
+
+fn C.uv_fs_closedir(loop &C.uv_loop_t, req &C.uv_fs_t, dir &C.uv_dir_t, cb fn (req &C.uv_fs_t)) int
+
+pub fn fs_closedir(loop &C.uv_loop_t, req &C.uv_fs_t, dir &C.uv_dir_t, cb fn (req &C.uv_fs_t)) int {
+	return C.uv_fs_closedir(loop, req, dir, cb)
+}
+
 pub fn fs_stat(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_stat(loop, req, path, cb)
 }
@@ -1338,8 +1364,8 @@ pub fn fs_fstat(loop &C.uv_loop_t, req &C.uv_fs_t, file int, cb fn (req &C.uv_fs
 	C.uv_fs_fstat(loop, req, file, cb)
 }
 
-pub fn fs_rename(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, new_path &char, cb fn (req &C.uv_fs_t)) {
-	C.uv_fs_rename(loop, req, path, new_path, cb)
+pub fn fs_rename(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, const_new_path &char, cb fn (req &C.uv_fs_t)) {
+	C.uv_fs_rename(loop, req, const_path, const_new_path, cb)
 }
 
 pub fn fs_fsync(loop &C.uv_loop_t, req &C.uv_fs_t, file int, cb fn (req &C.uv_fs_t)) {
@@ -1358,52 +1384,89 @@ pub fn fs_sendfile(loop &C.uv_loop_t, req &C.uv_fs_t, out_fd int, in_fd int, in_
 	C.uv_fs_sendfile(loop, req, out_fd, in_fd, in_offset, length, cb)
 }
 
-pub fn fs_access(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, mode int, cb fn (req &C.uv_fs_t)) {
-	C.uv_fs_access(loop, req, path, mode, cb)
+pub fn fs_access(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, mode int, cb fn (req &C.uv_fs_t)) {
+	C.uv_fs_access(loop, req, const_path, mode, cb)
 }
 
-pub fn fs_chmod(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, mode int, cb fn (req &C.uv_fs_t)) {
-	C.uv_fs_chmod(loop, req, path, mode, cb)
+pub fn fs_chmod(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, mode int, cb fn (req &C.uv_fs_t)) {
+	C.uv_fs_chmod(loop, req, const_path, mode, cb)
 }
 
 pub fn fs_fchmod(loop &C.uv_loop_t, req &C.uv_fs_t, file int, mode int, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_fchmod(loop, req, file, mode, cb)
 }
 
-pub fn fs_utime(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) {
-	C.uv_fs_utime(loop, req, path, atime, mtime, cb)
+pub fn fs_utime(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) {
+	C.uv_fs_utime(loop, req, const_path, atime, mtime, cb)
+}
+
+fn C.uv_fs_utime_ex(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, btime f64,atime f64, mtime f64, cb fn (req &C.uv_fs_t)) int
+
+pub fn fs_utime_ex(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, btime f64,atime f64, mtime f64, cb fn (req &C.uv_fs_t)) int {
+	return C.uv_fs_utime_ex(loop, req, const_path, btime, atime, mtime, cb)
 }
 
 pub fn fs_futime(loop &C.uv_loop_t, req &C.uv_fs_t, file int, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_futime(loop, req, file, atime, mtime, cb)
 }
 
+fn C.uv_fs_futime_ex(loop &C.uv_loop_t, req &C.uv_fs_t, file int, btime f64, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) int
+
+pub fn fs_futime_ex(loop &C.uv_loop_t, req &C.uv_fs_t, file int, btime f64, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) int {
+	return C.uv_fs_futime_ex(loop, req, file, btime, atime, mtime, cb)
+}
+
+fn C.uv_fs_lutime(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) int
+
+pub fn fs_lutime(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) int {
+	return C.uv_fs_lutime(loop, req, const_path, atime, mtime, cb)
+}
+
 pub fn fs_lstat(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_lstat(loop, req, path, cb)
 }
 
-pub fn fs_link(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, new_path &char, cb fn (req &C.uv_fs_t)) {
-	C.uv_fs_link(loop, req, path, new_path, cb)
+pub fn fs_link(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, const_new_path &char, cb fn (req &C.uv_fs_t)) {
+	C.uv_fs_link(loop, req, const_path, const_new_path, cb)
 }
 
-pub fn fs_symlink(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, new_path &char, flags int, cb fn (req &C.uv_fs_t)) {
-	C.uv_fs_symlink(loop, req, path, new_path, flags, cb)
+pub fn fs_symlink(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, const_new_path &char, flags int, cb fn (req &C.uv_fs_t)) {
+	C.uv_fs_symlink(loop, req, const_path, const_new_path, flags, cb)
 }
 
-pub fn fs_readlink(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t)) {
-	C.uv_fs_readlink(loop, req, path, cb)
+pub fn fs_readlink(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, cb fn (req &C.uv_fs_t)) {
+	C.uv_fs_readlink(loop, req, const_path, cb)
 }
 
-pub fn fs_realpath(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t)) {
-	C.uv_fs_realpath(loop, req, path, cb)
+pub fn fs_realpath(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, cb fn (req &C.uv_fs_t)) {
+	C.uv_fs_realpath(loop, req, const_path, cb)
 }
 
-pub fn fs_chown(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, uid u32, gid u32, cb fn (req &C.uv_fs_t)) {
-	C.uv_fs_chown(loop, req, path, uid, gid, cb)
+fn C.uv_fs_fchmod(loop &C.uv_loop_t, req &C.uv_fs_t, file int, mode int, cb fn (req &C.uv_fs_t)) int
+
+pub fn fs_fchmod(loop &C.uv_loop_t, req &C.uv_fs_t, file int, mode int, cb fn (req &C.uv_fs_t)) int {
+	return C.uv_fs_fchmod(loop, req, file, mode, cb)
 }
 
-pub fn fs_fchown(loop &C.uv_loop_t, req &C.uv_fs_t, file int, uid u32, gid u32, cb fn (req &C.uv_fs_t)) {
+pub fn fs_chown(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, uid usize, gid usize, cb fn (req &C.uv_fs_t)) {
+	C.uv_fs_chown(loop, req, const_path, uid, gid, cb)
+}
+
+pub fn fs_fchown(loop &C.uv_loop_t, req &C.uv_fs_t, file int, uid usize, gid usize, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_fchown(loop, req, file, uid, gid, cb)
+}
+
+fn C.uv_fs_lchown(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, uid usize, gid usize, cb fn (req &C.uv_fs_t)) int
+
+pub fn fs_lchown(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, uid usize, gid usize, cb fn (req &C.uv_fs_t)) int {
+	return C.uv_fs_lchown(loop, req, const_path, uid, gid, cb)
+}
+
+
+fn C.uv_fs_statfs(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, cb fn (req &C.uv_fs_t)) int
+
+pub fn fs_statfs(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, cb fn (req &C.uv_fs_t)) {
+	C.uv_fs_statfs(loop, req, const_path, cb)
 }
 
 
@@ -1413,13 +1476,21 @@ pub fn fs_poll_init(loop &C.uv_loop_t, handle &C.uv_fs_poll_t) int {
 	return C.uv_fs_poll_init(loop, handle)
 }
 
-pub fn fs_poll_start(handle &C.uv_fs_poll_t, cb fn (handle &C.uv_fs_poll_t, status int, prev &C.uv_stat_t, curr &C.uv_stat_t), path &char, interval u32) int {
+pub fn fs_poll_start(handle &C.uv_fs_poll_t, cb fn (handle &C.uv_fs_poll_t, status int, const_prev &C.uv_stat_t, const_curr &C.uv_stat_t), const_path &char, interval usize) int {
 	return C.uv_fs_poll_start(handle, cb, path, interval)
 }
 
 pub fn fs_poll_stop(handle &C.uv_fs_poll_t) int {
 	return C.uv_fs_poll_stop(handle)
 }
+
+fn C.uv_fs_poll_getpath(handle &C.uv_fs_poll_t, path &char, size &usize) int
+
+pub fn fs_poll_getpath(handle &C.uv_fs_poll_t, path &char, size &usize) int {
+	return C.uv_fs_poll_getpath(handle, path, size)
+}
+
+// ANCHOR up to 1744 of uv.h
 
 // signal functions
 
