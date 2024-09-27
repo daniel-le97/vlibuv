@@ -1,8 +1,10 @@
 module main
 
-fn C.uv_version() &u32
+// unsigned int = usize
 
-pub fn version() &u32 {
+fn C.uv_version() &usize
+
+pub fn version() &usize {
 	return C.uv_version()
 }
 
@@ -19,10 +21,10 @@ pub fn library_shutdown() {
 }
 
 // typedef void* (*uv_malloc_func)(size_t size);
-pub type Malloc_fn = fn (size usize) &u8
+pub type Malloc_fn = fn (size isize) &u8
 
 // typedef void* (*uv_realloc_func)(void* ptr, size_t size);
-pub type Realloc_fn = fn (ptr voidptr, size usize) &u8
+pub type Realloc_fn = fn (ptr &u8, size isize) &u8
 
 // typedef void* (*uv_calloc_func)(size_t count, size_t size);
 pub type Calloc_fn = fn (count usize, size usize) &u8

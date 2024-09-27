@@ -50,7 +50,6 @@ pub enum Uv_membership {
 	join_group
 }
 
-
 pub enum Uv_loop_option {
 	block_signal = 0
 	metrics_idle_time
@@ -59,6 +58,7 @@ pub enum Uv_loop_option {
 
 @[typedef]
 pub struct C.stat {}
+
 // Loop, handle, and stream types
 @[typedef]
 pub struct C.uv_loop_t {}
