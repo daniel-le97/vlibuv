@@ -50,32 +50,6 @@ pub enum Uv_membership {
 	join_group
 }
 
-pub enum Uv_fs_event_flags {
-	/*
-   * By default, if the fs event watcher is given a directory name, we will
-   * watch for all events in that directory. This flags overrides this behavior
-   * and makes fs_event report only changes to the directory entry itself. This
-   * flag does not affect individual files watched.
-   * This flag is currently not implemented yet on any backend.
-   */
-	fs_event_watch_entry = 1
-
-	/*
-   * By default uv_fs_event will try to use a kernel interface such as inotify
-   * or kqueue to detect events. This may not work on remote filesystems such
-   * as NFS mounts. This flag makes fs_event fall back to calling stat() on a
-   * regular interval.
-   * This flag is currently not implemented yet on any backend.
-   */
-	fs_event_stat = 2
-
-	/*
-   * By default, event watcher, when watching directory, is not registering
-   * (is ignoring) changes in it's subdirectories.
-   * This flag will override this behaviour on platforms that support it.
-   */
-	fs_event_recursive = 4
-}
 
 pub enum Uv_loop_option {
 	block_signal = 0
@@ -83,6 +57,8 @@ pub enum Uv_loop_option {
 	loop_use_io_uring_sqpoll
 }
 
+@[typedef]
+pub struct C.stat {}
 // Loop, handle, and stream types
 @[typedef]
 pub struct C.uv_loop_t {}

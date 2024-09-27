@@ -49,8 +49,6 @@ fn C.uv_idle_stop(handle &C.uv_idle_t) int
 fn C.uv_async_init(loop &C.uv_loop_t, handle &C.uv_async_t, cb fn (handle &C.uv_async_t)) int
 fn C.uv_async_send(handle &C.uv_async_t) int
 
-
-
 fn C.uv_spawn(loop &C.uv_loop_t, handle &C.uv_process_t, options &C.uv_process_options_t) int
 fn C.uv_process_kill(handle &C.uv_process_t, signum int) int
 fn C.uv_kill(pid int, signum int) int
@@ -65,9 +63,6 @@ fn C.uv_pipe_pending_instances(handle &C.uv_pipe_t, count int)
 fn C.uv_pipe_pending_count(handle &C.uv_pipe_t) int
 fn C.uv_pipe_pending_type(handle &C.uv_pipe_t) int
 fn C.uv_pipe_chmod(handle &C.uv_pipe_t, flags int) int
-
-
-
 
 // needed still, skipped to tcp
 fn C.uv_guess_handle(file int) int
@@ -146,7 +141,4 @@ fn C.uv_fs_poll_init(loop &C.uv_loop_t, handle &C.uv_fs_poll_t) int
 fn C.uv_fs_poll_start(handle &C.uv_fs_poll_t, cb fn (handle &C.uv_fs_poll_t, status int, prev &C.uv_stat_t, curr &C.uv_stat_t), path &char, interval u32) int
 fn C.uv_fs_poll_stop(handle &C.uv_fs_poll_t) int
 
-
-
 fn C.uv_queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int))
-
