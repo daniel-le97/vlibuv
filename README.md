@@ -5,6 +5,8 @@ note this is not fully complete
 
 about ~95% of the libuv api is available
 
+libuv's thread api, and string api do not yet compile
+
 this currently compiles libuv from source or a static library on macos, other platforms have not yet been tested
 
 
