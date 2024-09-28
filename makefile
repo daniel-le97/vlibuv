@@ -14,16 +14,16 @@ run:
 	v run .
 
 update:
-	rm -rf ./src/thirdparty
-	mkdir -p ./src/thirdparty
-	cd ./src/thirdparty && git init
-	cd ./src/thirdparty && git remote add origin https://github.com/libuv/libuv.git
-	cd ./src/thirdparty && git config core.sparseCheckout true
+	rm -rf ./vuv/thirdparty
+	mkdir -p ./vuv/thirdparty
+	cd ./vuv/thirdparty && git init
+	cd ./vuv/thirdparty && git remote add origin https://github.com/libuv/libuv.git
+	cd ./vuv/thirdparty && git config core.sparseCheckout true
 	# Specify the files and directories you want to include
-	echo "include/" >> ./src/thirdparty/.git/info/sparse-checkout
-	echo "src/" >> ./src/thirdparty/.git/info/sparse-checkout
-	echo "LICENSE*" >> ./src/thirdparty/.git/info/sparse-checkout
-	echo "README*" >> ./src/thirdparty/.git/info/sparse-checkout
+	echo "include/" >> ./vuv/thirdparty/.git/info/sparse-checkout
+	echo "src/" >> ./vuv/thirdparty/.git/info/sparse-checkout
+	echo "LICENSE*" >> ./vuv/thirdparty/.git/info/sparse-checkout
+	echo "README*" >> ./vuv/thirdparty/.git/info/sparse-checkout
 	# Exclude the docs/src directory
-	echo "!docs/src/" >> ./src/thirdparty/.git/info/sparse-checkout
-	cd ./src/thirdparty && git pull origin master
+	echo "!docs/src/" >> ./vuv/thirdparty/.git/info/sparse-checkout
+	cd ./vuv/thirdparty && git pull origin master
