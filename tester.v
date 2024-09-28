@@ -1,7 +1,5 @@
 module main
 
-// unsigned int = usize
-
 fn C.uv_version() &usize
 
 pub fn version() &usize {
@@ -9,6 +7,8 @@ pub fn version() &usize {
 }
 
 fn C.uv_version_string() &char
+
+fn C.uv_version() &usize
 
 pub fn version_string() &char {
 	return C.uv_version_string()
@@ -33,17 +33,24 @@ pub type Calloc_fn = fn (count usize, size usize) &u8
 pub type Free_fn = fn (ptr voidptr) voidptr
 
 fn C.uv_replace_allocator(malloc Malloc_fn, realloc Realloc_fn, calloc Calloc_fn, free Free_fn) int
+
 pub fn replace_allocator(malloc_fn Malloc_fn, realloc_cb Realloc_fn, calloc_cb Calloc_fn, free_cb Free_fn) int {
 	return C.uv_replace_allocator(malloc_fn, realloc_cb, calloc_cb, free_cb)
 }
+
+fn C.uv_default_loop() &C.uv_loop_t
 
 pub fn default_loop() &C.uv_loop_t {
 	return C.uv_default_loop()
 }
 
+fn C.uv_loop_init(loop &C.uv_loop_t) int
+
 pub fn loop_init(loop &C.uv_loop_t) int {
 	return C.uv_loop_init(loop)
 }
+
+fn C.uv_loop_close(loop &C.uv_loop_t) int
 
 pub fn loop_close(loop &C.uv_loop_t) int {
 	return C.uv_loop_close(loop)
@@ -51,15 +58,21 @@ pub fn loop_close(loop &C.uv_loop_t) int {
 
 // this is deprecated, allocate the loop manually and use loop_init instead
 @[deprecated: 'allocate the loop manually and use loop_init instead']
+fn C.uv_loop_new() &C.uv_loop_t
+
 pub fn loop_new() &C.uv_loop_t {
 	return C.uv_loop_new()
 }
 
 // this function is depracated, use loop_close and free the memory manually instead
 @[deprecated: 'use loop_close and free the memory manually instead']
+fn C.uv_loop_delete(loop &C.uv_loop_t)
+
 pub fn loop_delete(loop &C.uv_loop_t) {
 	C.uv_loop_delete(loop)
 }
+
+fn C.uv_loop_size() usize
 
 pub fn loop_size() usize {
 	return C.uv_loop_size()
@@ -72,11 +85,13 @@ pub fn loop_alive(const_loop &C.uv_loop_t) int {
 }
 
 // TODO idk how to handle the ... variadic
-fn C.uv_loop_configure(loop &C.uv_loop_t, option Uv_loop_option, ...) int
 
 // UV_EXTERN int uv_loop_configure(uv_loop_t* loop, uv_loop_option option, ...);
 
+fn C.uv_loop_configure(loop &C.uv_loop_t, option Uv_loop_option, ...) int
+
 // pub fn loop_configure(loop &C.uv_loop_t, option Uv_loop_option, ...voidptr) int {
+
 // 	return C.uv_loop_configure(loop, option, ...voidptr)
 // }
 
@@ -86,37 +101,55 @@ pub fn loop_fork(loop &C.uv_loop_t) int {
 	return C.uv_loop_fork(loop)
 }
 
+fn C.uv_run(loop &C.uv_loop_t, mode Mode) int
+
 pub fn run(loop &C.uv_loop_t, mode Mode) int {
 	return C.uv_run(loop, mode)
 }
+
+fn C.uv_stop(loop &C.uv_loop_t)
 
 pub fn stop(loop &C.uv_loop_t) {
 	C.uv_stop(loop)
 }
 
+fn C.uv_ref(handle &C.uv_handle_t)
+
 pub fn ref(handle &C.uv_handle_t) {
 	C.uv_ref(handle)
 }
+
+fn C.uv_unref(handle &C.uv_handle_t)
 
 pub fn unref(handle &C.uv_handle_t) {
 	C.uv_unref(handle)
 }
 
+fn C.uv_has_ref(handle &C.uv_handle_t) int
+
 pub fn has_ref(const_handle &C.uv_handle_t) int {
 	return C.uv_has_ref(const_handle)
 }
+
+fn C.uv_update_time(loop &C.uv_loop_t)
 
 pub fn update_time(loop &C.uv_loop_t) {
 	C.uv_update_time(loop)
 }
 
+fn C.uv_now(loop &C.uv_loop_t) u64
+
 pub fn now(const_loop &C.uv_loop_t) u64 {
 	return C.uv_now(const_loop)
 }
 
+fn C.uv_backend_fd(loop &C.uv_loop_t) int
+
 pub fn backend_fd(loop &C.uv_loop_t) int {
 	return C.uv_backend_fd(loop)
 }
+
+fn C.uv_backend_timeout(loop &C.uv_loop_t) int
 
 pub fn backend_timeout(loop &C.uv_loop_t) int {
 	return C.uv_backend_timeout(loop)
@@ -182,6 +215,8 @@ pub fn strerror(err int) &char {
 	return C.uv_strerror(err)
 }
 
+fn C.uv_err_name(const_err int) &char
+
 fn C.uv_err_name_r(err int, buff &char, buflen u64) &char
 
 pub fn err_name_r(err int, buff &char, buflen u64) &char {
@@ -196,6 +231,8 @@ pub fn err_name(const_err int) &char {
 
 fn C.uv_shutdown(req &C.uv_shutdown_t, handle &C.uv_stream_t, cb Shutdown_cb) int
 
+fn C.uv_shutdown(req &C.uv_shutdown_t, handle &C.uv_stream_t, cb fn (req &C.uv_shutdown_t, status int)) int
+
 pub fn shutdown(req &C.uv_shutdown_t, handle &C.uv_stream_t, cb Shutdown_cb) int {
 	return C.uv_shutdown(req, handle, cb)
 }
@@ -203,6 +240,10 @@ pub fn shutdown(req &C.uv_shutdown_t, handle &C.uv_stream_t, cb Shutdown_cb) int
 // handle functions
 
 fn C.uv_handle_size(handle_type Uv_handle_type) usize
+
+fn C.uv_handle_size(type, int) usize
+
+fn C.uv_handle_size(Uv_handle_type, int) usize
 
 pub fn handle_size(handle_type Uv_handle_type) usize {
 	return C.uv_handle_size(handle_type)
@@ -242,6 +283,10 @@ pub fn handle_set_data(handle &C.uv_handle_t, data voidptr) {
 
 fn C.uv_req_size(req_type Uv_req_type) usize
 
+fn C.uv_req_size(type, int) usize
+
+fn C.uv_req_size(Uv_req_type, int) usize
+
 pub fn req_size(req_type Uv_req_type) usize {
 	return C.uv_req_size(req_type)
 }
@@ -272,9 +317,13 @@ pub fn req_type_name(const_req_type Uv_req_type) &char {
 
 fn C.uv_is_active(const_handle &C.uv_handle_t) int
 
+fn C.uv_is_active(handle &C.uv_handle_t) int
+
 pub fn is_active(const_handle &C.uv_handle_t) int {
 	return C.uv_is_active(const_handle)
 }
+
+fn C.uv_walk(loop &C.uv_loop_t, walk_cb fn (handle &C.uv_handle_t, arg voidptr), arg voidptr)
 
 pub fn walk(loop &C.uv_loop_t, walk_cb fn (handle &C.uv_handle_t, arg voidptr), arg voidptr) {
 	C.uv_walk(loop, walk_cb, arg)
@@ -310,9 +359,11 @@ pub fn recv_buffer_size(handle &C.uv_handle_t, value &int) int {
 	return C.uv_recv_buffer_size(handle, value)
 }
 
+pub type Uv_os_fd_int = int
+
 fn C.uv_fileno(const_handle &C.uv_handle_t, fd &Uv_os_fd_int) int
 
-pub type Uv_os_fd_int = int
+fn C.uv_fileno(handle &C.uv_handle_t, fd &int) int
 
 pub fn fileno(const_handle &C.uv_handle_t, fd &Uv_os_fd_int) int {
 	return C.uv_fileno(const_handle, fd)
@@ -325,6 +376,7 @@ pub fn buf_init(base &char, len usize) C.uv_buf_t {
 }
 
 // TODO fds should be a fixed array of size 2 that holds 2 ints
+
 fn C.uv_pipe(fds []int, read_flags int, write_flags int) int
 
 pub fn pipe(fds []int, read_flags int, write_flags int) int {
@@ -332,6 +384,7 @@ pub fn pipe(fds []int, read_flags int, write_flags int) int {
 }
 
 // TODO socker_vector should be a fixed array of size 2 that holds 2 ints
+
 fn C.uv_socketpair(socker_type int, protocol int, socket_vector []int, flags0 int, flags1 int) int
 
 pub fn socketpair(socker_type int, protocol int, socket_vector []int, flags0 int, flags1 int) int {
@@ -346,6 +399,8 @@ pub fn stream_get_write_queue_size(const_stream &C.uv_stream_t) usize {
 
 fn C.uv_listen(stream &C.uv_stream_t, backlog int, cb Connection_cb) int
 
+fn C.uv_listen(stream &C.uv_stream_t, backlog int, cb fn (server &C.uv_stream_t, status int)) int
+
 pub fn listen(stream &C.uv_stream_t, backlog int, cb Connection_cb) int {
 	return C.uv_listen(stream, backlog, cb)
 }
@@ -358,6 +413,8 @@ pub fn accept(server &C.uv_stream_t, client &C.uv_stream_t) int {
 
 fn C.uv_read_start(stream &C.uv_stream_t, alloc_cb Alloc_cb, read_cb Read_cb) int
 
+fn C.uv_read_start(stream &C.uv_stream_t, alloc_cb fn (handle &C.uv_handle_t, suggested_size usize, buf &C.uv_buf_t), read_cb fn (stream &C.uv_stream_t, nread isize, buf &C.uv_buf_t)) int
+
 pub fn read_start(stream &C.uv_stream_t, alloc_cb Alloc_cb, read_cb Read_cb) int {
 	return C.uv_read_start(stream, alloc_cb, read_cb)
 }
@@ -369,14 +426,22 @@ pub fn read_stop(stream &C.uv_stream_t) int {
 }
 
 // TODO bufs is written as const uv_buf_t bufs[] in c, but I don't know how to handle that in v
+
 fn C.uv_write(req &C.uv_write_t, handle &C.uv_stream_t, const_bufs []&C.uv_buf_t, nbufs usize, cb Write_cb) int
+
+fn C.uv_write(req &C.uv_write_t, handle &C.uv_stream_t, bufs &C.uv_buf_t, nbufs u32, cb fn (req &C.uv_write_t, status int)) int
 
 pub fn write(req &C.uv_write_t, handle &C.uv_stream_t, const_bufs []&C.uv_buf_t, nbufs usize, cb Write_cb) int {
 	return C.uv_write(req, handle, const_bufs, nbufs, cb)
 }
 
 // TODO bufs is written as const uv_buf_t bufs[] in c, but I don't know how to handle that in v
+
 fn C.uv_write2(req &C.uv_write_t, handle &C.uv_stream_t, const_bufs []&C.uv_buf_t, nbufs usize, send_handle &C.uv_stream_t, cb Write_cb) int
+
+fn C.uv_write(req &C.uv_write_t, handle &C.uv_stream_t, const_bufs []&C.uv_buf_t, nbufs usize, cb Write_cb) int
+
+fn C.uv_write(req &C.uv_write_t, handle &C.uv_stream_t, bufs &C.uv_buf_t, nbufs u32, cb fn (req &C.uv_write_t, status int)) int
 
 pub fn write2(req &C.uv_write_t, handle &C.uv_stream_t, const_bufs []&C.uv_buf_t, nbufs usize, send_handle &C.uv_stream_t, cb Write_cb) int {
 	return C.uv_write2(req, handle, const_bufs, nbufs, send_handle, cb)
@@ -389,6 +454,8 @@ pub fn try_write(handle &C.uv_stream_t, const_bufs []&C.uv_buf_t, nbufs usize) i
 }
 
 fn C.uv_try_write2(handle &C.uv_stream_t, const_bufs []&C.uv_buf_t, nbufs usize, send_handle &C.uv_stream_t) int
+
+fn C.uv_try_write(handle &C.uv_stream_t, const_bufs []&C.uv_buf_t, nbufs usize) int
 
 pub fn try_write2(handle &C.uv_stream_t, const_bufs []&C.uv_buf_t, nbufs usize, send_handle &C.uv_stream_t) int {
 	return C.uv_try_write2(handle, const_bufs, nbufs, send_handle)
@@ -414,11 +481,15 @@ pub fn stream_set_blocking(handle &C.uv_stream_t, blocking int) int {
 
 fn C.uv_is_closing(const_handle &C.uv_handle_t) int
 
+fn C.uv_is_closing(handle &C.uv_handle_t) int
+
 pub fn is_closing(const_handle &C.uv_handle_t) int {
 	return C.uv_is_closing(const_handle)
 }
 
 // tcp functions
+
+fn C.uv_tcp_init(loop &C.uv_loop_t, handle &C.uv_tcp_t) int
 
 pub fn tcp_init(loop &C.uv_loop_t, handle &C.uv_tcp_t) int {
 	return C.uv_tcp_init(loop, handle)
@@ -426,21 +497,31 @@ pub fn tcp_init(loop &C.uv_loop_t, handle &C.uv_tcp_t) int {
 
 fn C.uv_tcp_init_ex(loop &C.uv_loop_t, handle &C.uv_tcp_t, flags usize) int
 
+fn C.uv_tcp_init(loop &C.uv_loop_t, handle &C.uv_tcp_t) int
+
 pub fn tcp_init_ex(loop &C.uv_loop_t, handle &C.uv_tcp_t, flags usize) int {
 	return C.uv_tcp_init_ex(loop, handle, flags)
 }
+
+fn C.uv_tcp_open(handle &C.uv_tcp_t, sock int) int
 
 pub fn tcp_open(handle &C.uv_tcp_t, sock int) int {
 	return C.uv_tcp_open(handle, sock)
 }
 
+fn C.uv_tcp_nodelay(handle &C.uv_tcp_t, enable int) int
+
 pub fn tcp_nodelay(handle &C.uv_tcp_t, enable int) int {
 	return C.uv_tcp_nodelay(handle, enable)
 }
 
+fn C.uv_tcp_keepalive(handle &C.uv_tcp_t, enable int, delay u32) int
+
 pub fn tcp_keepalive(handle &C.uv_tcp_t, enable int, delay u32) int {
 	return C.uv_tcp_keepalive(handle, enable, delay)
 }
+
+fn C.uv_tcp_simultaneous_accepts(handle &C.uv_tcp_t, enable int) int
 
 pub fn tcp_simultaneous_accepts(handle &C.uv_tcp_t, enable int) int {
 	return C.uv_tcp_simultaneous_accepts(handle, enable)
@@ -451,18 +532,27 @@ pub enum Uv_tcp_flags {
 	tcp_reuse_port
 }
 
+fn C.uv_tcp_bind(handle &C.uv_tcp_t, addr &C.sockaddr, flags u32) int
+
 pub fn tcp_bind(handle &C.uv_tcp_t, const_sockaddr &C.sockaddr, flags int) int {
 	return C.uv_tcp_bind(handle, const_sockaddr, flags)
 }
 
 // TODO maybe need to change namelen to usize or isize
+
+fn C.uv_tcp_getsockname(handle &C.uv_tcp_t, name &C.sockaddr, namelen &int) int
+
 pub fn tcp_getsockname(const_handle &C.uv_tcp_t, name &C.sockaddr, namelen &int) int {
 	return C.uv_tcp_getsockname(const_handle, name, namelen)
 }
 
+fn C.uv_tcp_getpeername(handle &C.uv_tcp_t, name &C.sockaddr, namelen &int) int
+
 pub fn tcp_getpeername(const_handle &C.uv_tcp_t, name &C.sockaddr, namelen &int) int {
 	return C.uv_tcp_getpeername(const_handle, name, namelen)
 }
+
+fn C.uv_tcp_connect(req &C.uv_connect_t, handle &C.uv_tcp_t, addr &C.sockaddr, cb fn (req &C.uv_connect_t, status int)) int
 
 pub fn tcp_connect(req &C.uv_connect_t, handle &C.uv_tcp_t, const_sockaddr &C.sockaddr, cb fn (req &C.uv_connect_t, status int)) int {
 	return C.uv_tcp_connect(req, handle, const_sockaddr, cb)
@@ -521,19 +611,27 @@ pub type Udp_recv_cb = fn (handle &C.uv_udp_t, nread isize, const_buf &C.uv_buf_
 
 // udp functions
 
+fn C.uv_udp_init(loop &C.uv_loop_t, handle &C.uv_udp_t) int
+
 pub fn udp_init(loop &C.uv_loop_t, handle &C.uv_udp_t) int {
 	return C.uv_udp_init(loop, handle)
 }
 
 fn C.uv_udp_init_ex(loop &C.uv_loop_t, handle &C.uv_udp_t, flags Uv_udp_flags) int
 
+fn C.uv_udp_init(loop &C.uv_loop_t, handle &C.uv_udp_t) int
+
 pub fn udp_init_ex(loop &C.uv_loop_t, handle &C.uv_udp_t, flags Uv_udp_flags) int {
 	return C.uv_udp_init_ex(loop, handle, flags)
 }
 
+fn C.uv_udp_open(handle &C.uv_udp_t, sock int) int
+
 pub fn udp_open(handle &C.uv_udp_t, sock int) int {
 	return C.uv_udp_open(handle, sock)
 }
+
+fn C.uv_udp_bind(handle &C.uv_udp_t, addr &C.sockaddr, flags u32) int
 
 pub fn udp_bind(handle &C.uv_udp_t, const_sockaddr &C.sockaddr, flags int) int {
 	return C.uv_udp_bind(handle, const_sockaddr, flags)
@@ -551,9 +649,13 @@ pub fn udp_getpeername(const_handle &C.uv_udp_t, name &C.sockaddr, namelen &int)
 	return C.uv_udp_getpeername(const_handle, name, namelen)
 }
 
+fn C.uv_udp_getsockname(handle &C.uv_udp_t, name &C.sockaddr, namelen &int) int
+
 pub fn udp_getsockname(handle &C.uv_udp_t, name &C.sockaddr, namelen &int) int {
 	return C.uv_udp_getsockname(handle, name, namelen)
 }
+
+fn C.uv_udp_set_membership(handle &C.uv_udp_t, multicast_addr &char, interface_addr &char, membership Uv_membership) int
 
 pub fn udp_set_membership(handle &C.uv_udp_t, multicast_addr &char, interface_addr &char, membership Uv_membership) int {
 	return C.uv_udp_set_membership(handle, multicast_addr, interface_addr, membership)
@@ -566,25 +668,37 @@ pub fn udp_set_source_membership(handle &C.uv_udp_t, const_multicast_addr &char,
 		const_source_addr, membership)
 }
 
+fn C.uv_udp_set_multicast_loop(handle &C.uv_udp_t, on int) int
+
 pub fn udp_set_multicast_loop(handle &C.uv_udp_t, on int) int {
 	return C.uv_udp_set_multicast_loop(handle, on)
 }
+
+fn C.uv_udp_set_multicast_ttl(handle &C.uv_udp_t, ttl int) int
 
 pub fn udp_set_multicast_ttl(handle &C.uv_udp_t, ttl int) int {
 	return C.uv_udp_set_multicast_ttl(handle, ttl)
 }
 
+fn C.uv_udp_set_multicast_interface(handle &C.uv_udp_t, interface_addr &char) int
+
 pub fn udp_set_multicast_interface(handle &C.uv_udp_t, const_interface_addr &char) int {
 	return C.uv_udp_set_multicast_interface(handle, const_interface_addr)
 }
+
+fn C.uv_udp_set_broadcast(handle &C.uv_udp_t, on int) int
 
 pub fn udp_set_broadcast(handle &C.uv_udp_t, on int) int {
 	return C.uv_udp_set_broadcast(handle, on)
 }
 
+fn C.uv_udp_set_ttl(handle &C.uv_udp_t, ttl int) int
+
 pub fn udp_set_ttl(handle &C.uv_udp_t, ttl int) int {
 	return C.uv_udp_set_ttl(handle, ttl)
 }
+
+fn C.uv_udp_send(req &C.uv_udp_send_t, handle &C.uv_udp_t, bufs []&C.uv_buf_t, nbufs u32, addr &C.sockaddr, cb fn (req &C.uv_udp_send_t, status int)) int
 
 pub fn udp_send(req &C.uv_udp_send_t, handle &C.uv_udp_t, const_bufs []&C.uv_buf_t, nbufs u32, addr &C.sockaddr, cb fn (req &C.uv_udp_send_t, status int)) int {
 	return C.uv_udp_send(req, handle, const_bufs, nbufs, addr, cb)
@@ -596,6 +710,8 @@ pub fn udp_try_send(handle &C.uv_udp_t, const_bufs []&C.uv_buf_t, nbufs u32, con
 	return C.uv_udp_try_send(handle, const_bufs, nbufs, const_sockaddr)
 }
 
+fn C.uv_udp_recv_start(handle &C.uv_udp_t, alloc_cb fn (handle &C.uv_handle_t, suggested_size usize, buf &C.uv_buf_t), recv_cb fn (handle &C.uv_udp_t, nread isize, buf &C.uv_buf_t, addr &C.sockaddr, flags u32)) int
+
 pub fn udp_recv_start(handle &C.uv_udp_t, alloc_cb fn (handle &C.uv_handle_t, suggested_size usize, buf &C.uv_buf_t), recv_cb fn (handle &C.uv_udp_t, nread isize, buf &C.uv_buf_t, addr &C.sockaddr, flags u32)) int {
 	return C.uv_udp_recv_start(handle, alloc_cb, recv_cb)
 }
@@ -605,6 +721,8 @@ fn C.uv_udp_using_recvmmsg(const_handle &C.uv_udp_t) int
 pub fn udp_using_recvmmsg(const_handle &C.uv_udp_t) int {
 	return C.uv_udp_using_recvmmsg(const_handle)
 }
+
+fn C.uv_udp_recv_stop(handle &C.uv_udp_t) int
 
 pub fn udp_recv_stop(handle &C.uv_udp_t) int {
 	return C.uv_udp_recv_stop(handle)
@@ -680,28 +798,51 @@ pub fn tty_get_vterm_state(state &Uv_tty_vtermstate) int {
 
 fn C.uv_guess_handle(fd int) Uv_handle_type
 
+fn C.uv_guess_handle(file int) int
+
 pub fn guess_handle(fd int) Uv_handle_type {
 	return C.uv_guess_handle(fd)
 }
 
 // pipe functions
 
+fn C.uv_pipe(fds []int, read_flags int, write_flags int) int
+
+fn C.uv_pipe_init(loop &C.uv_loop_t, handle &C.uv_pipe_t, ipc int) int
+
 pub fn pipe_init(loop &C.uv_loop_t, handle &C.uv_pipe_t, ipc int) int {
 	return C.uv_pipe_init(loop, handle, ipc)
 }
 
+fn C.uv_pipe(fds []int, read_flags int, write_flags int) int
+
+fn C.uv_pipe_open(handle &C.uv_pipe_t, file int) int
+
 pub fn pipe_open(handle &C.uv_pipe_t, file int) int {
 	return C.uv_pipe_open(handle, file)
 }
+
+fn C.uv_pipe(fds []int, read_flags int, write_flags int) int
+
+fn C.uv_pipe_bind(handle &C.uv_pipe_t, name &char) int
 
 pub fn pipe_bind(handle &C.uv_pipe_t, const_name &char) int {
 	return C.uv_pipe_bind(handle, const_name)
 }
 
 fn C.uv_pipe_bind2(handle &C.uv_pipe_t, const_name &char, namelen usize, flags usize) int
+
+fn C.uv_pipe(fds []int, read_flags int, write_flags int) int
+
+fn C.uv_pipe_bind(handle &C.uv_pipe_t, name &char) int
+
 pub fn pipe_bind2(handle &C.uv_pipe_t, const_name &char, namelen usize, flags usize) int {
 	return C.uv_pipe_bind2(handle, const_name, namelen, flags)
 }
+
+fn C.uv_pipe(fds []int, read_flags int, write_flags int) int
+
+fn C.uv_pipe_connect(req &C.uv_connect_t, handle &C.uv_pipe_t, name &char, cb fn (req &C.uv_connect_t, status int))
 
 pub fn pipe_connect(req &C.uv_connect_t, handle &C.uv_pipe_t, const_name &char, cb fn (req &C.uv_connect_t, status int)) {
 	C.uv_pipe_connect(req, handle, const_name, cb)
@@ -709,29 +850,57 @@ pub fn pipe_connect(req &C.uv_connect_t, handle &C.uv_pipe_t, const_name &char, 
 
 fn C.uv_pipe_connect2(req &C.uv_connect_t, handle &C.uv_pipe_t, const_name &char, flags usize, cb fn (req &C.uv_connect_t, status int)) int
 
+fn C.uv_pipe(fds []int, read_flags int, write_flags int) int
+
+fn C.uv_pipe_connect(req &C.uv_connect_t, handle &C.uv_pipe_t, name &char, cb fn (req &C.uv_connect_t, status int))
+
 pub fn pipe_connect2(req &C.uv_connect_t, handle &C.uv_pipe_t, const_name &char, flags usize, cb fn (req &C.uv_connect_t, status int)) int {
 	return C.uv_pipe_connect2(req, handle, const_name, flags, cb)
 }
+
+fn C.uv_pipe(fds []int, read_flags int, write_flags int) int
+
+fn C.uv_pipe_getsockname(handle &C.uv_pipe_t, buffer &char, size &usize) int
 
 pub fn pipe_getsockname(handle &C.uv_pipe_t, name &char, namelen &usize) int {
 	return C.uv_pipe_getsockname(handle, name, namelen)
 }
 
+fn C.uv_pipe(fds []int, read_flags int, write_flags int) int
+
+fn C.uv_pipe_getpeername(handle &C.uv_pipe_t, buffer &char, size &usize) int
+
 pub fn pipe_getpeername(handle &C.uv_pipe_t, name &char, namelen &usize) int {
 	return C.uv_pipe_getpeername(handle, name, namelen)
 }
+
+fn C.uv_pipe(fds []int, read_flags int, write_flags int) int
+
+fn C.uv_pipe_pending_instances(handle &C.uv_pipe_t, count int)
 
 pub fn pipe_pending_instances(handle &C.uv_pipe_t, count int) {
 	C.uv_pipe_pending_instances(handle, count)
 }
 
+fn C.uv_pipe(fds []int, read_flags int, write_flags int) int
+
+fn C.uv_pipe_pending_count(handle &C.uv_pipe_t) int
+
 pub fn pipe_pending_count(handle &C.uv_pipe_t) int {
 	return C.uv_pipe_pending_count(handle)
 }
 
+fn C.uv_pipe(fds []int, read_flags int, write_flags int) int
+
+fn C.uv_pipe_pending_type(handle &C.uv_pipe_t) int
+
 pub fn pipe_pending_type(handle &C.uv_pipe_t) int {
 	return C.uv_pipe_pending_type(handle)
 }
+
+fn C.uv_pipe(fds []int, read_flags int, write_flags int) int
+
+fn C.uv_pipe_chmod(handle &C.uv_pipe_t, flags int) int
 
 pub fn pipe_chmod(handle &C.uv_pipe_t, flags int) int {
 	return C.uv_pipe_chmod(handle, flags)
@@ -739,19 +908,27 @@ pub fn pipe_chmod(handle &C.uv_pipe_t, flags int) int {
 
 // poll functions
 
+fn C.uv_poll_init(loop &C.uv_loop_t, handle &C.uv_poll_t, fd int) int
+
 pub fn poll_init(loop &C.uv_loop_t, handle &C.uv_poll_t, fd int) int {
 	return C.uv_poll_init(loop, handle, fd)
 }
 
 fn C.uv_poll_init_socket(loop &C.uv_loop_t, handle &C.uv_poll_t, socket int) int
 
+fn C.uv_poll_init(loop &C.uv_loop_t, handle &C.uv_poll_t, fd int) int
+
 pub fn poll_init_socket(loop &C.uv_loop_t, handle &C.uv_poll_t, socket int) int {
 	return C.uv_poll_init_socket(loop, handle, socket)
 }
 
+fn C.uv_poll_start(handle &C.uv_poll_t, events int, cb fn (handle &C.uv_poll_t, status int, events int)) int
+
 pub fn poll_start(handle &C.uv_poll_t, events int, cb fn (handle &C.uv_poll_t, status int, events int)) int {
 	return C.uv_poll_start(handle, events, cb)
 }
+
+fn C.uv_poll_stop(handle &C.uv_poll_t) int
 
 pub fn poll_stop(handle &C.uv_poll_t) int {
 	return C.uv_poll_stop(handle)
@@ -759,13 +936,19 @@ pub fn poll_stop(handle &C.uv_poll_t) int {
 
 // prepare functions
 
+fn C.uv_prepare_init(loop &C.uv_loop_t, handle &C.uv_prepare_t) int
+
 pub fn prepare_init(loop &C.uv_loop_t, handle &C.uv_prepare_t) int {
 	return C.uv_prepare_init(loop, handle)
 }
 
+fn C.uv_prepare_start(handle &C.uv_prepare_t, cb fn (handle &C.uv_prepare_t)) int
+
 pub fn prepare_start(handle &C.uv_prepare_t, cb fn (handle &C.uv_prepare_t)) int {
 	return C.uv_prepare_start(handle, cb)
 }
+
+fn C.uv_prepare_stop(handle &C.uv_prepare_t) int
 
 pub fn prepare_stop(handle &C.uv_prepare_t) int {
 	return C.uv_prepare_stop(handle)
@@ -773,13 +956,19 @@ pub fn prepare_stop(handle &C.uv_prepare_t) int {
 
 // check functions
 
+fn C.uv_check_init(loop &C.uv_loop_t, handle &C.uv_check_t) int
+
 pub fn check_init(loop &C.uv_loop_t, handle &C.uv_check_t) int {
 	return C.uv_check_init(loop, handle)
 }
 
+fn C.uv_check_start(handle &C.uv_check_t, cb fn (handle &C.uv_check_t)) int
+
 pub fn check_start(handle &C.uv_check_t, cb fn (handle &C.uv_check_t)) int {
 	return C.uv_check_start(handle, cb)
 }
+
+fn C.uv_check_stop(handle &C.uv_check_t) int
 
 pub fn check_stop(handle &C.uv_check_t) int {
 	return C.uv_check_stop(handle)
@@ -787,13 +976,19 @@ pub fn check_stop(handle &C.uv_check_t) int {
 
 // idle functions
 
+fn C.uv_idle_init(loop &C.uv_loop_t, handle &C.uv_idle_t) int
+
 pub fn idle_init(loop &C.uv_loop_t, handle &C.uv_idle_t) int {
 	return C.uv_idle_init(loop, handle)
 }
 
+fn C.uv_idle_start(handle &C.uv_idle_t, cb fn (handle &C.uv_idle_t)) int
+
 pub fn idle_start(handle &C.uv_idle_t, cb fn (handle &C.uv_idle_t)) int {
 	return C.uv_idle_start(handle, cb)
 }
+
+fn C.uv_idle_stop(handle &C.uv_idle_t) int
 
 pub fn idle_stop(handle &C.uv_idle_t) int {
 	return C.uv_idle_stop(handle)
@@ -801,9 +996,13 @@ pub fn idle_stop(handle &C.uv_idle_t) int {
 
 // async functions
 
+fn C.uv_async_init(loop &C.uv_loop_t, handle &C.uv_async_t, cb fn (handle &C.uv_async_t)) int
+
 pub fn async_init(loop &C.uv_loop_t, handle &C.uv_async_t, cb fn (handle &C.uv_async_t)) int {
 	return C.uv_async_init(loop, handle, cb)
 }
+
+fn C.uv_async_send(handle &C.uv_async_t) int
 
 pub fn async_send(handle &C.uv_async_t) int {
 	return C.uv_async_send(handle)
@@ -811,25 +1010,37 @@ pub fn async_send(handle &C.uv_async_t) int {
 
 // timer functions
 
+fn C.uv_timer_init(loop &C.uv_loop_t, handle &C.uv_timer_t) int
+
 pub fn timer_init(loop &C.uv_loop_t, handle &C.uv_timer_t) int {
 	return C.uv_timer_init(loop, handle)
 }
+
+fn C.uv_timer_start(handle &C.uv_timer_t, cb fn (handle &C.uv_timer_t), timeout u64, repeat u64) int
 
 pub fn timer_start(handle &C.uv_timer_t, cb fn (handle &C.uv_timer_t), timeout u64, repeat u64) int {
 	return C.uv_timer_start(handle, cb, timeout, repeat)
 }
 
+fn C.uv_timer_stop(handle &C.uv_timer_t) int
+
 pub fn timer_stop(handle &C.uv_timer_t) int {
 	return C.uv_timer_stop(handle)
 }
+
+fn C.uv_timer_again(handle &C.uv_timer_t) int
 
 pub fn timer_again(handle &C.uv_timer_t) int {
 	return C.uv_timer_again(handle)
 }
 
+fn C.uv_timer_set_repeat(handle &C.uv_timer_t, repeat u64)
+
 pub fn timer_set_repeat(handle &C.uv_timer_t, repeat u64) {
 	C.uv_timer_set_repeat(handle, repeat)
 }
+
+fn C.uv_timer_get_repeat(handle &C.uv_timer_t) u64
 
 pub fn timer_get_repeat(const_handle &C.uv_timer_t) u64 {
 	return C.uv_timer_get_repeat(const_handle)
@@ -889,15 +1100,21 @@ pub fn uv_spawn(loop &C.uv_loop_t, handle &C.uv_process_t, options &C.uv_process
 	return C.uv_spawn(loop, handle, options)
 }
 
+fn C.uv_process_kill(handle &C.uv_process_t, signum int) int
+
 pub fn process_kill(handle &C.uv_process_t, signum int) int {
 	return C.uv_process_kill(handle, signum)
 }
+
+fn C.uv_kill(pid int, signum int) int
 
 pub fn kill(pid int, signum int) int {
 	return C.uv_kill(pid, signum)
 }
 
 // work functions
+
+fn C.uv_queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int))
 
 pub fn queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int)) {
 	C.uv_queue_work(loop, work, work_cb, after_work_cb)
@@ -910,8 +1127,6 @@ pub fn cancel(req &C.uv_req_t) int {
 }
 
 // memory functions
-
-fn C.uv_getrusage(rusage &C.uv_rusage_t) int
 
 @[typedef]
 pub struct C.uv_timeval_t {}
@@ -978,6 +1193,8 @@ pub fn set_osfhandle(os_fd int) int {
 	return C.uv_set_osfhandle(os_fd)
 }
 
+fn C.uv_getrusage(rusage &C.uv_rusage_t) int
+
 pub fn getrusage(rusage &C.uv_rusage_t) int {
 	return C.uv_getrusage(rusage)
 }
@@ -1012,6 +1229,8 @@ pub fn os_free_passwd(pwd &C.uv_passwd_t) {
 pub struct C.uv_uid_t {}
 
 fn C.uv_os_get_passwd2(pwd &C.uv_passwd_t, uid C.uv_uid_t) int
+
+fn C.uv_os_get_passwd(pwd &C.uv_passwd_t) int
 
 pub fn os_get_passwd2(pwd &C.uv_passwd_t, uid C.uv_uid_t) int {
 	return C.uv_os_get_passwd2(pwd, uid)
@@ -1263,21 +1482,31 @@ pub fn fs_req_cleanup(fs &C.uv_fs_t) {
 	C.uv_fs_req_cleanup(fs)
 }
 
+fn C.uv_fs_close(loop &C.uv_loop_t, req &C.uv_fs_t, file int, cb fn (req &C.uv_fs_t))
+
 pub fn fs_close(loop &C.uv_loop_t, req &C.uv_fs_t, file int, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_close(loop, req, file, cb)
 }
+
+fn C.uv_fs_open(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, flags int, mode int, cb fn (req &C.uv_fs_t))
 
 pub fn fs_open(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, flags int, mode int, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_open(loop, req, path, flags, mode, cb)
 }
 
+fn C.uv_fs_read(loop &C.uv_loop_t, req &C.uv_fs_t, file int, bufs &C.uv_buf_t, nbufs u32, offset i64, cb fn (req &C.uv_fs_t))
+
 pub fn fs_read(loop &C.uv_loop_t, req &C.uv_fs_t, file int, bufs &C.uv_buf_t, nbufs u32, offset i64, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_read(loop, req, file, bufs, nbufs, offset, cb)
 }
 
+fn C.uv_fs_unlink(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t))
+
 pub fn fs_unlink(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_unlink(loop, req, path, cb)
 }
+
+fn C.uv_fs_write(loop &C.uv_loop_t, req &C.uv_fs_t, file int, bufs &C.uv_buf_t, nbufs u32, offset i64, cb fn (req &C.uv_fs_t))
 
 pub fn fs_write(loop &C.uv_loop_t, req &C.uv_fs_t, file int, bufs &C.uv_buf_t, nbufs u32, offset i64, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_write(loop, req, file, bufs, nbufs, offset, cb)
@@ -1290,6 +1519,8 @@ fn C.uv_fs_copyfile(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, const_n
 pub fn fs_copyfile(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, const_new_path &char, flags int, cb fn (req &C.uv_fs_t)) int {
 	return C.uv_fs_copyfile(loop, req, const_path, const_new_path, flags, cb)
 }
+
+fn C.uv_fs_mkdir(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, mode int, cb fn (req &C.uv_fs_t))
 
 pub fn fs_mkdir(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, mode int, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_mkdir(loop, req, path, mode, cb)
@@ -1307,13 +1538,21 @@ pub fn fs_mkstemp(loop &C.uv_loop_t, req &C.uv_fs_t, const_tpl &char, flags int,
 	C.uv_fs_mkstemp(loop, req, const_tpl, cb)
 }
 
+fn C.uv_fs_rmdir(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t))
+
 pub fn fs_rmdir(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_rmdir(loop, req, path, cb)
 }
 
+fn C.uv_fs_scandir(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, flags int, cb fn (req &C.uv_fs_t))
+
 pub fn fs_scandir(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, flags int, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_scandir(loop, req, path, flags, cb)
 }
+
+fn C.uv_fs_scandir_next(req &C.uv_fs_t, ent &C.uv_dirent_t) int
+
+fn C.uv_fs_scandir(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, flags int, cb fn (req &C.uv_fs_t))
 
 pub fn fs_scandir_next(req &C.uv_fs_t, ent &C.uv_dirent_t) int {
 	return C.uv_fs_scandir_next(req, ent)
@@ -1321,11 +1560,15 @@ pub fn fs_scandir_next(req &C.uv_fs_t, ent &C.uv_dirent_t) int {
 
 fn C.uv_fs_opendir(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, cb fn (req &C.uv_fs_t)) int
 
+fn C.uv_fs_open(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, flags int, mode int, cb fn (req &C.uv_fs_t))
+
 pub fn fs_opendir(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, cb fn (req &C.uv_fs_t)) int {
 	return C.uv_fs_opendir(loop, req, const_path, cb)
 }
 
 fn C.uv_fs_readdir(loop &C.uv_loop_t, req &C.uv_fs_t, dir &C.uv_dir_t, cb fn (req &C.uv_fs_t)) int
+
+fn C.uv_fs_read(loop &C.uv_loop_t, req &C.uv_fs_t, file int, bufs &C.uv_buf_t, nbufs u32, offset i64, cb fn (req &C.uv_fs_t))
 
 pub fn fs_readdir(loop &C.uv_loop_t, req &C.uv_fs_t, dir &C.uv_dir_t, cb fn (req &C.uv_fs_t)) int {
 	return C.uv_fs_readdir(loop, req, dir, cb)
@@ -1333,49 +1576,75 @@ pub fn fs_readdir(loop &C.uv_loop_t, req &C.uv_fs_t, dir &C.uv_dir_t, cb fn (req
 
 fn C.uv_fs_closedir(loop &C.uv_loop_t, req &C.uv_fs_t, dir &C.uv_dir_t, cb fn (req &C.uv_fs_t)) int
 
+fn C.uv_fs_close(loop &C.uv_loop_t, req &C.uv_fs_t, file int, cb fn (req &C.uv_fs_t))
+
 pub fn fs_closedir(loop &C.uv_loop_t, req &C.uv_fs_t, dir &C.uv_dir_t, cb fn (req &C.uv_fs_t)) int {
 	return C.uv_fs_closedir(loop, req, dir, cb)
 }
+
+fn C.uv_fs_stat(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t))
 
 pub fn fs_stat(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_stat(loop, req, path, cb)
 }
 
+fn C.uv_fs_fstat(loop &C.uv_loop_t, req &C.uv_fs_t, file int, cb fn (req &C.uv_fs_t))
+
 pub fn fs_fstat(loop &C.uv_loop_t, req &C.uv_fs_t, file int, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_fstat(loop, req, file, cb)
 }
+
+fn C.uv_fs_rename(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, new_path &char, cb fn (req &C.uv_fs_t))
 
 pub fn fs_rename(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, const_new_path &char, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_rename(loop, req, const_path, const_new_path, cb)
 }
 
+fn C.uv_fs_fsync(loop &C.uv_loop_t, req &C.uv_fs_t, file int, cb fn (req &C.uv_fs_t))
+
 pub fn fs_fsync(loop &C.uv_loop_t, req &C.uv_fs_t, file int, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_fsync(loop, req, file, cb)
 }
+
+fn C.uv_fs_fdatasync(loop &C.uv_loop_t, req &C.uv_fs_t, file int, cb fn (req &C.uv_fs_t))
 
 pub fn fs_fdatasync(loop &C.uv_loop_t, req &C.uv_fs_t, file int, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_fdatasync(loop, req, file, cb)
 }
 
+fn C.uv_fs_ftruncate(loop &C.uv_loop_t, req &C.uv_fs_t, file int, offset i64, cb fn (req &C.uv_fs_t))
+
 pub fn fs_ftruncate(loop &C.uv_loop_t, req &C.uv_fs_t, file int, offset i64, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_ftruncate(loop, req, file, offset, cb)
 }
+
+fn C.uv_fs_sendfile(loop &C.uv_loop_t, req &C.uv_fs_t, out_fd int, in_fd int, in_offset i64, length usize, cb fn (req &C.uv_fs_t))
 
 pub fn fs_sendfile(loop &C.uv_loop_t, req &C.uv_fs_t, out_fd int, in_fd int, in_offset i64, length usize, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_sendfile(loop, req, out_fd, in_fd, in_offset, length, cb)
 }
 
+fn C.uv_fs_access(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, mode int, cb fn (req &C.uv_fs_t))
+
 pub fn fs_access(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, mode int, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_access(loop, req, const_path, mode, cb)
 }
+
+fn C.uv_fs_chmod(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, mode int, cb fn (req &C.uv_fs_t))
 
 pub fn fs_chmod(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, mode int, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_chmod(loop, req, const_path, mode, cb)
 }
 
+fn C.uv_fs_fchmod(loop &C.uv_loop_t, req &C.uv_fs_t, file int, mode int, cb fn (req &C.uv_fs_t)) int
+
+fn C.uv_fs_fchmod(loop &C.uv_loop_t, req &C.uv_fs_t, file int, mode int, cb fn (req &C.uv_fs_t))
+
 pub fn fs_fchmod(loop &C.uv_loop_t, req &C.uv_fs_t, file int, mode int, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_fchmod(loop, req, file, mode, cb)
 }
+
+fn C.uv_fs_utime(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, atime f64, mtime f64, cb fn (req &C.uv_fs_t))
 
 pub fn fs_utime(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_utime(loop, req, const_path, atime, mtime, cb)
@@ -1383,15 +1652,21 @@ pub fn fs_utime(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, atime f64, 
 
 fn C.uv_fs_utime_ex(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, btime f64, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) int
 
+fn C.uv_fs_utime(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, atime f64, mtime f64, cb fn (req &C.uv_fs_t))
+
 pub fn fs_utime_ex(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, btime f64, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) int {
 	return C.uv_fs_utime_ex(loop, req, const_path, btime, atime, mtime, cb)
 }
+
+fn C.uv_fs_futime(loop &C.uv_loop_t, req &C.uv_fs_t, file int, atime f64, mtime f64, cb fn (req &C.uv_fs_t))
 
 pub fn fs_futime(loop &C.uv_loop_t, req &C.uv_fs_t, file int, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_futime(loop, req, file, atime, mtime, cb)
 }
 
 fn C.uv_fs_futime_ex(loop &C.uv_loop_t, req &C.uv_fs_t, file int, btime f64, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) int
+
+fn C.uv_fs_futime(loop &C.uv_loop_t, req &C.uv_fs_t, file int, atime f64, mtime f64, cb fn (req &C.uv_fs_t))
 
 pub fn fs_futime_ex(loop &C.uv_loop_t, req &C.uv_fs_t, file int, btime f64, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) int {
 	return C.uv_fs_futime_ex(loop, req, file, btime, atime, mtime, cb)
@@ -1403,21 +1678,33 @@ pub fn fs_lutime(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, atime f64,
 	return C.uv_fs_lutime(loop, req, const_path, atime, mtime, cb)
 }
 
+fn C.uv_fs_lstat(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t))
+
 pub fn fs_lstat(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_lstat(loop, req, path, cb)
 }
+
+fn C.uv_fs_link(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, new_path &char, cb fn (req &C.uv_fs_t))
 
 pub fn fs_link(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, const_new_path &char, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_link(loop, req, const_path, const_new_path, cb)
 }
 
+fn C.uv_fs_symlink(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, new_path &char, flags int, cb fn (req &C.uv_fs_t))
+
 pub fn fs_symlink(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, const_new_path &char, flags int, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_symlink(loop, req, const_path, const_new_path, flags, cb)
 }
 
+fn C.uv_fs_read(loop &C.uv_loop_t, req &C.uv_fs_t, file int, bufs &C.uv_buf_t, nbufs u32, offset i64, cb fn (req &C.uv_fs_t))
+
+fn C.uv_fs_readlink(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t))
+
 pub fn fs_readlink(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_readlink(loop, req, const_path, cb)
 }
+
+fn C.uv_fs_realpath(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t))
 
 pub fn fs_realpath(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_realpath(loop, req, const_path, cb)
@@ -1425,13 +1712,19 @@ pub fn fs_realpath(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, cb fn (r
 
 fn C.uv_fs_fchmod(loop &C.uv_loop_t, req &C.uv_fs_t, file int, mode int, cb fn (req &C.uv_fs_t)) int
 
+fn C.uv_fs_fchmod(loop &C.uv_loop_t, req &C.uv_fs_t, file int, mode int, cb fn (req &C.uv_fs_t))
+
 pub fn fs_fchmod(loop &C.uv_loop_t, req &C.uv_fs_t, file int, mode int, cb fn (req &C.uv_fs_t)) int {
 	return C.uv_fs_fchmod(loop, req, file, mode, cb)
 }
 
+fn C.uv_fs_chown(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, uid u32, gid u32, cb fn (req &C.uv_fs_t))
+
 pub fn fs_chown(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, uid usize, gid usize, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_chown(loop, req, const_path, uid, gid, cb)
 }
+
+fn C.uv_fs_fchown(loop &C.uv_loop_t, req &C.uv_fs_t, file int, uid u32, gid u32, cb fn (req &C.uv_fs_t))
 
 pub fn fs_fchown(loop &C.uv_loop_t, req &C.uv_fs_t, file int, uid usize, gid usize, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_fchown(loop, req, file, uid, gid, cb)
@@ -1445,19 +1738,27 @@ pub fn fs_lchown(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, uid usize,
 
 fn C.uv_fs_statfs(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, cb fn (req &C.uv_fs_t)) int
 
+fn C.uv_fs_stat(loop &C.uv_loop_t, req &C.uv_fs_t, path &char, cb fn (req &C.uv_fs_t))
+
 pub fn fs_statfs(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, cb fn (req &C.uv_fs_t)) {
 	C.uv_fs_statfs(loop, req, const_path, cb)
 }
 
 // fs poll functions
 
+fn C.uv_fs_poll_init(loop &C.uv_loop_t, handle &C.uv_fs_poll_t) int
+
 pub fn fs_poll_init(loop &C.uv_loop_t, handle &C.uv_fs_poll_t) int {
 	return C.uv_fs_poll_init(loop, handle)
 }
 
+fn C.uv_fs_poll_start(handle &C.uv_fs_poll_t, cb fn (handle &C.uv_fs_poll_t, status int, prev &C.uv_stat_t, curr &C.uv_stat_t), path &char, interval u32) int
+
 pub fn fs_poll_start(handle &C.uv_fs_poll_t, cb fn (handle &C.uv_fs_poll_t, status int, const_prev &C.uv_stat_t, const_curr &C.uv_stat_t), const_path &char, interval usize) int {
 	return C.uv_fs_poll_start(handle, cb, const_path, interval)
 }
+
+fn C.uv_fs_poll_stop(handle &C.uv_fs_poll_t) int
 
 pub fn fs_poll_stop(handle &C.uv_fs_poll_t) int {
 	return C.uv_fs_poll_stop(handle)
@@ -1469,13 +1770,15 @@ pub fn fs_poll_getpath(handle &C.uv_fs_poll_t, path &char, size &usize) int {
 	return C.uv_fs_poll_getpath(handle, path, size)
 }
 
-// ANCHOR up to 1744 of uv.h
-
 // signal functions
+
+fn C.uv_signal_init(loop &C.uv_loop_t, handle &C.uv_signal_t) int
 
 pub fn signal_init(loop &C.uv_loop_t, handle &C.uv_signal_t) int {
 	return C.uv_signal_init(loop, handle)
 }
+
+fn C.uv_signal_start(handle &C.uv_signal_t, cb fn (handle &C.uv_signal_t, signum int), signum int) int
 
 pub fn signal_start(handle &C.uv_signal_t, cb fn (handle &C.uv_signal_t, signum int), signum int) int {
 	return C.uv_signal_start(handle, cb, signum)
@@ -1483,9 +1786,13 @@ pub fn signal_start(handle &C.uv_signal_t, cb fn (handle &C.uv_signal_t, signum 
 
 fn C.uv_signal_start_oneshot(signal &C.uv_signal_t, cb fn (signal &C.uv_signal_t, signum int), signum int) int
 
+fn C.uv_signal_start(handle &C.uv_signal_t, cb fn (handle &C.uv_signal_t, signum int), signum int) int
+
 pub fn signal_start_oneshot(signal &C.uv_signal_t, cb fn (signal &C.uv_signal_t, signum int), signum int) int {
 	return C.uv_signal_start_oneshot(signal, cb, signum)
 }
+
+fn C.uv_signal_stop(handle &C.uv_signal_t) int
 
 pub fn signal_stop(handle &C.uv_signal_t) int {
 	return C.uv_signal_stop(handle)
@@ -1521,13 +1828,19 @@ pub enum Uv_fs_event_flags {
 	fs_event_recursive = 4
 }
 
+fn C.uv_fs_event_init(loop &C.uv_loop_t, handle &C.uv_fs_event_t) int
+
 pub fn fs_event_init(loop &C.uv_loop_t, handle &C.uv_fs_event_t) int {
 	return C.uv_fs_event_init(loop, handle)
 }
 
+fn C.uv_fs_event_start(handle &C.uv_fs_event_t, cb fn (handle &C.uv_fs_event_t, filename &char, events int, status int), path &&char, flags int) int
+
 pub fn fs_event_start(handle &C.uv_fs_event_t, cb fn (handle &C.uv_fs_event_t, filename &char, events int, status int), path &&char, flags int) int {
 	return C.uv_fs_event_start(handle, cb, path, flags)
 }
+
+fn C.uv_fs_event_stop(handle &C.uv_fs_event_t) int
 
 pub fn fs_event_stop(handle &C.uv_fs_event_t) int {
 	return C.uv_fs_event_stop(handle)
@@ -1547,8 +1860,6 @@ pub fn ip4_addr(const_ip &char, port int, addr &C.sockaddr_in) int {
 	return C.uv_ip4_addr(const_ip, port, addr)
 }
 
-fn C.uv_ip6_addr(const_ip &char, port int, addr &C.sockaddr_in6) int
-
 @[typedef]
 pub struct C.sockaddr_in6 {
 	// sin6_family   int
@@ -1557,6 +1868,8 @@ pub struct C.sockaddr_in6 {
 	// sin6_addr     [16]u8
 	// sin6_scope_id u32
 }
+
+fn C.uv_ip6_addr(const_ip &char, port int, addr &C.sockaddr_in6) int
 
 pub fn ip6_addr(const_ip &char, port int, addr &C.sockaddr_in6) int {
 	return C.uv_ip6_addr(const_ip, port, addr)
@@ -1613,8 +1926,6 @@ fn C.uv_if_indextoiid(ifindex usize, buffer &char, size &usize) int
 pub fn if_indextoiid(ifindex usize, buffer &char, size &usize) int {
 	return C.uv_if_indextoiid(ifindex, buffer, size)
 }
-
-fn C.u_exepath(buffer &char, size &usize) int
 
 pub fn exepath(buffer &char, size &usize) int {
 	return C.u_exepath(buffer, size)
@@ -1694,10 +2005,10 @@ pub fn disable_stdio_inheritance() {
 
 // dl functions
 
-fn C.uv_dlopen(const_filename &char, lib &C.uv_lib_t) int
-
 @[typdef]
 struct C.uv_lib_t {}
+
+fn C.uv_dlopen(const_filename &char, lib &C.uv_lib_t) int
 
 pub fn dlopen(const_filename &char, lib &C.uv_lib_t) int {
 	return C.uv_dlopen(const_filename, lib)
@@ -1733,6 +2044,8 @@ pub fn mutex_init(handle &C.uv_mutex_t) int {
 }
 
 fn C.uv_mutex_init_recursive(handle &C.uv_mutex_t) int
+
+fn C.uv_mutex_init(handle &C.uv_mutex_t) int
 
 pub fn mutex_init_recursive(handle &C.uv_mutex_t) int {
 	return C.uv_mutex_init_recursive(handle)
@@ -2027,6 +2340,7 @@ pub fn loop_set_data(loop &C.uv_loop_t, data &voidptr) {
 // TODO check c type to v conversion
 
 //  string util functions
+
 fn C.uv_utf16_length_as_wtf8(const_utf16 &u16) usize
 
 pub fn utf16_length_as_wtf8(const_utf16 &u16) usize {

@@ -6,4 +6,3 @@ fn init() {
 		return vcalloc(isize(size))
 	}, free)
 }
-

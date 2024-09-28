@@ -3,6 +3,8 @@ module main
 //  add -d uv_static to your v build command to use libuv static library instead of building from source
 const compile_static = $d('uv_static', false)
 
+const libuv_path = $env('LIBUV_PATH')
+
 $if compile_static {
 	$if macos {
 		#flag -I /opt/homebrew/include
