@@ -2,16 +2,16 @@
 .PHONY: docs fmt test run update
 
 docs:
-	echo "not implemented"
+	v doc ./vuv -f markdown -o vuv.md
 
 fmt:
-	v fmt -w src/
+	v fmt -w .
 
 test:
 	v -stats test src/*_test.v
 
 run:
-	v run ./src
+	v run .
 
 update:
 	rm -rf ./src/thirdparty

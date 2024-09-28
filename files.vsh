@@ -1,4 +1,3 @@
-
 import os
 import regex
 
@@ -9,9 +8,3 @@ fn get_files(cmd string, ext string) {
 		println(file)
 	}
 }
-
-// get_files('/Users/daniel/homelab/GitHub/languages/v-projects/native/libuv-test', '.git')
-// get_files('/Users/daniel/homelab/GitHub/languages/v-projects/native/libuv-test/libuv/src', '.c')
-// println('-------------------')
-
-// get_files('/Users/daniel/homelab/GitHub/languages/v-projects/native/libuv-test/libuv/include', '.h')

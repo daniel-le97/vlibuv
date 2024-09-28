@@ -1,4 +1,4 @@
-module main
+module vuv
 
 pub enum Mode {
 	default = 0
@@ -204,6 +204,7 @@ pub struct C.sockaddr {}
 pub struct C.sockaddr_in {}
 
 pub type Sockaddr = C.sockaddr
+pub type Sockaddr_in = C.sockaddr_in
 
 // Alias for the respective VLang structs
 pub type Uv_loop_t = C.uv_loop_t
@@ -250,5 +251,9 @@ pub type Uv_group_t = C.uv_group_t
 pub type Uv_utsname_t = C.uv_utsname_t
 pub type Uv_statfs_t = C.uv_statfs_t
 pub type Uv_metrics_t = C.uv_metrics_t
+
+
+
+pub type Uv_buf_t = C.uv_buf_t
 
 // Import necessary C functions and structures

@@ -1,4 +1,4 @@
-module main
+module vuv
 
 fn init() {
 	// im not sure if vcalloc is implemented right, i dont normally do manual memory management
