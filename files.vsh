@@ -1,5 +1,6 @@
 import os
 import regex
+import vuv.fs
 
 fn get_files(cmd string, ext string) {
 	println(cmd)
@@ -7,4 +8,11 @@ fn get_files(cmd string, ext string) {
 	for file in files {
 		println(file)
 	}
+	fs.read_file(cmd, fn (err string, data string) {
+		if err != '' {
+			println(err)
+		} else {
+			println(data)
+		}
+	})
 }

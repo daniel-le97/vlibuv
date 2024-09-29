@@ -73,7 +73,6 @@ fn on_read(client &vuv.Uv_stream_t, nread isize, buf &vuv.Uv_buf_t) {
 	request.parse_request(request_raw) or { panic(err) }
 	// println(request.path)
 
-
 	mut response := http.new_response(
 		body: 'hello world!'
 	)
@@ -91,7 +90,6 @@ fn on_write(req &vuv.Uv_write_t, status int) {
 		free(req)
 	}
 }
-
 
 // Example usage
 fn main() {

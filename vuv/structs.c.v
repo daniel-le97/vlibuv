@@ -1,6 +1,5 @@
 module vuv
 
-
 // struct Foo {
 // 	a int // private immutable (default)
 // mut:
@@ -529,3 +528,7 @@ struct C.uv_key_t {}
 struct C.uv_lib_t {}
 
 // Import necessary C functions and structures
+
+pub struct Hello_Cats {
+	hello string
+}

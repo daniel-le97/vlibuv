@@ -507,7 +507,6 @@ pub fn tcp_bind(handle &C.uv_tcp_t, const_sockaddr &C.sockaddr, flags int) int {
 	return C.uv_tcp_bind(handle, const_sockaddr, flags)
 }
 
-
 fn C.uv_tcp_getsockname(handle &C.uv_tcp_t, name &C.sockaddr, namelen &int) int
 
 pub fn tcp_getsockname(const_handle &C.uv_tcp_t, name &C.sockaddr, namelen &int) int {
@@ -1024,7 +1023,6 @@ fn C.uv_get_osfhandle(fd int) int
 pub fn get_osfhandle(fd int) int {
 	return C.uv_get_osfhandle(fd)
 }
-
 
 // fn C.uv_set_osfhandle(os_fd int) int
 
