@@ -18,9 +18,10 @@ fn new_http_server() HttpServer {
 }
 
 fn (hs HttpServer) bind(ip string, port int) !int {
-	mut addr := vuv.Sockaddr{}
+	mut addr := vuv.Sockaddr_in{}
 	vuv.ip4_addr(&char(ip.str), port, &addr)
-	return vuv.tcp_bind(hs.server, &addr, 0)
+	addy := unsafe { &vuv.Sockaddr(addr) }
+	return vuv.tcp_bind(hs.server, addy, 0)
 }
 
 fn (hs HttpServer) listen() !int {
@@ -54,7 +55,7 @@ fn on_new_connection(server &vuv.Uv_stream_t, status int) {
 
 fn alloc_buffer(handle &vuv.Uv_handle_t, suggested_size usize, mut buf vuv.Uv_buf_t) {
 	unsafe {
-		buf.base = malloc(suggested_size)
+		buf.base = &char(malloc(suggested_size))
 		buf.len = suggested_size
 	}
 }

@@ -2,16 +2,18 @@ module vuv
 
 // add documentation to each function for each wrapper of a underlying libuv function
 
-fn C.uv_version() &usize
+fn C.uv_version() u32
 
-pub fn version() &usize {
+pub fn version() u32 {
 	return C.uv_version()
 }
 
 fn C.uv_version_string() &char
 
-pub fn version_string() &char {
-	return C.uv_version_string()
+pub fn version_string() string {
+	unsafe {
+		return cstring_to_vstring(C.uv_version_string())
+	}
 }
 
 fn C.uv_library_shutdown()
@@ -85,10 +87,10 @@ pub fn loop_alive(const_loop &C.uv_loop_t) int {
 
 // TODO idk how to handle the ... variadic
 // UV_EXTERN int uv_loop_configure(uv_loop_t* loop, uv_loop_option option, ...);
-fn C.uv_loop_configure(loop &C.uv_loop_t, option Uv_loop_option, ...voidptr) int
+fn C.uv_loop_configure(loop &C.uv_loop_t, option int, ...voidptr) int
 
 pub fn loop_configure(loop &C.uv_loop_t, option Uv_loop_option, args ...voidptr) int {
-	return C.uv_loop_configure(loop, option, ...args)
+	return C.uv_loop_configure(loop, int(option), ...args)
 }
 
 fn C.uv_loop_fork(loop &C.uv_loop_t) int
@@ -97,10 +99,10 @@ pub fn loop_fork(loop &C.uv_loop_t) int {
 	return C.uv_loop_fork(loop)
 }
 
-fn C.uv_run(loop &C.uv_loop_t, mode Mode) int
+fn C.uv_run(loop &C.uv_loop_t, mode int) int
 
 pub fn run(loop &C.uv_loop_t, mode Mode) int {
-	return C.uv_run(loop, mode)
+	return C.uv_run(loop, int(mode))
 }
 
 fn C.uv_stop(loop &C.uv_loop_t)
@@ -207,20 +209,27 @@ pub fn translate_sys_error(sys_errno int) int {
 
 fn C.uv_strerror(err int) &char
 
-pub fn strerror(err int) &char {
-	return C.uv_strerror(err)
+pub fn strerror(err int) string {
+	unsafe {
+		return cstring_to_vstring(C.uv_strerror(err))
+	}
+	// return C.uv_strerror(err)
 }
 
 fn C.uv_err_name_r(err int, buff &char, buflen u64) &char
 
-pub fn err_name_r(err int, buff &char, buflen u64) &char {
-	return C.uv_err_name_r(err, buff, buflen)
+pub fn err_name_r(err int, buff &char, buflen u64) string {
+	unsafe {
+		return cstring_to_vstring(C.uv_err_name_r(err, buff, buflen))
+	}
 }
 
 fn C.uv_err_name(const_err int) &char
 
-pub fn err_name(const_err int) &char {
-	return C.uv_err_name(const_err)
+pub fn err_name(const_err int) string {
+	unsafe {
+		return cstring_to_vstring(C.uv_err_name(const_err))
+	}
 }
 
 fn C.uv_shutdown(req &C.uv_shutdown_t, handle &C.uv_stream_t, cb Shutdown_cb) int
@@ -230,24 +239,27 @@ pub fn shutdown(req &C.uv_shutdown_t, handle &C.uv_stream_t, cb Shutdown_cb) int
 }
 
 // handle functions
-fn C.uv_handle_size(Uv_handle_type, int) usize
 
-fn C.uv_handle_size(handle_type Uv_handle_type) usize
+fn C.uv_handle_size(handle_type int) usize
 
 pub fn handle_size(handle_type Uv_handle_type) usize {
-	return C.uv_handle_size(handle_type)
+	return C.uv_handle_size(int(handle_type))
 }
 
 fn C.uv_handle_get_type(const_handle &C.uv_handle_t) Uv_handle_type
 
 pub fn handle_get_type(const_handle &C.uv_handle_t) Uv_handle_type {
-	return C.uv_handle_get_type(const_handle)
+	unsafe {
+		return Uv_handle_type(C.uv_handle_get_type(const_handle))
+	}
 }
 
-fn C.uv_handle_type_name(handle_type Uv_handle_type) &char
+fn C.uv_handle_type_name(handle_type int) &char
 
-pub fn handle_type_name(const_handle_type Uv_handle_type) &char {
-	return C.uv_handle_type_name(const_handle_type)
+pub fn handle_type_name(const_handle_type Uv_handle_type) string {
+	unsafe {
+		return cstring_to_vstring(C.uv_handle_type_name(int(const_handle_type)))
+	}
 }
 
 fn C.uv_handle_get_data(const_handle &C.uv_handle_t) voidptr
@@ -270,12 +282,10 @@ pub fn handle_set_data(handle &C.uv_handle_t, data voidptr) {
 
 // request functions
 
-fn C.uv_req_size(Uv_req_type, int) usize
-
-fn C.uv_req_size(req_type Uv_req_type) usize
+fn C.uv_req_size(req_type int) usize
 
 pub fn req_size(req_type Uv_req_type) usize {
-	return C.uv_req_size(req_type)
+	return C.uv_req_size(int(req_type))
 }
 
 fn C.uv_req_get_data(const_req &C.uv_req_t) voidptr
@@ -293,13 +303,17 @@ pub fn req_set_data(req &C.uv_req_t, data voidptr) {
 fn C.uv_req_get_type(const_req &C.uv_req_t) Uv_req_type
 
 pub fn req_get_type(const_req &C.uv_req_t) Uv_req_type {
-	return C.uv_req_get_type(const_req)
+	unsafe {
+		return Uv_req_type(C.uv_req_get_type(const_req))
+	}
 }
 
-fn C.uv_req_type_name(req_type Uv_req_type) &char
+fn C.uv_req_type_name(req_type int) &char
 
-pub fn req_type_name(const_req_type Uv_req_type) &char {
-	return C.uv_req_type_name(const_req_type)
+pub fn req_type_name(const_req_type Uv_req_type) string {
+	unsafe {
+		return cstring_to_vstring(C.uv_req_type_name(int(const_req_type)))
+	}
 }
 
 fn C.uv_is_active(const_handle &C.uv_handle_t) int
@@ -350,12 +364,13 @@ pub fn fileno(const_handle &C.uv_handle_t, fd &int) int {
 	return C.uv_fileno(const_handle, fd)
 }
 
+// pub type Buf = u8 | char
+
 fn C.uv_buf_init(base &char, len usize) C.uv_buf_t
 
 pub fn buf_init(base &char, len usize) C.uv_buf_t {
 	return C.uv_buf_init(base, len)
 }
-
 
 // TODO fds should be a fixed array of size 2 that holds 2 ints
 // TODO assing 'Array_int' (aka 'struct array') to parameter of incompatible type 'uv_os_fd_t *' (aka 'int *')
@@ -494,11 +509,6 @@ pub fn tcp_simultaneous_accepts(handle &C.uv_tcp_t, enable int) int {
 	return C.uv_tcp_simultaneous_accepts(handle, enable)
 }
 
-pub enum Uv_tcp_flags {
-	tcp_ipv6_only = 1
-	tcp_reuse_port
-}
-
 fn C.uv_tcp_bind(handle &C.uv_tcp_t, addr &C.sockaddr, flags u32) int
 
 pub fn tcp_bind(handle &C.uv_tcp_t, const_sockaddr &C.sockaddr, flags int) int {
@@ -522,53 +532,6 @@ fn C.uv_tcp_connect(req &C.uv_connect_t, handle &C.uv_tcp_t, addr &C.sockaddr, c
 
 pub fn tcp_connect(req &C.uv_connect_t, handle &C.uv_tcp_t, const_sockaddr &C.sockaddr, cb fn (req &C.uv_connect_t, status int)) int {
 	return C.uv_tcp_connect(req, handle, const_sockaddr, cb)
-}
-
-pub enum Uv_udp_flags {
-	// Disables dual stack mode.
-	udp_ipv6_only = 1
-	// Indicates message was truncated because read buffer was too small. The
-	// remainder was discarded by the OS. Used in uv_udp_recv_cb.
-	udp_partial = 2
-	// Indicates if SO_REUSEADDR will be set when binding the handle.
-	// This sets the SO_REUSEPORT socket flag on the BSDs (except for
-	// DragonFlyBSD), OS X, and other platforms where SO_REUSEPORTs don't
-	// have the capability of load balancing, as the opposite of what
-	// UV_UDP_REUSEPORT would do. On other Unix platforms, it sets the
-	// SO_REUSEADDR flag. What that means is that multiple threads or
-	// processes can bind to the same address without error (provided
-	// they all set the flag) but only the last one to bind will receive
-	// any traffic, in effect "stealing" the port from the previous listener.
-	udp_reuseaddr = 4
-
-	// Indicates that the message was received by recvmmsg, so the buffer provided
-	// must not be freed by the recv_cb callback.
-	udp_mmsg_chunk = 8
-
-	// Indicates that the buffer provided has been fully utilized by recvmmsg and
-	// that it should now be freed by the recv_cb callback. When this flag is set
-	// in uv_udp_recv_cb, nread will always be 0 and addr will always be NULL.
-	udp_mmsg_free = 16
-
-	// Indicates if IP_RECVERR/IPV6_RECVERR will be set when binding the handle.
-	// This sets IP_RECVERR for IPv4 and IPV6_RECVERR for IPv6 UDP sockets on
-	// Linux. This stops the Linux kernel from suppressing some ICMP error
-	// messages and enables full ICMP error reporting for faster failover.
-	// This flag is no-op on platforms other than Linux.
-	udp_linux_recverr = 32
-
-	// Indicates if SO_REUSEPORT will be set when binding the handle.
-	// This sets the SO_REUSEPORT socket option on supported platforms.
-	// Unlike UV_UDP_REUSEADDR, this flag will make multiple threads or
-	// processes that are binding to the same address and port "share"
-	// the port, which means incoming datagrams are distributed across
-	// the receiving sockets among threads or processes.
-	//
-	// This flag is available only on Linux 3.9+, DragonFlyBSD 3.6+,
-	// FreeBSD 12.0+, Solaris 11.4, and AIX 7.2.5+ for now.
-	udp_reuseport = 64
-	// Indicates that recvmmsg should be used, if available.
-	udp_recvmmsg = 256
 }
 
 pub type Udp_send_cb = fn (req &C.uv_udp_send_t, status int)
@@ -619,17 +582,17 @@ pub fn udp_getsockname(handle &C.uv_udp_t, name &C.sockaddr, namelen &int) int {
 	return C.uv_udp_getsockname(handle, name, namelen)
 }
 
-fn C.uv_udp_set_membership(handle &C.uv_udp_t, multicast_addr &char, interface_addr &char, membership Uv_membership) int
+fn C.uv_udp_set_membership(handle &C.uv_udp_t, multicast_addr &char, interface_addr &char, membership int) int
 
 pub fn udp_set_membership(handle &C.uv_udp_t, multicast_addr &char, interface_addr &char, membership Uv_membership) int {
-	return C.uv_udp_set_membership(handle, multicast_addr, interface_addr, membership)
+	return C.uv_udp_set_membership(handle, multicast_addr, interface_addr, int(membership))
 }
 
-fn C.uv_udp_set_source_membership(handle &C.uv_udp_t, const_multicast_addr &char, const_interface_addr &char, const_source_addr &char, membership Uv_membership) int
+fn C.uv_udp_set_source_membership(handle &C.uv_udp_t, const_multicast_addr &char, const_interface_addr &char, const_source_addr &char, membership int) int
 
 pub fn udp_set_source_membership(handle &C.uv_udp_t, const_multicast_addr &char, const_interface_addr &char, const_source_addr &char, membership Uv_membership) int {
 	return C.uv_udp_set_source_membership(handle, const_multicast_addr, const_interface_addr,
-		const_source_addr, membership)
+		const_source_addr, int(membership))
 }
 
 fn C.uv_udp_set_multicast_loop(handle &C.uv_udp_t, on int) int
@@ -706,34 +669,16 @@ pub fn udp_get_send_queue_count(const_handle &C.uv_udp_t) usize {
 
 // tty functions
 
-pub enum Uv_tty_mode {
-	// Initial/normal terminal mode
-	tty_mode_normal = 0
-	// Raw input mode (On Windows, ENABLE_WINDOW_INPUT is also enabled)
-	tty_mode_raw
-	//  Binary-safe I/O mode for IPC (Unix-only)
-	tty_mode_io
-}
-
-pub enum Uv_tty_vtermstate {
-	// The console supports handling of virtual terminal sequences
-	// (Windows10 new console, ConEmu)
-	tty_supported
-	// The console cannot process the virtual terminal sequence.  (Legacy
-	// console)
-	tty_unsupported
-}
-
 fn C.uv_tty_init(loop &C.uv_loop_t, handle &C.uv_tty_t, fd int, readable int) int
 
 pub fn tty_init(loop &C.uv_loop_t, handle &C.uv_tty_t, fd int, readable int) int {
 	return C.uv_tty_init(loop, handle, fd, readable)
 }
 
-fn C.uv_tty_set_mode(handle &C.uv_tty_t, mode Uv_tty_mode) int
+fn C.uv_tty_set_mode(handle &C.uv_tty_t, mode int) int
 
 pub fn tty_set_mode(handle &C.uv_tty_t, mode Uv_tty_mode) int {
-	return C.uv_tty_set_mode(handle, mode)
+	return C.uv_tty_set_mode(handle, int(mode))
 }
 
 fn C.uv_tty_reset_mode() int
@@ -748,22 +693,29 @@ pub fn tty_get_winsize(handle &C.uv_tty_t, width &int, height &int) int {
 	return C.uv_tty_get_winsize(handle, width, height)
 }
 
-// fn C.uv_tty_set_vterm_state(state Uv_tty_vtermstate) int
+fn C.uv_tty_set_vterm_state(state int)
 
-// pub fn tty_set_vterm_state(state Uv_tty_vtermstate) int {
-// 	return C.uv_tty_set_vterm_state(state)
-// }
-
-fn C.uv_tty_get_vterm_state(state &Uv_tty_vtermstate) int
-
-pub fn tty_get_vterm_state(state &Uv_tty_vtermstate) int {
-	return C.uv_tty_get_vterm_state(state)
+pub fn tty_set_vterm_state(state Uv_tty_vtermstate) {
+	C.uv_tty_set_vterm_state(int(state))
 }
 
-fn C.uv_guess_handle(fd int) Uv_handle_type
+
+// @[typedef]
+// struct C.uv_tty_vtermstate_t {}
+
+// fn C.uv_tty_get_vterm_state(state &C.uv_tty_vtermstate_t) int
+// pub fn tty_get_vterm_state(state int) int {
+// 	unsafe {
+// 		return C.uv_tty_get_vterm_state(state)
+// 	}
+// }
+
+fn C.uv_guess_handle(fd int) int
 
 pub fn guess_handle(fd int) Uv_handle_type {
-	return C.uv_guess_handle(fd)
+	unsafe {
+		return Uv_handle_type(C.uv_guess_handle(fd))
+	}
 }
 
 // pipe functions
@@ -798,11 +750,11 @@ pub fn pipe_connect(req &C.uv_connect_t, handle &C.uv_pipe_t, const_name &char, 
 	C.uv_pipe_connect(req, handle, const_name, cb)
 }
 
-// fn C.uv_pipe_connect2(req &C.uv_connect_t, handle &C.uv_pipe_t, const_name &char, flags usize, cb fn (req &C.uv_connect_t, status int)) int
+fn C.uv_pipe_connect2(req &C.uv_connect_t, handle &C.uv_pipe_t, const_name &char, namelen usize, flags usize, cb fn (req &C.uv_connect_t, status int)) int
 
-// pub fn pipe_connect2(req &C.uv_connect_t, handle &C.uv_pipe_t, const_name &char, flags usize, cb fn (req &C.uv_connect_t, status int)) int {
-// 	return C.uv_pipe_connect2(req, handle, const_name, flags, cb)
-// }
+pub fn pipe_connect2(req &C.uv_connect_t, handle &C.uv_pipe_t, const_name &char, namelen usize, flags usize, cb fn (req &C.uv_connect_t, status int)) int {
+	return C.uv_pipe_connect2(req, handle, const_name, namelen, flags, cb)
+}
 
 fn C.uv_pipe_getsockname(handle &C.uv_pipe_t, buffer &char, size &usize) int
 
@@ -848,12 +800,16 @@ pub fn poll_init(loop &C.uv_loop_t, handle &C.uv_poll_t, fd int) int {
 	return C.uv_poll_init(loop, handle, fd)
 }
 
-// TODO  error: call to undeclared function 'uv_poll_init_socket';
-// fn C.uv_poll_init_socket(loop &C.uv_loop_t, handle &C.uv_poll_t, socket int) int
+fn C.uv_poll_init_socket(loop &C.uv_loop_t, handle &C.uv_poll_t, socket int) int
 
-// pub fn poll_init_socket(loop &C.uv_loop_t, handle &C.uv_poll_t, socket int) int {
-// 	return C.uv_poll_init_socket(loop, handle, socket)
-// }
+pub fn poll_init_socket(loop &C.uv_loop_t, handle &C.uv_poll_t, socket int) int {
+	$if compile_static {
+		return C.uv_poll_init_socket(loop, handle, socket)
+	} $else {
+		panic('uv_poll_init_socket is not available when building from source')
+		return -1
+	}
+}
 
 fn C.uv_poll_start(handle &C.uv_poll_t, events int, cb fn (handle &C.uv_poll_t, status int, events int)) int
 
@@ -1006,28 +962,6 @@ pub fn getnameinfo(loop &C.uv_loop_t, req &C.uv_getnameinfo_t, cb fn (req &C.uv_
 
 // process functions
 
-pub enum Uv_stdio_flags {
-	ignore         = 0x00
-	create_pipe    = 0x01
-	inherit_fd     = 0x02
-	inherit_stream = 0x04
-	readable_pipe  = 0x10
-	writable_pipe  = 0x20
-	nonblock_pipe  = 0x40
-	// overlapped_pipe = 64
-}
-
-pub enum Uv_process_flags {
-	setuid
-	setgid
-	windows_verbatim_arguments
-	detached
-	windows_hide
-	windows_hide_console
-	windows_hide_gui
-	windows_file_path_exact_name
-}
-
 fn C.uv_spawn(loop &C.uv_loop_t, handle &C.uv_process_t, options &C.uv_process_options_t) int
 
 pub fn uv_spawn(loop &C.uv_loop_t, handle &C.uv_process_t, options &C.uv_process_options_t) int {
@@ -1063,29 +997,6 @@ pub fn cancel(req &C.uv_req_t) int {
 // memory functions
 
 fn C.uv_getrusage(rusage &C.uv_rusage_t) int
-
-@[typedef]
-pub struct C.uv_timeval_t {}
-
-@[typedef]
-pub struct C.uv_rusage_t {
-	ru_utime    C.uv_timeval_t
-	ru_stime    C.uv_timeval_t
-	ru_maxrss   u64
-	ru_ixrss    u64
-	ru_idrss    u64
-	ru_isrss    u64
-	ru_minflt   u64
-	ru_majflt   u64
-	ru_nswap    u64
-	ru_inblock  u64
-	ru_oublock  u64
-	ru_msgsnd   u64
-	ru_msgrcv   u64
-	ru_nsignals u64
-	ru_nvcsw    u64
-	ru_nivcsw   u64
-}
 
 fn C.uv_setup_args(argc int, argv &&char) &&char
 
@@ -1123,7 +1034,6 @@ pub fn get_osfhandle(fd int) int {
 	return C.uv_get_osfhandle(fd)
 }
 
-
 // TODO error: call to undeclared function 'uv_set_osfhandle';
 // fn C.uv_set_osfhandle(os_fd int) int
 
@@ -1160,9 +1070,6 @@ fn C.uv_os_free_passwd(pwd &C.uv_passwd_t)
 pub fn os_free_passwd(pwd &C.uv_passwd_t) {
 	C.uv_os_free_passwd(pwd)
 }
-
-@[typedef]
-pub struct C.uv_uid_t {}
 
 fn C.uv_os_get_passwd2(pwd &C.uv_passwd_t, uid C.uv_uid_t) int
 
@@ -1208,28 +1115,15 @@ pub fn os_setpriority(pid int, priority int) int {
 
 // cpu functions
 
-@[typedef]
-pub struct C.uv_thread_t {
-	__sig int
-}
+fn C.uv_thread_getpriority(tid C.uv_thread_t, priority &int) int
 
-pub enum Uv_thread_priority {
-	highest      = 2
-	above_normal = 1
-	normal       = 0
-	below_normal = -1
-	lowest       = -2
-}
-
-fn C.uv_thread_getpriority(tid &C.uv_thread_t, priority &int) int
-
-pub fn thread_getpriority(tid &C.uv_thread_t, priority &int) int {
+pub fn thread_getpriority(tid C.uv_thread_t, priority &int) int {
 	return C.uv_thread_getpriority(tid, priority)
 }
 
-fn C.uv_thread_setpriority(tid &C.uv_thread_t, priority Uv_thread_priority) int
+fn C.uv_thread_setpriority(tid C.uv_thread_t, priority Uv_thread_priority) int
 
-pub fn thread_setpriority(tid &C.uv_thread_t, priority Uv_thread_priority) int {
+pub fn thread_setpriority(tid C.uv_thread_t, priority Uv_thread_priority) int {
 	return C.uv_thread_setpriority(tid, priority)
 }
 
@@ -1245,9 +1139,9 @@ pub fn cpu_info(cpu_infos &&C.uv_cpu_info_t, count &int) int {
 	return C.uv_cpu_info(cpu_infos, count)
 }
 
-fn C.uv_free_cpu_info(cpu_infos &&C.uv_cpu_info_t, count int)
+fn C.uv_free_cpu_info(cpu_infos &C.uv_cpu_info_t, count int)
 
-pub fn free_cpu_info(cpu_infos &&C.uv_cpu_info_t, count int) {
+pub fn free_cpu_info(cpu_infos &C.uv_cpu_info_t, count int) {
 	C.uv_free_cpu_info(cpu_infos, count)
 }
 
@@ -1263,19 +1157,13 @@ pub fn interface_addresses(addresses &&C.uv_interface_address_t, count &int) int
 	return C.uv_interface_addresses(addresses, count)
 }
 
-fn C.uv_free_interface_addresses(addresses &&C.uv_interface_address_t, count &int)
+fn C.uv_free_interface_addresses(addresses &&C.uv_interface_address_t, count int)
 
-pub fn free_interface_addresses(addresses &C.uv_interface_address_t, count &int) {
+pub fn free_interface_addresses(addresses &C.uv_interface_address_t, count int) {
 	C.uv_free_interface_addresses(addresses, count)
 }
 
 // env functions
-
-@[typedef]
-pub struct C.uv_env_item_t {
-	name  &char
-	value &char
-}
 
 fn C.uv_os_environ(env_items &&C.uv_env_item_t, count &int) int
 
@@ -1335,56 +1223,17 @@ pub fn metrics_idle_time(loop &C.uv_loop_t) u64 {
 
 // fs helper functions
 
-pub enum Uv_fs_type {
-	fs_unknown = -1
-	fs_custom
-	fs_open
-	fs_close
-	fs_read
-	fs_write
-	fs_sendfile
-	fs_stat
-	fs_lstat
-	fs_fstat
-	fs_ftruncate
-	fs_utime
-	fs_futime
-	fs_access
-	fs_chmod
-	fs_fchmod
-	fs_fsync
-	fs_fdatasync
-	fs_unlink
-	fs_rmdir
-	fs_mkdir
-	fs_mktemp
-	fs_rename
-	fs_scandir
-	fs_link
-	fs_symlink
-	fs_readlink
-	fs_chown
-	fs_fchown
-	fs_realpath
-	fs_copyfile
-	fs_lchown
-	fs_opendir
-	fs_readdir
-	fs_closedir
-	fs_statfs
-	fs_mkstemp
-	fs_lutime
-}
-
-fn C.uv_fs_get_type(const_fs &C.uv_fs_t) Uv_fs_type
+fn C.uv_fs_get_type(const_fs &C.uv_fs_t) int
 
 pub fn fs_get_type(const_fs &C.uv_fs_t) Uv_fs_type {
-	return C.uv_fs_get_type(const_fs)
+	unsafe {
+		return Uv_fs_type(C.uv_fs_get_type(const_fs))
+	}
 }
 
-fn C.uv_fs_get_result(const_fs &C.uv_fs_t) &usize
+fn C.uv_fs_get_result(const_fs &C.uv_fs_t) int
 
-pub fn fs_get_result(const_fs &C.uv_fs_t) &usize {
+pub fn fs_get_result(const_fs &C.uv_fs_t) int {
 	return C.uv_fs_get_result(const_fs)
 }
 
@@ -1402,10 +1251,11 @@ pub fn fs_get_ptr(const_fs &C.uv_fs_t) &voidptr {
 
 fn C.uv_fs_get_path(const_fs &C.uv_fs_t) &char
 
-pub fn fs_get_path(const_fs &C.uv_fs_t) &char {
-	return C.uv_fs_get_path(const_fs)
+pub fn fs_get_path(const_fs &C.uv_fs_t) string {
+	unsafe {
+		return cstring_to_vstring(C.uv_fs_get_path(const_fs))
+	}
 }
-
 
 // TODO must use 'struct' tag to refer to type 'stat'
 
@@ -1585,7 +1435,7 @@ pub fn fs_utime_ex(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, btime f6
 	$if !compile_static {
 		return C.uv_fs_utime_ex(loop, req, const_path, btime, atime, mtime, cb)
 	} $else {
-		panic("uv_fs_utime_ex is not available in static build")
+		panic('uv_fs_utime_ex is not available in static build')
 		return -1
 	}
 }
@@ -1605,7 +1455,7 @@ pub fn fs_futime_ex(loop &C.uv_loop_t, req &C.uv_fs_t, file int, btime f64, atim
 	$if !compile_static {
 		return C.uv_fs_futime_ex(loop, req, file, btime, atime, mtime, cb)
 	} $else {
-		panic("uv_fs_futime_ex is not available in static build")
+		panic('uv_fs_futime_ex is not available in static build')
 		return -1
 	}
 	// return C.uv_fs_futime_ex(loop, req, file, btime, atime, mtime, cb)
@@ -1731,38 +1581,16 @@ pub fn loadavg(avg &f64) {
 
 // fs event functions
 
-// Flags to be passed to uv_fs_event_start().
-pub enum Uv_fs_event_flags {
-	// By default, if the fs event watcher is given a directory name, we will
-	// watch for all events in that directory. This flags overrides this behavior
-	// and makes fs_event report only changes to the directory entry itself. This
-	// flag does not affect individual files watched.
-	// This flag is currently not implemented yet on any backend.
-	fs_event_watch_entry = 1
-
-	// By default uv_fs_event will try to use a kernel interface such as inotify
-	// or kqueue to detect events. This may not work on remote filesystems such
-	// as NFS mounts. This flag makes fs_event fall back to calling stat() on a
-	// regular interval.
-	// This flag is currently not implemented yet on any backend.
-	fs_event_stat = 2
-
-	// By default, event watcher, when watching directory, is not registering
-	// (is ignoring) changes in it's subdirectories.
-	// This flag will override this behaviour on platforms that support it.
-	fs_event_recursive = 4
-}
-
 fn C.uv_fs_event_init(loop &C.uv_loop_t, handle &C.uv_fs_event_t) int
 
 pub fn fs_event_init(loop &C.uv_loop_t, handle &C.uv_fs_event_t) int {
 	return C.uv_fs_event_init(loop, handle)
 }
 
-fn C.uv_fs_event_start(handle &C.uv_fs_event_t, cb fn (handle &C.uv_fs_event_t, filename &char, events int, status int), path &&char, flags int) int
+fn C.uv_fs_event_start(handle &C.uv_fs_event_t, cb fn (handle &C.uv_fs_event_t, const_filename &char, events int, status int), const_path &char, flags int) int
 
-pub fn fs_event_start(handle &C.uv_fs_event_t, cb fn (handle &C.uv_fs_event_t, filename &char, events int, status int), path &&char, flags int) int {
-	return C.uv_fs_event_start(handle, cb, path, flags)
+pub fn fs_event_start(handle &C.uv_fs_event_t, cb fn (handle &C.uv_fs_event_t, const_filename &char, events int, status int), const_path &char, flags int) int {
+	return C.uv_fs_event_start(handle, cb, const_path, flags)
 }
 
 fn C.uv_fs_event_stop(handle &C.uv_fs_event_t) int
@@ -1779,21 +1607,11 @@ pub fn fs_event_getpath(handle &C.uv_fs_event_t, path &char, size &usize) int {
 
 // ip functions
 
-fn C.uv_ip4_addr(const_ip &char, port int, addr &C.sockaddr) int
+fn C.uv_ip4_addr(const_ip &char, port int, addr &C.sockaddr_in) int
 
-pub fn ip4_addr(const_ip &char, port int, addr &C.sockaddr) int {
-	return C.uv_ip4_addr(const_ip, port, addr)
+pub fn ip4_addr(const_ip &char, port int, addr &C.sockaddr_in) int {
+	return C.uv_ip4_addr(const_ip, port, &C.sockaddr_in(addr))
 }
-
-@[typedef]
-pub struct C.sockaddr_in6 {
-	// sin6_family   int
-	// sin6_port     u16
-	// sin6_flowinfo u32
-	// sin6_addr     [16]u8
-	// sin6_scope_id u32
-}
-
 
 // TODO must use 'struct' tag to refer to type 'sockaddr_in6'
 // fn C.uv_ip6_addr(const_ip &char, port int, addr &C.sockaddr_in6) int
@@ -1902,18 +1720,10 @@ pub fn get_available_memory() u64 {
 
 // clock functions
 
-pub enum Uv_clock_id {
-	monotonic = 0
-	realtime
-}
-
-@[typedef]
-struct C.uv_timespec_t {}
-
-fn C.uv_clock_gettime(clock_id Uv_clock_id, ts &C.uv_timespec_t) int
+fn C.uv_clock_gettime(clock_id int, ts &C.uv_timespec_t) int
 
 pub fn clock_gettime(clock_id Uv_clock_id, ts &C.uv_timespec_t) int {
-	return C.uv_clock_gettime(clock_id, ts)
+	return C.uv_clock_gettime(int(clock_id), ts)
 }
 
 fn C.uv_hrtime() u64
@@ -1938,10 +1748,7 @@ pub fn disable_stdio_inheritance() {
 
 // TODO warning: incompatible pointer types passing 'struct uv_lib_t *' to parameter of type 'uv_lib_t *'
 
-// @[typdef]
-// struct C.uv_lib_t {}
 // fn C.uv_dlopen(const_filename &char, lib &C.uv_lib_t) int
-
 
 // pub fn dlopen(const_filename &char, lib &C.uv_lib_t) int {
 // 	return C.uv_dlopen(const_filename, lib)
@@ -1966,9 +1773,6 @@ pub fn disable_stdio_inheritance() {
 // }
 
 // mutex functions
-
-@[typedef]
-struct C.uv_mutex_t {}
 
 fn C.uv_mutex_init(handle &C.uv_mutex_t) int
 
@@ -2007,9 +1811,6 @@ pub fn mutex_unlock(handle &C.uv_mutex_t) {
 }
 
 // lock functions
-
-@[typedef]
-struct C.uv_rwlock_t {}
 
 fn C.uv_rwlock_init(handle &C.uv_rwlock_t) int
 
@@ -2061,9 +1862,6 @@ pub fn rwlock_wrunlock(handle &C.uv_rwlock_t) {
 
 // semaphore functions
 
-@[typedef]
-struct C.uv_sem_t {}
-
 fn C.uv_sem_init(sem &C.uv_sem_t, value usize) int
 
 pub fn sem_init(sem &C.uv_sem_t, value usize) int {
@@ -2095,9 +1893,6 @@ pub fn sem_trywait(sem &C.uv_sem_t) int {
 }
 
 // condition functions
-
-@[typedef]
-struct C.uv_cond_t {}
 
 fn C.uv_cond_init(handle &C.uv_cond_t) int
 
@@ -2137,9 +1932,6 @@ pub fn cond_timedwait(handle &C.uv_cond_t, mutex &C.uv_mutex_t, timeout u64) {
 
 // barrier functions
 
-@[typedef]
-struct C.uv_barrier_t {}
-
 fn C.uv_barrier_init(handle &C.uv_barrier_t, count usize) int
 
 pub fn barrier_init(handle &C.uv_barrier_t, count usize) int {
@@ -2158,25 +1950,33 @@ pub fn barrier_wait(handle &C.uv_barrier_t) {
 	C.uv_barrier_wait(handle)
 }
 
-@[typedef]
-struct C.uv_once_t {}
-
 fn C.uv_once(guard &C.uv_once_t, cb fn ())
 
 pub fn once(guard &C.uv_once_t, cb fn ()) {
 	C.uv_once(guard, cb)
 }
 
-fn C.uv_gettimeofday(tv &C.uv_timeval_t) int
+// pub type Uv_timeval = C.uv_timeval_t | C.uv_timeval64_t
 
-pub fn gettimeofday(tv &C.uv_timeval_t) int {
-	return C.uv_gettimeofday(tv)
+struct Uv_timeval {
+	tv_sec  i64
+	tv_usec i64
+}
+
+fn C.uv_gettimeofday(tv &C.uv_timeval_t) int
+fn C.uv_gettimeofday(tv &C.uv_timeval64_t) int
+
+pub fn gettimeofday(tv &Uv_timeval) int {
+	$if compile_static {
+		return C.uv_gettimeofday(&C.uv_timeval64_t(tv))
+	} $else {
+		// panic('uv_gettimeofday is not available in static build')
+		// return -1
+		return C.uv_gettimeofday(&C.uv_timeval64_t(tv))
+	}
 }
 
 // key functions
-
-@[typedef]
-struct C.uv_key_t {}
 
 fn C.uv_key_create(key &C.uv_key_t) int
 
@@ -2203,14 +2003,6 @@ pub fn key_set(key &C.uv_key_t, value &voidptr) {
 }
 
 // thread functions
-
-@[typedef]
-struct C.uv_thread_options_t {}
-
-pub enum Uv_thread_create_flags {
-	uv_thread_no_flags       = 0
-	uv_thread_has_stack_size = 1
-}
 
 fn C.uv_thread_create(tid &C.uv_thread_t, entry fn (arg &voidptr), arg &voidptr) int
 
@@ -2242,9 +2034,9 @@ pub fn thread_join(tid &C.uv_thread_t) {
 	C.uv_thread_join(tid)
 }
 
-fn C.uv_thread_self() &C.uv_thread_t
+fn C.uv_thread_self() C.uv_thread_t
 
-pub fn thread_self() &C.uv_thread_t {
+pub fn thread_self() C.uv_thread_t {
 	return C.uv_thread_self()
 }
 

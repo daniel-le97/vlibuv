@@ -7,18 +7,24 @@
 
 // V comptime_definitions:
 // V compile time defines by -d or -define flags:
-//     All custom defines      : uv_static,gcboehm,gcboehm_full,gcboehm_opt
-//     Turned ON custom defines: uv_static,gcboehm,gcboehm_full,gcboehm_opt
+//     All custom defines      : uv_static,gcboehm,gcboehm_full,gcboehm_opt,debug
+//     Turned ON custom defines: uv_static,gcboehm,gcboehm_full,gcboehm_opt,debug
 #define CUSTOM_DEFINE_uv_static
 #define CUSTOM_DEFINE_gcboehm
 #define CUSTOM_DEFINE_gcboehm_full
 #define CUSTOM_DEFINE_gcboehm_opt
+#define CUSTOM_DEFINE_debug
 
 #define _VGCBOEHM (1)
+#define _VDEBUG (1)
 
 // V typedefs:
 typedef struct IError IError;
 typedef struct none none;
+typedef struct vuv__Buf vuv__Buf;
+typedef struct vuv__Uv_timeval vuv__Uv_timeval;
+typedef struct _option_anon_fn_c__uv_handle_t_usize_c__uv_buf_t _option_anon_fn_c__uv_handle_t_usize_c__uv_buf_t;
+typedef struct _option_anon_fn_c__uv_stream_t_isize_c__uv_buf_t _option_anon_fn_c__uv_stream_t_isize_c__uv_buf_t;
 
 // BEGIN_array_fixed_return_typedefs
 // END_array_fixed_return_typedefs
@@ -72,6 +78,8 @@ typedef struct RepIndex RepIndex;
 typedef union StrIntpMem StrIntpMem;
 typedef struct StrIntpCgenData StrIntpCgenData;
 typedef struct StrIntpData StrIntpData;
+typedef struct vuv__Handle_fields vuv__Handle_fields;
+typedef struct vuv__Stream_fields vuv__Stream_fields;
 typedef struct main__HttpServer main__HttpServer;
 typedef struct _result_int _result_int;
 typedef struct _result_f64 _result_f64;
@@ -896,6 +904,17 @@ typedef enum {
 }  StrIntpType;
 
 typedef enum {
+	vuv__Uv_dirent_type__uv_dirent_unknown = 0, // 0
+	vuv__Uv_dirent_type__uv_dirent_file, // 0+1
+	vuv__Uv_dirent_type__uv_dirent_dir, // 0+2
+	vuv__Uv_dirent_type__uv_dirent_link, // 0+3
+	vuv__Uv_dirent_type__uv_dirent_fifo, // 0+4
+	vuv__Uv_dirent_type__uv_dirent_socket, // 0+5
+	vuv__Uv_dirent_type__uv_dirent_char, // 0+6
+	vuv__Uv_dirent_type__uv_dirent_block, // 0+7
+}  vuv__Uv_dirent_type;
+
+typedef enum {
 	vuv__Uv_tcp_flags__tcp_ipv6_only = 1, // 1
 	vuv__Uv_tcp_flags__tcp_reuse_port, // 1+1
 }  vuv__Uv_tcp_flags;
@@ -942,14 +961,6 @@ typedef enum {
 	vuv__Uv_process_flags__windows_hide_gui, // +6
 	vuv__Uv_process_flags__windows_file_path_exact_name, // +7
 }  vuv__Uv_process_flags;
-
-typedef enum {
-	vuv__Uv_thread_priority__highest = 2, // 2
-	vuv__Uv_thread_priority__above_normal = 1, // 1
-	vuv__Uv_thread_priority__normal = 0, // 0
-	vuv__Uv_thread_priority__below_normal = -1, // -1
-	vuv__Uv_thread_priority__lowest = -2, // -2
-}  vuv__Uv_thread_priority;
 
 typedef enum {
 	vuv__Uv_fs_type__fs_unknown = -1, // -1
@@ -999,14 +1010,17 @@ typedef enum {
 }  vuv__Uv_fs_event_flags;
 
 typedef enum {
-	vuv__Uv_clock_id__monotonic = 0, // 0
-	vuv__Uv_clock_id__realtime, // 0+1
-}  vuv__Uv_clock_id;
-
-typedef enum {
 	vuv__Uv_thread_create_flags__uv_thread_no_flags = 0, // 0
 	vuv__Uv_thread_create_flags__uv_thread_has_stack_size = 1, // 1
 }  vuv__Uv_thread_create_flags;
+
+typedef enum {
+	vuv__Uv_thread_priority__highest = 2, // 2
+	vuv__Uv_thread_priority__above_normal = 1, // 1
+	vuv__Uv_thread_priority__normal = 0, // 0
+	vuv__Uv_thread_priority__below_normal = -1, // -1
+	vuv__Uv_thread_priority__lowest = -2, // -2
+}  vuv__Uv_thread_priority;
 
 typedef enum {
 	vuv__Mode__default = 0, // 0
@@ -1061,6 +1075,11 @@ typedef enum {
 	vuv__Uv_loop_option__metrics_idle_time, // 0+1
 	vuv__Uv_loop_option__loop_use_io_uring_sqpoll, // 0+2
 }  vuv__Uv_loop_option;
+
+typedef enum {
+	vuv__Uv_clock_id__monotonic = 0, // 0
+	vuv__Uv_clock_id__realtime, // 0+1
+}  vuv__Uv_clock_id;
 
 // Thread definitions:
 typedef pthread_t __v_thread;
@@ -1145,6 +1164,8 @@ typedef array Array_RepIndex;
 typedef array Array_int;
 typedef array Array_u16;
 typedef map Map_string_int;
+typedef byte Array_fixed_byte_256 [256];
+typedef u64 Array_fixed_u64_4 [4];
 typedef u8 Array_fixed_u8_5 [5];
 typedef u8 Array_fixed_u8_25 [25];
 typedef u8 Array_fixed_u8_32 [32];
@@ -1177,7 +1198,6 @@ typedef uv_stream_t vuv__Uv_stream_t;
 typedef uv_handle_t vuv__Uv_handle_t;
 typedef uv_buf_t vuv__Uv_buf_t;
 typedef uv_write_t vuv__Uv_write_t;
-typedef struct sockaddr_in vuv__Sockaddr_in;
 typedef uv_dir_t vuv__Uv_dir_t;
 typedef uv_udp_t vuv__Uv_udp_t;
 typedef uv_pipe_t vuv__Uv_pipe_t;
@@ -1210,6 +1230,7 @@ typedef uv_group_t vuv__Uv_group_t;
 typedef uv_utsname_t vuv__Uv_utsname_t;
 typedef uv_statfs_t vuv__Uv_statfs_t;
 typedef uv_metrics_t vuv__Uv_metrics_t;
+typedef struct sockaddr_in vuv__Sockaddr_in;
 typedef bool (*anon_fn_voidptr__bool)(voidptr);
 typedef voidptr (*anon_fn_voidptr__voidptr)(voidptr);
 typedef int (*anon_fn_voidptr_voidptr__int)(voidptr,voidptr);
@@ -1270,6 +1291,7 @@ typedef void (*anon_fn_c__uv_fs_event_t_char_int_int)(uv_fs_event_t*,char*,int,i
 typedef void (*anon_fn_c__uv_random_t_int_voidptr_usize)(uv_random_t*,int,voidptr,usize);
 typedef void (*anon_fn_)();
 typedef void (*anon_fn_voidptr)(voidptr*);
+typedef void (*anon_fn_c__uv_process_t_i64_i64)(uv_process_t*,i64,i64);
 // #start sorted_symbols
 struct none {
 	EMPTY_STRUCT_DECLARATION;
@@ -1288,6 +1310,28 @@ struct StrIntpCgenData {
 struct main__HttpServer {
 	vuv__Uv_tcp_t* server;
 	vuv__Uv_loop_t* loop;
+};
+
+// Union sum type vuv__Buf = 
+//          |   11 = u8                  
+//          |   18 = char                
+struct vuv__Buf {
+	union {
+		u8* _u8;
+		char* _char;
+	};
+	int _typ;
+};
+
+// Union sum type vuv__Uv_timeval = 
+//          |  247 = uv_timeval_t        
+//          |  248 = uv_timeval64_t      
+struct vuv__Uv_timeval {
+	union {
+		uv_timeval_t* _C__uv_timeval_t;
+		uv_timeval64_t* _C__uv_timeval64_t;
+	};
+	int _typ;
 };
 
 struct GCHeapUsage {
@@ -1459,6 +1503,27 @@ struct strconv__Uint128 {
 union strconv__Uf64 {
 	f64 f;
 	u64 u;
+};
+
+struct vuv__Handle_fields {
+	uv_loop_t* loop;
+	voidptr data;
+};
+struct _option_anon_fn_c__uv_stream_t_isize_c__uv_buf_t {
+	byte state;
+	IError err;
+	byte data[sizeof(void*) > 1 ? sizeof(void*) : 1];
+};
+struct _option_anon_fn_c__uv_handle_t_usize_c__uv_buf_t {
+	byte state;
+	IError err;
+	byte data[sizeof(void*) > 1 ? sizeof(void*) : 1];
+};
+
+struct vuv__Stream_fields {
+	usize write_queue_size;
+	_option_anon_fn_c__uv_handle_t_usize_c__uv_buf_t alloc_cb;
+	_option_anon_fn_c__uv_stream_t_isize_c__uv_buf_t read_cb;
 };
 
 struct mapnode {
@@ -1640,7 +1705,7 @@ string strings__Builder_str(strings__Builder* b);
 void strings__Builder_ensure_cap(strings__Builder* b, int n);
 void strings__Builder_grow_len(strings__Builder* b, int n);
 void strings__Builder_free(strings__Builder* b);
-VV_LOCAL_SYMBOL u16 strings__min(u16 a, u16 b, u16 c);
+u16 strings__min(u16 a, u16 b, u16 c);
 int strings__levenshtein_distance(string a, string b);
 f32 strings__levenshtein_distance_percentage(string a, string b);
 f32 strings__dice_coefficient(string s1, string s2);
@@ -1692,15 +1757,15 @@ u32 math__bits__f32_bits(f32 f);
 f32 math__bits__f32_from_bits(u32 b);
 u64 math__bits__f64_bits(f64 f);
 f64 math__bits__f64_from_bits(u64 b);
-VV_LOCAL_SYMBOL multi_return_u32_u32_u32 strconv__lsr96(u32 s2, u32 s1, u32 s0);
-VV_LOCAL_SYMBOL multi_return_u32_u32_u32 strconv__lsl96(u32 s2, u32 s1, u32 s0);
-VV_LOCAL_SYMBOL multi_return_u32_u32_u32 strconv__add96(u32 s2, u32 s1, u32 s0, u32 d2, u32 d1, u32 d0);
-VV_LOCAL_SYMBOL multi_return_u32_u32_u32 strconv__sub96(u32 s2, u32 s1, u32 s0, u32 d2, u32 d1, u32 d0);
-VV_LOCAL_SYMBOL bool strconv__is_digit(u8 x);
-VV_LOCAL_SYMBOL bool strconv__is_space(u8 x);
-VV_LOCAL_SYMBOL bool strconv__is_exp(u8 x);
-VV_LOCAL_SYMBOL multi_return_strconv__ParserState_strconv__PrepNumber strconv__parser(string s);
-VV_LOCAL_SYMBOL u64 strconv__converter(strconv__PrepNumber* pn);
+multi_return_u32_u32_u32 strconv__lsr96(u32 s2, u32 s1, u32 s0);
+multi_return_u32_u32_u32 strconv__lsl96(u32 s2, u32 s1, u32 s0);
+multi_return_u32_u32_u32 strconv__add96(u32 s2, u32 s1, u32 s0, u32 d2, u32 d1, u32 d0);
+multi_return_u32_u32_u32 strconv__sub96(u32 s2, u32 s1, u32 s0, u32 d2, u32 d1, u32 d0);
+bool strconv__is_digit(u8 x);
+bool strconv__is_space(u8 x);
+bool strconv__is_exp(u8 x);
+multi_return_strconv__ParserState_strconv__PrepNumber strconv__parser(string s);
+u64 strconv__converter(strconv__PrepNumber* pn);
 _result_f64 strconv__atof64(string s);
 f64 strconv__atof_quick(string s);
 u8 strconv__byte_to_lower(u8 c);
@@ -1711,13 +1776,13 @@ _result_i64 strconv__common_parse_int(string _s, int base, int _bit_size, bool e
 _result_i64 strconv__parse_int(string _s, int base, int _bit_size);
 _result_int strconv__atoi(string s);
 string strconv__Dec32_get_string_32(strconv__Dec32 d, bool neg, int i_n_digit, int i_pad_digit);
-VV_LOCAL_SYMBOL multi_return_strconv__Dec32_bool strconv__f32_to_decimal_exact_int(u32 i_mant, u32 exp);
-VV_LOCAL_SYMBOL strconv__Dec32 strconv__f32_to_decimal(u32 mant, u32 exp);
+multi_return_strconv__Dec32_bool strconv__f32_to_decimal_exact_int(u32 i_mant, u32 exp);
+strconv__Dec32 strconv__f32_to_decimal(u32 mant, u32 exp);
 string strconv__f32_to_str(f32 f, int n_digit);
 string strconv__f32_to_str_pad(f32 f, int n_digit);
-VV_LOCAL_SYMBOL string strconv__Dec64_get_string_64(strconv__Dec64 d, bool neg, int i_n_digit, int i_pad_digit);
-VV_LOCAL_SYMBOL multi_return_strconv__Dec64_bool strconv__f64_to_decimal_exact_int(u64 i_mant, u64 exp);
-VV_LOCAL_SYMBOL strconv__Dec64 strconv__f64_to_decimal(u64 mant, u64 exp);
+string strconv__Dec64_get_string_64(strconv__Dec64 d, bool neg, int i_n_digit, int i_pad_digit);
+multi_return_strconv__Dec64_bool strconv__f64_to_decimal_exact_int(u64 i_mant, u64 exp);
+strconv__Dec64 strconv__f64_to_decimal(u64 mant, u64 exp);
 string strconv__f64_to_str(f64 f, int n_digit);
 string strconv__f64_to_str_pad(f64 f, int n_digit);
 string strconv__format_str(string s, strconv__BF_param p);
@@ -1739,68 +1804,68 @@ string strconv__f64_to_str_l(f64 f);
 string strconv__f64_to_str_l_with_dot(f64 f);
 string strconv__fxx_to_str_l_parse(string s);
 string strconv__fxx_to_str_l_parse_with_dot(string s);
-VV_LOCAL_SYMBOL int strconv__bool_to_int(bool b);
-VV_LOCAL_SYMBOL u32 strconv__bool_to_u32(bool b);
-VV_LOCAL_SYMBOL u64 strconv__bool_to_u64(bool b);
-VV_LOCAL_SYMBOL string strconv__get_string_special(bool neg, bool expZero, bool mantZero);
-VV_LOCAL_SYMBOL u32 strconv__mul_shift_32(u32 m, u64 mul, int ishift);
-VV_LOCAL_SYMBOL u32 strconv__mul_pow5_invdiv_pow2(u32 m, u32 q, int j);
-VV_LOCAL_SYMBOL u32 strconv__mul_pow5_div_pow2(u32 m, u32 i, int j);
-VV_LOCAL_SYMBOL u32 strconv__pow5_factor_32(u32 i_v);
-VV_LOCAL_SYMBOL bool strconv__multiple_of_power_of_five_32(u32 v, u32 p);
-VV_LOCAL_SYMBOL bool strconv__multiple_of_power_of_two_32(u32 v, u32 p);
-VV_LOCAL_SYMBOL u32 strconv__log10_pow2(int e);
-VV_LOCAL_SYMBOL u32 strconv__log10_pow5(int e);
-VV_LOCAL_SYMBOL int strconv__pow5_bits(int e);
-VV_LOCAL_SYMBOL u64 strconv__shift_right_128(strconv__Uint128 v, int shift);
-VV_LOCAL_SYMBOL u64 strconv__mul_shift_64(u64 m, strconv__Uint128 mul, int shift);
-VV_LOCAL_SYMBOL u32 strconv__pow5_factor_64(u64 v_i);
-VV_LOCAL_SYMBOL bool strconv__multiple_of_power_of_five_64(u64 v, u32 p);
-VV_LOCAL_SYMBOL bool strconv__multiple_of_power_of_two_64(u64 v, u32 p);
+int strconv__bool_to_int(bool b);
+u32 strconv__bool_to_u32(bool b);
+u64 strconv__bool_to_u64(bool b);
+string strconv__get_string_special(bool neg, bool expZero, bool mantZero);
+u32 strconv__mul_shift_32(u32 m, u64 mul, int ishift);
+u32 strconv__mul_pow5_invdiv_pow2(u32 m, u32 q, int j);
+u32 strconv__mul_pow5_div_pow2(u32 m, u32 i, int j);
+u32 strconv__pow5_factor_32(u32 i_v);
+bool strconv__multiple_of_power_of_five_32(u32 v, u32 p);
+bool strconv__multiple_of_power_of_two_32(u32 v, u32 p);
+u32 strconv__log10_pow2(int e);
+u32 strconv__log10_pow5(int e);
+int strconv__pow5_bits(int e);
+u64 strconv__shift_right_128(strconv__Uint128 v, int shift);
+u64 strconv__mul_shift_64(u64 m, strconv__Uint128 mul, int shift);
+u32 strconv__pow5_factor_64(u64 v_i);
+bool strconv__multiple_of_power_of_five_64(u64 v, u32 p);
+bool strconv__multiple_of_power_of_two_64(u64 v, u32 p);
 int strconv__dec_digits(u64 n);
 void strconv__v_printf(string str, Array_voidptr pt);
 string strconv__v_sprintf(string str, Array_voidptr pt);
-VV_LOCAL_SYMBOL void strconv__v_sprintf_panic(int idx, int len);
-VV_LOCAL_SYMBOL f64 strconv__fabs(f64 x);
+void strconv__v_sprintf_panic(int idx, int len);
+f64 strconv__fabs(f64 x);
 string strconv__format_fl_old(f64 f, strconv__BF_param p);
-VV_LOCAL_SYMBOL string strconv__format_es_old(f64 f, strconv__BF_param p);
-VV_LOCAL_SYMBOL string strconv__remove_tail_zeros_old(string s);
+string strconv__format_es_old(f64 f, strconv__BF_param p);
+string strconv__remove_tail_zeros_old(string s);
 string strconv__format_dec_old(u64 d, strconv__BF_param p);
-VV_LOCAL_SYMBOL array __new_array(int mylen, int cap, int elm_size);
-VV_LOCAL_SYMBOL array __new_array_with_default(int mylen, int cap, int elm_size, voidptr val);
-VV_LOCAL_SYMBOL array __new_array_with_multi_default(int mylen, int cap, int elm_size, voidptr val);
-VV_LOCAL_SYMBOL array __new_array_with_array_default(int mylen, int cap, int elm_size, array val, int depth);
-VV_LOCAL_SYMBOL array __new_array_with_map_default(int mylen, int cap, int elm_size, map val);
-VV_LOCAL_SYMBOL array new_array_from_c_array(int len, int cap, int elm_size, voidptr c_array);
-VV_LOCAL_SYMBOL array new_array_from_c_array_no_alloc(int len, int cap, int elm_size, voidptr c_array);
-VV_LOCAL_SYMBOL void array_ensure_cap(array* a, int required);
+array __new_array(int mylen, int cap, int elm_size);
+array __new_array_with_default(int mylen, int cap, int elm_size, voidptr val);
+array __new_array_with_multi_default(int mylen, int cap, int elm_size, voidptr val);
+array __new_array_with_array_default(int mylen, int cap, int elm_size, array val, int depth);
+array __new_array_with_map_default(int mylen, int cap, int elm_size, map val);
+array new_array_from_c_array(int len, int cap, int elm_size, voidptr c_array);
+array new_array_from_c_array_no_alloc(int len, int cap, int elm_size, voidptr c_array);
+void array_ensure_cap(array* a, int required);
 array array_repeat(array a, int count);
 array array_repeat_to_depth(array a, int count, int depth);
 void array_insert(array* a, int i, voidptr val);
-VV_LOCAL_SYMBOL void array_insert_many(array* a, int i, voidptr val, int size);
+void array_insert_many(array* a, int i, voidptr val, int size);
 void array_prepend(array* a, voidptr val);
-VV_LOCAL_SYMBOL void array_prepend_many(array* a, voidptr val, int size);
+void array_prepend_many(array* a, voidptr val, int size);
 void array_delete(array* a, int i);
 void array_delete_many(array* a, int i, int size);
 void array_clear(array* a);
 void array_reset(array* a);
 void array_trim(array* a, int index);
 void array_drop(array* a, int num);
-VV_LOCAL_SYMBOL voidptr array_get_unsafe(array a, int i);
-VV_LOCAL_SYMBOL voidptr array_get(array a, int i);
-VV_LOCAL_SYMBOL voidptr array_get_with_check(array a, int i);
+voidptr array_get_unsafe(array a, int i);
+voidptr array_get(array a, int i);
+voidptr array_get_with_check(array a, int i);
 voidptr array_first(array a);
 voidptr array_last(array a);
 voidptr array_pop(array* a);
 void array_delete_last(array* a);
-VV_LOCAL_SYMBOL array array_slice(array a, int start, int _end);
-VV_LOCAL_SYMBOL array array_slice_ni(array a, int _start, int _end);
-VV_LOCAL_SYMBOL array array_clone_static_to_depth(array a, int depth);
+array array_slice(array a, int start, int _end);
+array array_slice_ni(array a, int _start, int _end);
+array array_clone_static_to_depth(array a, int depth);
 array array_clone(array* a);
 array array_clone_to_depth(array* a, int depth);
-VV_LOCAL_SYMBOL void array_set_unsafe(array* a, int i, voidptr val);
-VV_LOCAL_SYMBOL void array_set(array* a, int i, voidptr val);
-VV_LOCAL_SYMBOL void array_push(array* a, voidptr val);
+void array_set_unsafe(array* a, int i, voidptr val);
+void array_set(array* a, int i, voidptr val);
+void array_push(array* a, voidptr val);
 void array_push_many(array* a3, voidptr val, int size);
 void array_reverse_in_place(array* a);
 array array_reverse(array a);
@@ -1824,34 +1889,34 @@ void array_grow_len(array* a, int amount);
 Array_voidptr array_pointers(array a);
 Array_u8 voidptr_vbytes(voidptr data, int len);
 Array_u8 u8_vbytes(u8* data, int len);
-VV_LOCAL_SYMBOL array __new_array_noscan(int mylen, int cap, int elm_size);
-VV_LOCAL_SYMBOL array __new_array_with_default_noscan(int mylen, int cap, int elm_size, voidptr val);
-VV_LOCAL_SYMBOL array __new_array_with_multi_default_noscan(int mylen, int cap, int elm_size, voidptr val);
-VV_LOCAL_SYMBOL array __new_array_with_array_default_noscan(int mylen, int cap, int elm_size, array val);
-VV_LOCAL_SYMBOL array new_array_from_c_array_noscan(int len, int cap, int elm_size, voidptr c_array);
-VV_LOCAL_SYMBOL void array_ensure_cap_noscan(array* a, int required);
-VV_LOCAL_SYMBOL array array_repeat_to_depth_noscan(array a, int count, int depth);
-VV_LOCAL_SYMBOL void array_insert_noscan(array* a, int i, voidptr val);
-VV_LOCAL_SYMBOL void array_insert_many_noscan(array* a, int i, voidptr val, int size);
-VV_LOCAL_SYMBOL void array_prepend_noscan(array* a, voidptr val);
-VV_LOCAL_SYMBOL void array_prepend_many_noscan(array* a, voidptr val, int size);
-VV_LOCAL_SYMBOL voidptr array_pop_noscan(array* a);
-VV_LOCAL_SYMBOL array array_clone_static_to_depth_noscan(array a, int depth);
-VV_LOCAL_SYMBOL array array_clone_to_depth_noscan(array* a, int depth);
-VV_LOCAL_SYMBOL void array_push_noscan(array* a, voidptr val);
-VV_LOCAL_SYMBOL void array_push_many_noscan(array* a3, voidptr val, int size);
-VV_LOCAL_SYMBOL array array_reverse_noscan(array a);
-VV_LOCAL_SYMBOL void array_grow_cap_noscan(array* a, int amount);
-VV_LOCAL_SYMBOL void array_grow_len_noscan(array* a, int amount);
+array __new_array_noscan(int mylen, int cap, int elm_size);
+array __new_array_with_default_noscan(int mylen, int cap, int elm_size, voidptr val);
+array __new_array_with_multi_default_noscan(int mylen, int cap, int elm_size, voidptr val);
+array __new_array_with_array_default_noscan(int mylen, int cap, int elm_size, array val);
+array new_array_from_c_array_noscan(int len, int cap, int elm_size, voidptr c_array);
+void array_ensure_cap_noscan(array* a, int required);
+array array_repeat_to_depth_noscan(array a, int count, int depth);
+void array_insert_noscan(array* a, int i, voidptr val);
+void array_insert_many_noscan(array* a, int i, voidptr val, int size);
+void array_prepend_noscan(array* a, voidptr val);
+void array_prepend_many_noscan(array* a, voidptr val, int size);
+voidptr array_pop_noscan(array* a);
+array array_clone_static_to_depth_noscan(array a, int depth);
+array array_clone_to_depth_noscan(array* a, int depth);
+void array_push_noscan(array* a, voidptr val);
+void array_push_many_noscan(array* a3, voidptr val, int size);
+array array_reverse_noscan(array a);
+void array_grow_cap_noscan(array* a, int amount);
+void array_grow_len_noscan(array* a, int amount);
 void print_backtrace(void);
 bool print_backtrace_skipping_top_frames(int xskipframes);
-VV_LOCAL_SYMBOL bool print_backtrace_skipping_top_frames_bsd(int skipframes);
-VV_LOCAL_SYMBOL bool print_backtrace_skipping_top_frames_linux(int skipframes);
-VV_LOCAL_SYMBOL void vhalt(void);
-VV_LOCAL_SYMBOL void v_segmentation_fault_handler(i32 signal_number);
+bool print_backtrace_skipping_top_frames_bsd(int skipframes);
+bool print_backtrace_skipping_top_frames_linux(int skipframes);
+void vhalt(void);
+void v_segmentation_fault_handler(i32 signal_number);
 void _v_exit(int code);
 _result_void at_exit(void (*cb)());
-VV_LOCAL_SYMBOL void panic_debug(int line_no, string file, string mod, string fn_name, string s);
+void panic_debug(int line_no, string file, string mod, string fn_name, string s);
 void panic_option_not_set(string s);
 void panic_result_not_set(string s);
 void _v_panic(string s);
@@ -1864,11 +1929,11 @@ void flush_stderr(void);
 void unbuffer_stdout(void);
 void print(string s);
 void println(string s);
-VV_LOCAL_SYMBOL void _writeln_to_fd(int fd, string s);
-VV_LOCAL_SYMBOL void _write_buf_to_fd(int fd, u8* buf, int buf_len);
+void _writeln_to_fd(int fd, string s);
+void _write_buf_to_fd(int fd, u8* buf, int buf_len);
 u8* _v_malloc(isize n);
 u8* malloc_noscan(isize n);
-VV_LOCAL_SYMBOL u64 __at_least_one(u64 how_many);
+u64 __at_least_one(u64 how_many);
 u8* malloc_uncollectable(isize n);
 u8* v_realloc(u8* b, isize n);
 u8* realloc_data(u8* old_data, int old_size, int new_size);
@@ -1880,12 +1945,12 @@ voidptr memdup_noscan(voidptr src, isize sz);
 voidptr memdup_uncollectable(voidptr src, isize sz);
 GCHeapUsage gc_heap_usage(void);
 usize gc_memory_use(void);
-VV_LOCAL_SYMBOL int v_fixed_index(int i, int len);
+int v_fixed_index(int i, int len);
 Array_string arguments(void);
 bool isnil(voidptr v);
-VV_LOCAL_SYMBOL voidptr __as_cast(voidptr obj, int obj_type, int expected_type);
+voidptr __as_cast(voidptr obj, int obj_type, int expected_type);
 void VAssertMetaInfo_free(VAssertMetaInfo* ami);
-VV_LOCAL_SYMBOL void __print_assert_failure(VAssertMetaInfo* i);
+void __print_assert_failure(VAssertMetaInfo* i);
 bool gc_is_enabled(void);
 void gc_collect(void);
 void gc_enable(void);
@@ -1893,12 +1958,12 @@ void gc_disable(void);
 void gc_check_leaks(void);
 FnGC_WarnCB gc_get_warn_proc(void);
 void gc_set_warn_proc(void (*cb)(char* msg, usize arg));
-VV_LOCAL_SYMBOL void internal_gc_warn_proc_none(char* msg, usize arg);
-VV_LOCAL_SYMBOL void builtin_init(void);
-VV_LOCAL_SYMBOL void break_if_debugger_attached(void);
+void internal_gc_warn_proc_none(char* msg, usize arg);
+void builtin_init(void);
+void break_if_debugger_attached(void);
 void panic_lasterr(string base);
-VV_LOCAL_SYMBOL void print_libbacktrace(int frames_to_skip);
-VV_LOCAL_SYMBOL void eprint_libbacktrace(int frames_to_skip);
+void print_libbacktrace(int frames_to_skip);
+void eprint_libbacktrace(int frames_to_skip);
 int proc_pidpath(int , voidptr , int );
 int vstrlen(u8* s);
 int vstrlen_char(char* s);
@@ -1906,7 +1971,7 @@ voidptr vmemcpy(voidptr dest, const voidptr const_src, isize n);
 voidptr vmemmove(voidptr dest, const voidptr const_src, isize n);
 int vmemcmp(const voidptr const_s1, const voidptr const_s2, isize n);
 voidptr vmemset(voidptr s, int c, isize n);
-VV_LOCAL_SYMBOL void vqsort(voidptr base, usize nmemb, usize size, int (*sort_cb)(const voidptr const_a, const voidptr const_b));
+void vqsort(voidptr base, usize nmemb, usize size, int (*sort_cb)(const voidptr const_a, const voidptr const_b));
 void chan_close(chan ch);
 ChanState chan_try_pop(chan ch, voidptr obj);
 ChanState chan_try_push(chan ch, voidptr obj);
@@ -1922,19 +1987,19 @@ string f32_strg(f32 x);
 string f32_strsci(f32 x, int digit_num);
 string f32_strlong(f32 x);
 f32 f32_abs(f32 a);
-VV_LOCAL_SYMBOL f64 f64_abs(f64 a);
+f64 f64_abs(f64 a);
 f32 f32_max(f32 a, f32 b);
 f32 f32_min(f32 a, f32 b);
 f64 f64_max(f64 a, f64 b);
-VV_LOCAL_SYMBOL f64 f64_min(f64 a, f64 b);
+f64 f64_min(f64 a, f64 b);
 bool f32_eq_epsilon(f32 a, f32 b);
 bool f64_eq_epsilon(f64 a, f64 b);
-VV_LOCAL_SYMBOL void float_test(void);
+void float_test(void);
 string ptr_str(voidptr ptr);
 string isize_str(isize x);
 string usize_str(usize x);
 string char_str(char* cptr);
-VV_LOCAL_SYMBOL string int_str_l(int nn, int max);
+string int_str_l(int nn, int max);
 string i8_str(i8 n);
 string i16_str(i16 n);
 string u16_str(u16 n);
@@ -1946,8 +2011,8 @@ string int_literal_str(int_literal n);
 string i64_str(i64 nn);
 string u64_str(u64 nn);
 string bool_str(bool b);
-VV_LOCAL_SYMBOL string u64_to_hex(u64 nn, u8 len);
-VV_LOCAL_SYMBOL string u64_to_hex_no_leading_zeros(u64 nn, u8 len);
+string u64_to_hex(u64 nn, u8 len);
+string u64_to_hex_no_leading_zeros(u64 nn, u8 len);
 string u8_hex(u8 nn);
 string i8_hex(i8 nn);
 string u16_hex(u16 nn);
@@ -1977,70 +2042,70 @@ bool u8_is_capital(u8 c);
 string Array_u8_bytestr(Array_u8 b);
 _result_rune Array_u8_byterune(Array_u8 b);
 string u8_repeat(u8 b, int count);
-VV_LOCAL_SYMBOL string _Atomic__int_str(int x);
-VV_LOCAL_SYMBOL bool fast_string_eq(string a, string b);
-VV_LOCAL_SYMBOL u64 map_hash_string(voidptr pkey);
-VV_LOCAL_SYMBOL u64 map_hash_int_1(voidptr pkey);
-VV_LOCAL_SYMBOL u64 map_hash_int_2(voidptr pkey);
-VV_LOCAL_SYMBOL u64 map_hash_int_4(voidptr pkey);
-VV_LOCAL_SYMBOL u64 map_hash_int_8(voidptr pkey);
-VV_LOCAL_SYMBOL void DenseArray_zeros_to_end(DenseArray* d);
-VV_LOCAL_SYMBOL DenseArray new_dense_array(int key_bytes, int value_bytes);
-VV_LOCAL_SYMBOL voidptr DenseArray_key(DenseArray* d, int i);
-VV_LOCAL_SYMBOL voidptr DenseArray_value(DenseArray* d, int i);
-VV_LOCAL_SYMBOL bool DenseArray_has_index(DenseArray* d, int i);
-VV_LOCAL_SYMBOL int DenseArray_expand(DenseArray* d);
-VV_LOCAL_SYMBOL bool map_eq_string(voidptr a, voidptr b);
-VV_LOCAL_SYMBOL bool map_eq_int_1(voidptr a, voidptr b);
-VV_LOCAL_SYMBOL bool map_eq_int_2(voidptr a, voidptr b);
-VV_LOCAL_SYMBOL bool map_eq_int_4(voidptr a, voidptr b);
-VV_LOCAL_SYMBOL bool map_eq_int_8(voidptr a, voidptr b);
-VV_LOCAL_SYMBOL void map_clone_string(voidptr dest, voidptr pkey);
-VV_LOCAL_SYMBOL void map_clone_int_1(voidptr dest, voidptr pkey);
-VV_LOCAL_SYMBOL void map_clone_int_2(voidptr dest, voidptr pkey);
-VV_LOCAL_SYMBOL void map_clone_int_4(voidptr dest, voidptr pkey);
-VV_LOCAL_SYMBOL void map_clone_int_8(voidptr dest, voidptr pkey);
-VV_LOCAL_SYMBOL void map_free_string(voidptr pkey);
-VV_LOCAL_SYMBOL void map_free_nop(voidptr _d1);
-VV_LOCAL_SYMBOL map new_map(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ));
-VV_LOCAL_SYMBOL map new_map_init(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values);
-VV_LOCAL_SYMBOL map new_map_update_init(map* update, int n, int key_bytes, int value_bytes, voidptr keys, voidptr values);
+string _Atomic__int_str(int x);
+bool fast_string_eq(string a, string b);
+u64 map_hash_string(voidptr pkey);
+u64 map_hash_int_1(voidptr pkey);
+u64 map_hash_int_2(voidptr pkey);
+u64 map_hash_int_4(voidptr pkey);
+u64 map_hash_int_8(voidptr pkey);
+void DenseArray_zeros_to_end(DenseArray* d);
+DenseArray new_dense_array(int key_bytes, int value_bytes);
+voidptr DenseArray_key(DenseArray* d, int i);
+voidptr DenseArray_value(DenseArray* d, int i);
+bool DenseArray_has_index(DenseArray* d, int i);
+int DenseArray_expand(DenseArray* d);
+bool map_eq_string(voidptr a, voidptr b);
+bool map_eq_int_1(voidptr a, voidptr b);
+bool map_eq_int_2(voidptr a, voidptr b);
+bool map_eq_int_4(voidptr a, voidptr b);
+bool map_eq_int_8(voidptr a, voidptr b);
+void map_clone_string(voidptr dest, voidptr pkey);
+void map_clone_int_1(voidptr dest, voidptr pkey);
+void map_clone_int_2(voidptr dest, voidptr pkey);
+void map_clone_int_4(voidptr dest, voidptr pkey);
+void map_clone_int_8(voidptr dest, voidptr pkey);
+void map_free_string(voidptr pkey);
+void map_free_nop(voidptr _d1);
+map new_map(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ));
+map new_map_init(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values);
+map new_map_update_init(map* update, int n, int key_bytes, int value_bytes, voidptr keys, voidptr values);
 map map_move(map* m);
 void map_clear(map* m);
-VV_LOCAL_SYMBOL multi_return_u32_u32 map_key_to_index(map* m, voidptr pkey);
-VV_LOCAL_SYMBOL multi_return_u32_u32 map_meta_less(map* m, u32 _index, u32 _metas);
-VV_LOCAL_SYMBOL void map_meta_greater(map* m, u32 _index, u32 _metas, u32 kvi);
-VV_LOCAL_SYMBOL void map_ensure_extra_metas(map* m, u32 probe_count);
-VV_LOCAL_SYMBOL void map_set(map* m, voidptr key, voidptr value);
-VV_LOCAL_SYMBOL void map_expand(map* m);
-VV_LOCAL_SYMBOL void map_rehash(map* m);
+multi_return_u32_u32 map_key_to_index(map* m, voidptr pkey);
+multi_return_u32_u32 map_meta_less(map* m, u32 _index, u32 _metas);
+void map_meta_greater(map* m, u32 _index, u32 _metas, u32 kvi);
+void map_ensure_extra_metas(map* m, u32 probe_count);
+void map_set(map* m, voidptr key, voidptr value);
+void map_expand(map* m);
+void map_rehash(map* m);
 void map_reserve(map* m, u32 meta_bytes);
-VV_LOCAL_SYMBOL void map_cached_rehash(map* m, u32 old_cap);
-VV_LOCAL_SYMBOL voidptr map_get_and_set(map* m, voidptr key, voidptr zero);
-VV_LOCAL_SYMBOL voidptr map_get(map* m, voidptr key, voidptr zero);
-VV_LOCAL_SYMBOL voidptr map_get_check(map* m, voidptr key);
-VV_LOCAL_SYMBOL bool map_exists(map* m, voidptr key);
-VV_LOCAL_SYMBOL void DenseArray_delete(DenseArray* d, int i);
+void map_cached_rehash(map* m, u32 old_cap);
+voidptr map_get_and_set(map* m, voidptr key, voidptr zero);
+voidptr map_get(map* m, voidptr key, voidptr zero);
+voidptr map_get_check(map* m, voidptr key);
+bool map_exists(map* m, voidptr key);
+void DenseArray_delete(DenseArray* d, int i);
 void map_delete(map* m, voidptr key);
 array map_keys(map* m);
 array map_values(map* m);
-VV_LOCAL_SYMBOL DenseArray DenseArray_clone(DenseArray* d);
+DenseArray DenseArray_clone(DenseArray* d);
 map map_clone(map* m);
 void map_free(map* m);
-VV_LOCAL_SYMBOL u8* __malloc_at_least_one(u64 how_many_bytes, bool noscan);
-VV_LOCAL_SYMBOL DenseArray new_dense_array_noscan(int key_bytes, bool key_noscan, int value_bytes, bool value_noscan);
-VV_LOCAL_SYMBOL map new_map_noscan_key(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ));
-VV_LOCAL_SYMBOL map new_map_noscan_value(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ));
-VV_LOCAL_SYMBOL map new_map_noscan_key_value(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ));
-VV_LOCAL_SYMBOL map new_map_init_noscan_key(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values);
-VV_LOCAL_SYMBOL map new_map_init_noscan_value(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values);
-VV_LOCAL_SYMBOL map new_map_init_noscan_key_value(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values);
+u8* __malloc_at_least_one(u64 how_many_bytes, bool noscan);
+DenseArray new_dense_array_noscan(int key_bytes, bool key_noscan, int value_bytes, bool value_noscan);
+map new_map_noscan_key(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ));
+map new_map_noscan_value(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ));
+map new_map_noscan_key_value(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ));
+map new_map_init_noscan_key(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values);
+map new_map_init_noscan_value(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values);
+map new_map_init_noscan_key_value(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values);
 void IError_free(IError* ie);
-VV_LOCAL_SYMBOL void _option_none(voidptr data, _option* option, int size);
-VV_LOCAL_SYMBOL void _option_ok(voidptr data, _option* option, int size);
-VV_LOCAL_SYMBOL string None___str(None__ _d1);
+void _option_none(voidptr data, _option* option, int size);
+void _option_ok(voidptr data, _option* option, int size);
+string None___str(None__ _d1);
 string none_str(none _d2);
-VV_LOCAL_SYMBOL void _result_ok(voidptr data, _result* res, int size);
+void _result_ok(voidptr data, _result* res, int size);
 string IError_str(IError err);
 string Error_msg(Error err);
 int Error_code(Error err);
@@ -2055,25 +2120,25 @@ string Array_rune_string(Array_rune ra);
 string rune_repeat(rune c, int count);
 Array_u8 rune_bytes(rune c);
 int rune_length_in_bytes(rune c);
-VV_LOCAL_SYMBOL SortedMap new_sorted_map(int n, int value_bytes);
-VV_LOCAL_SYMBOL SortedMap new_sorted_map_init(int n, int value_bytes, string* keys, voidptr values);
-VV_LOCAL_SYMBOL mapnode* new_node(void);
-VV_LOCAL_SYMBOL void SortedMap_set(SortedMap* m, string key, voidptr value);
-VV_LOCAL_SYMBOL void mapnode_split_child(mapnode* n, int child_index, mapnode* y);
-VV_LOCAL_SYMBOL bool SortedMap_get(SortedMap m, string key, voidptr out);
-VV_LOCAL_SYMBOL bool SortedMap_exists(SortedMap m, string key);
-VV_LOCAL_SYMBOL int mapnode_find_key(mapnode* n, string k);
-VV_LOCAL_SYMBOL bool mapnode_remove_key(mapnode* n, string k);
-VV_LOCAL_SYMBOL void mapnode_remove_from_leaf(mapnode* n, int idx);
-VV_LOCAL_SYMBOL void mapnode_remove_from_non_leaf(mapnode* n, int idx);
-VV_LOCAL_SYMBOL void mapnode_fill(mapnode* n, int idx);
-VV_LOCAL_SYMBOL void mapnode_borrow_from_prev(mapnode* n, int idx);
-VV_LOCAL_SYMBOL void mapnode_borrow_from_next(mapnode* n, int idx);
-VV_LOCAL_SYMBOL void mapnode_merge(mapnode* n, int idx);
+SortedMap new_sorted_map(int n, int value_bytes);
+SortedMap new_sorted_map_init(int n, int value_bytes, string* keys, voidptr values);
+mapnode* new_node(void);
+void SortedMap_set(SortedMap* m, string key, voidptr value);
+void mapnode_split_child(mapnode* n, int child_index, mapnode* y);
+bool SortedMap_get(SortedMap m, string key, voidptr out);
+bool SortedMap_exists(SortedMap m, string key);
+int mapnode_find_key(mapnode* n, string k);
+bool mapnode_remove_key(mapnode* n, string k);
+void mapnode_remove_from_leaf(mapnode* n, int idx);
+void mapnode_remove_from_non_leaf(mapnode* n, int idx);
+void mapnode_fill(mapnode* n, int idx);
+void mapnode_borrow_from_prev(mapnode* n, int idx);
+void mapnode_borrow_from_next(mapnode* n, int idx);
+void mapnode_merge(mapnode* n, int idx);
 void SortedMap_delete(SortedMap* m, string key);
-VV_LOCAL_SYMBOL int mapnode_subkeys(mapnode* n, Array_string* keys, int at);
+int mapnode_subkeys(mapnode* n, Array_string* keys, int at);
 Array_string SortedMap_keys(SortedMap* m);
-VV_LOCAL_SYMBOL void mapnode_free(mapnode* n);
+void mapnode_free(mapnode* n);
 void SortedMap_free(SortedMap* m);
 void SortedMap_print(SortedMap m);
 Array_rune string_runes(string s);
@@ -2093,8 +2158,8 @@ string u8_vstring_literal_with_len(u8* bp, int len);
 string char_vstring_literal(char* cp);
 string char_vstring_literal_with_len(char* cp, int len);
 int string_len_utf8(string s);
-VV_LOCAL_SYMBOL string string_clone_static(string a);
-VV_LOCAL_SYMBOL _option_string string_option_clone_static(string a);
+string string_clone_static(string a);
+_option_string string_option_clone_static(string a);
 string string_clone(string a);
 string string_replace_once(string s, string rep, string with);
 string string_replace(string s, string rep, string with);
@@ -2121,11 +2186,11 @@ u32 string_u32(string s);
 u64 string_u64(string s);
 _result_u64 string_parse_uint(string s, int _base, int _bit_size);
 _result_i64 string_parse_int(string s, int _base, int _bit_size);
-VV_LOCAL_SYMBOL bool string__eq(string s, string a);
+bool string__eq(string s, string a);
 int string_compare(string s, string a);
-VV_LOCAL_SYMBOL bool string__lt(string s, string a);
-VV_LOCAL_SYMBOL string string__plus(string s, string a);
-VV_LOCAL_SYMBOL string string_plus_two(string s, string a, string b);
+bool string__lt(string s, string a);
+string string__plus(string s, string a);
+string string_plus_two(string s, string a, string b);
 Array_string string_split_any(string s, string delim);
 Array_string string_rsplit_any(string s, string delim);
 Array_string string_split(string s, string delim);
@@ -2140,13 +2205,13 @@ string string_substr(string s, int start, int _end);
 string string_substr_unsafe(string s, int start, int _end);
 _result_string string_substr_with_check(string s, int start, int _end);
 string string_substr_ni(string s, int _start, int _end);
-VV_LOCAL_SYMBOL int string_index_(string s, string p);
+int string_index_(string s, string p);
 _option_int string_index(string s, string p);
 _option_int string_index_last(string s, string needle);
 _option_int string_last_index(string s, string needle);
-VV_LOCAL_SYMBOL int string_index_kmp(string s, string p);
+int string_index_kmp(string s, string p);
 int string_index_any(string s, string chars);
-VV_LOCAL_SYMBOL int string_index_last_(string s, string p);
+int string_index_last_(string s, string p);
 int string_index_after(string s, string p, int start);
 int string_index_u8(string s, u8 c);
 int string_index_u8_last(string s, u8 c);
@@ -2175,20 +2240,20 @@ string string_trim_space_left(string s);
 string string_trim_space_right(string s);
 string string_trim(string s, string cutset);
 multi_return_int_int string_trim_indexes(string s, string cutset);
-VV_LOCAL_SYMBOL string string_trim_chars(string s, string cutset, TrimMode mode);
-VV_LOCAL_SYMBOL string string_trim_runes(string s, string cutset, TrimMode mode);
+string string_trim_chars(string s, string cutset, TrimMode mode);
+string string_trim_runes(string s, string cutset, TrimMode mode);
 string string_trim_left(string s, string cutset);
 string string_trim_right(string s, string cutset);
 string string_trim_string_left(string s, string str);
 string string_trim_string_right(string s, string str);
 int compare_strings(string* a, string* b);
-VV_LOCAL_SYMBOL int compare_strings_by_len(string* a, string* b);
-VV_LOCAL_SYMBOL int compare_lower_strings(string* a, string* b);
+int compare_strings_by_len(string* a, string* b);
+int compare_lower_strings(string* a, string* b);
 void Array_string_sort_ignore_case(Array_string* s);
 void Array_string_sort_by_len(Array_string* s);
 string string_str(string s);
-VV_LOCAL_SYMBOL u8 string_at(string s, int idx);
-VV_LOCAL_SYMBOL _option_u8 string_at_with_check(string s, int idx);
+u8 string_at(string s, int idx);
+_option_u8 string_at_with_check(string s, int idx);
 bool string_is_oct(string str);
 bool string_is_bin(string str);
 bool string_is_hex(string str);
@@ -2236,12 +2301,12 @@ string byteptr_vstring_literal_with_len(byteptr bp, int len);
 string charptr_vstring_literal(charptr cp);
 string charptr_vstring_literal_with_len(charptr cp, int len);
 string StrIntpType_str(StrIntpType x);
-VV_LOCAL_SYMBOL f32 fabs32(f32 x);
-VV_LOCAL_SYMBOL f64 fabs64(f64 x);
-VV_LOCAL_SYMBOL u64 abs64(i64 x);
+f32 fabs32(f32 x);
+f64 fabs64(f64 x);
+u64 abs64(i64 x);
 u64 get_str_intp_u64_format(StrIntpType fmt_type, int in_width, int in_precision, bool in_tail_zeros, bool in_sign, u8 in_pad_ch, int in_base, bool in_upper_case);
 u32 get_str_intp_u32_format(StrIntpType fmt_type, int in_width, int in_precision, bool in_tail_zeros, bool in_sign, u8 in_pad_ch, int in_base, bool in_upper_case);
-VV_LOCAL_SYMBOL void StrIntpData_process_str_intp_data(StrIntpData* data, strings__Builder* sb);
+void StrIntpData_process_str_intp_data(StrIntpData* data, strings__Builder* sb);
 string str_intp(int data_len, StrIntpData* input_base);
 string str_intp_sq(string in_str);
 string str_intp_rune(string in_str);
@@ -2313,7 +2378,7 @@ void vuv__close(uv_handle_t* handle, void (*close_cb)(uv_handle_t* handle));
 int vuv__send_buffer_size(uv_handle_t* handle, int* value);
 int vuv__recv_buffer_size(uv_handle_t* handle, int* value);
 int vuv__fileno(const uv_handle_t* const_handle, int* fd);
-uv_buf_t vuv__buf_init(char* base, usize len);
+uv_buf_t vuv__buf_init(vuv__Buf* base, usize len);
 usize vuv__stream_get_write_queue_size(const uv_stream_t* const_stream);
 int vuv__listen(uv_stream_t* stream, int backlog, void (*cb)(uv_stream_t* server, int status));
 int vuv__accept(uv_stream_t* server, uv_stream_t* client);
@@ -2369,6 +2434,7 @@ int vuv__pipe_open(uv_pipe_t* handle, int file);
 int vuv__pipe_bind(uv_pipe_t* handle, const char* const_name);
 int vuv__pipe_bind2(uv_pipe_t* handle, const char* const_name, usize namelen, usize flags);
 void vuv__pipe_connect(uv_connect_t* req, uv_pipe_t* handle, const char* const_name, void (*cb)(uv_connect_t* req, int status));
+int vuv__pipe_connect2(uv_connect_t* req, uv_pipe_t* handle, const char* const_name, usize namelen, usize flags, void (*cb)(uv_connect_t* req, int status));
 int vuv__pipe_getsockname(uv_pipe_t* handle, char* name, usize* namelen);
 int vuv__pipe_getpeername(uv_pipe_t* handle, char* name, usize* namelen);
 void vuv__pipe_pending_instances(uv_pipe_t* handle, int count);
@@ -2376,6 +2442,7 @@ int vuv__pipe_pending_count(uv_pipe_t* handle);
 int vuv__pipe_pending_type(uv_pipe_t* handle);
 int vuv__pipe_chmod(uv_pipe_t* handle, int flags);
 int vuv__poll_init(uv_loop_t* loop, uv_poll_t* handle, int fd);
+int vuv__poll_init_socket(uv_loop_t* loop, uv_poll_t* handle, int socket);
 int vuv__poll_start(uv_poll_t* handle, int events, void (*cb)(uv_poll_t* handle, int status, int events));
 int vuv__poll_stop(uv_poll_t* handle);
 int vuv__prepare_init(uv_loop_t* loop, uv_prepare_t* handle);
@@ -2545,7 +2612,7 @@ int vuv__barrier_init(uv_barrier_t* handle, usize count);
 void vuv__barrier_destroy(uv_barrier_t* handle);
 void vuv__barrier_wait(uv_barrier_t* handle);
 void vuv__once(uv_once_t* guard, void (*cb)());
-int vuv__gettimeofday(uv_timeval_t* tv);
+int vuv__gettimeofday(vuv__Uv_timeval* tv);
 int vuv__key_create(uv_key_t* key);
 void vuv__key_delete(uv_key_t* key);
 voidptr* vuv__key_get(uv_key_t* key);
@@ -2555,25 +2622,25 @@ int vuv__thread_setaffinity(uv_thread_t* tid, char* cpumask, char* oldmask, usiz
 int vuv__thread_getaffinity(uv_thread_t* tid, char* cpumask, usize mask_size);
 int vuv__thread_getcpu(void);
 void vuv__thread_join(uv_thread_t* tid);
-uv_thread_t* vuv__thread_self(void);
+uv_thread_t vuv__thread_self(void);
 int vuv__thread_equal(const uv_thread_t* const_t1, const uv_thread_t* const_t2);
 voidptr* vuv__loop_get_data(const uv_loop_t* const_loop);
 void vuv__loop_set_data(uv_loop_t* loop, voidptr* data);
 usize vuv__utf16_length_as_wtf8(const u16* const_utf16, usize utf16_len);
 int vuv__utf16_to_wtf8(const u16* const_utf16, usize utf16_len, char** wtf8_ptr, usize* wtf8_len_ptr);
-VV_LOCAL_SYMBOL void vuv__init(void);
-VV_LOCAL_SYMBOL u8* anon_fn_efe1ab8975140a00_usize_usize__u8_193(usize count, usize size);
+void vuv__init(void);
+u8* anon_fn_ac991afcff96cb3f_usize_usize__u8_193(usize count, usize size);
 vuv__Uv_loop_t* vuv__Uv_loop_t__static__new(void);
-VV_LOCAL_SYMBOL main__HttpServer main__new_http_server(void);
-VV_LOCAL_SYMBOL _result_int main__HttpServer_bind(main__HttpServer hs, string ip, int port);
-VV_LOCAL_SYMBOL _result_int main__HttpServer_listen(main__HttpServer hs);
-VV_LOCAL_SYMBOL void main__HttpServer_set_nodelay(main__HttpServer* server, bool enable);
-VV_LOCAL_SYMBOL void main__on_close_cb(vuv__Uv_handle_t* handle);
-VV_LOCAL_SYMBOL void main__on_new_connection(vuv__Uv_stream_t* server, int status);
-VV_LOCAL_SYMBOL void main__alloc_buffer(vuv__Uv_handle_t* handle, usize suggested_size, vuv__Uv_buf_t* buf);
-VV_LOCAL_SYMBOL void main__on_read(vuv__Uv_stream_t* client, isize nread, vuv__Uv_buf_t* buf);
-VV_LOCAL_SYMBOL void main__on_write(vuv__Uv_write_t* req, int status);
-VV_LOCAL_SYMBOL void main__main(void);
+main__HttpServer main__new_http_server(void);
+_result_int main__HttpServer_bind(main__HttpServer hs, string ip, int port);
+_result_int main__HttpServer_listen(main__HttpServer hs);
+void main__HttpServer_set_nodelay(main__HttpServer* server, bool enable);
+void main__on_close_cb(vuv__Uv_handle_t* handle);
+void main__on_new_connection(vuv__Uv_stream_t* server, int status);
+void main__alloc_buffer(vuv__Uv_handle_t* handle, usize suggested_size, vuv__Uv_buf_t* buf);
+void main__on_read(vuv__Uv_stream_t* client, isize nread, vuv__Uv_buf_t* buf);
+void main__on_write(vuv__Uv_write_t* req, int status);
+void main__main(void);
 
 static bool Array_rune_arr_eq(Array_rune a, Array_rune b); // auto
 
@@ -2755,6 +2822,16 @@ static inline IError I_MessageError_to_Interface_IError(MessageError* x) {
 
 
 // V auto functions:
+static inline vuv__Uv_timeval C__uv_timeval64_t_to_sumtype_vuv__Uv_timeval(uv_timeval64_t* x) {
+	uv_timeval64_t* ptr = memdup(x, sizeof(uv_timeval64_t));
+	return (vuv__Uv_timeval){ ._C__uv_timeval64_t = ptr, ._typ = 248};
+}
+
+static inline vuv__Buf u8_to_sumtype_vuv__Buf(u8* x) {
+	u8* ptr = memdup(x, sizeof(u8));
+	return (vuv__Buf){ ._u8 = ptr, ._typ = 11};
+}
+
 static bool Array_u8_contains(Array_u8 a, u8 v) {
 	for (int i = 0; i < a.len; ++i) {
 		if (((u8*)a.data)[i] == v) {
@@ -2779,7 +2856,7 @@ static bool Array_rune_arr_eq(Array_rune a, Array_rune b) {
 
 // V anon functions:
 /*F*/
-VV_LOCAL_SYMBOL u8* anon_fn_efe1ab8975140a00_usize_usize__u8_193(usize count, usize size) {
+u8* anon_fn_ac991afcff96cb3f_usize_usize__u8_193(usize count, usize size) {
 	u8* _t1 = vcalloc(((isize)(size)));
 	return _t1;
 }
@@ -2803,6 +2880,40 @@ static int v_typeof_interface_idx_IError(int sidx) { /* IError */
 	if (sidx == _IError_Error_index) return 81;
 	if (sidx == _IError_MessageError_index) return 83;
 	return 30;
+}
+char * v_typeof_sumtype_vuv__Buf(int sidx) { /* vuv.Buf */ 
+	switch(sidx) {
+		case 197: return "vuv.Buf";
+		case 11: return "u8";
+		case 18: return "char";
+		default: return "unknown vuv.Buf";
+	}
+}
+
+int v_typeof_sumtype_idx_vuv__Buf(int sidx) { /* vuv.Buf */ 
+	switch(sidx) {
+		case 197: return 197;
+		case 11: return 11;
+		case 18: return 18;
+		default: return 197;
+	}
+}
+char * v_typeof_sumtype_vuv__Uv_timeval(int sidx) { /* vuv.Uv_timeval */ 
+	switch(sidx) {
+		case 249: return "vuv.Uv_timeval";
+		case 247: return "C.uv_timeval_t";
+		case 248: return "C.uv_timeval64_t";
+		default: return "unknown vuv.Uv_timeval";
+	}
+}
+
+int v_typeof_sumtype_idx_vuv__Uv_timeval(int sidx) { /* vuv.Uv_timeval */ 
+	switch(sidx) {
+		case 249: return 249;
+		case 247: return 247;
+		case 248: return 248;
+		default: return 249;
+	}
 }
 // << typeof() support for sum types
 
@@ -3032,7 +3143,7 @@ void strings__Builder_free(strings__Builder* b) {
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL u16 strings__min(u16 a, u16 b, u16 c) {
+inline u16 strings__min(u16 a, u16 b, u16 c) {
 	u16 m = a;
 	if (b < m) {
 		m = b;
@@ -3276,7 +3387,7 @@ int math__bits__trailing_zeros_16(u16 x) {
 	if (x == 0U) {
 		return 16;
 	}
-	return ((int)(_const_math__bits__de_bruijn32tab[((u32)(((u32)((x & -x))) * _const_math__bits__de_bruijn32) >> (27))]));
+	return ((int)(_const_math__bits__de_bruijn32tab[((u32)(((u32)((x & -x))) * _const_math__bits__de_bruijn32) >> ((int_literal)(32 - 5)))]));
 }
 
 // Attr: [direct_array_access]
@@ -3284,7 +3395,7 @@ int math__bits__trailing_zeros_32(u32 x) {
 	if (x == 0U) {
 		return 32;
 	}
-	return ((int)(_const_math__bits__de_bruijn32tab[((u32)(((x & -x)) * _const_math__bits__de_bruijn32) >> (27))]));
+	return ((int)(_const_math__bits__de_bruijn32tab[((u32)(((x & -x)) * _const_math__bits__de_bruijn32) >> ((int_literal)(32 - 5)))]));
 }
 
 // Attr: [direct_array_access]
@@ -3292,7 +3403,7 @@ int math__bits__trailing_zeros_64(u64 x) {
 	if (x == 0U) {
 		return 64;
 	}
-	return ((int)(_const_math__bits__de_bruijn64tab[((u64)(((x & -x)) * _const_math__bits__de_bruijn64) >> (58))]));
+	return ((int)(_const_math__bits__de_bruijn64tab[((u64)(((x & -x)) * _const_math__bits__de_bruijn64) >> ((int_literal)(64 - 6)))]));
 }
 
 // Attr: [direct_array_access]
@@ -3317,7 +3428,7 @@ int math__bits__ones_count_64(u64 x) {
 	y += (y >> 8U);
 	y += (y >> 16U);
 	y += (y >> 32U);
-	return (((int)(y)) & ((int_literal)((128) - 1)));
+	return (((int)(y)) & ((int_literal)(((1 << 7)) - 1)));
 }
 
 // Attr: [inline]
@@ -3399,7 +3510,7 @@ int math__bits__len_8(u8 x) {
 int math__bits__len_16(u16 x) {
 	u16 y = x;
 	int n = 0;
-	if (y >= 256U) {
+	if (y >= (1 << 8)) {
 		y >>= 8U;
 		n = 8;
 	}
@@ -3410,11 +3521,11 @@ int math__bits__len_16(u16 x) {
 int math__bits__len_32(u32 x) {
 	u32 y = x;
 	int n = 0;
-	if (y >= (65536)) {
+	if (y >= ((1 << 16))) {
 		y >>= 16U;
 		n = 16;
 	}
-	if (y >= (256)) {
+	if (y >= ((1 << 8))) {
 		y >>= 8U;
 		n += 8;
 	}
@@ -3489,7 +3600,7 @@ multi_return_u64_u64 math__bits__mul_64(u64 x, u64 y) {
 
 multi_return_u32_u32 math__bits__div_32(u32 hi, u32 lo, u32 y) {
 	if (y != 0U && y <= hi) {
-		_v_panic(_const_math__bits__overflow_error);
+		panic_debug(411, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/math/bits/bits.v"), tos3("math.bits"), tos3("div_32"),  _const_math__bits__overflow_error);
 		VUNREACHABLE();
 	}
 	u64 z = (((((u64)(hi)) << 32U)) | ((u64)(lo)));
@@ -3501,11 +3612,11 @@ multi_return_u32_u32 math__bits__div_32(u32 hi, u32 lo, u32 y) {
 multi_return_u64_u64 math__bits__div_64(u64 hi, u64 lo, u64 y1) {
 	u64 y = y1;
 	if (y == 0U) {
-		_v_panic(_const_math__bits__overflow_error);
+		panic_debug(426, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/math/bits/bits.v"), tos3("math.bits"), tos3("div_64"),  _const_math__bits__overflow_error);
 		VUNREACHABLE();
 	}
 	if (y <= hi) {
-		_v_panic(_const_math__bits__overflow_error);
+		panic_debug(429, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/math/bits/bits.v"), tos3("math.bits"), tos3("div_64"),  _const_math__bits__overflow_error);
 		VUNREACHABLE();
 	}
 	u32 s = ((u32)(math__bits__leading_zeros_64(y)));
@@ -3590,7 +3701,7 @@ inline f64 math__bits__f64_from_bits(u64 b) {
 	return p;
 }
 
-VV_LOCAL_SYMBOL multi_return_u32_u32_u32 strconv__lsr96(u32 s2, u32 s1, u32 s0) {
+multi_return_u32_u32_u32 strconv__lsr96(u32 s2, u32 s1, u32 s0) {
 	u32 r0 = ((u32)(0U));
 	u32 r1 = ((u32)(0U));
 	u32 r2 = ((u32)(0U));
@@ -3600,7 +3711,7 @@ VV_LOCAL_SYMBOL multi_return_u32_u32_u32 strconv__lsr96(u32 s2, u32 s1, u32 s0) 
 	return (multi_return_u32_u32_u32){.arg0=r2, .arg1=r1, .arg2=r0};
 }
 
-VV_LOCAL_SYMBOL multi_return_u32_u32_u32 strconv__lsl96(u32 s2, u32 s1, u32 s0) {
+multi_return_u32_u32_u32 strconv__lsl96(u32 s2, u32 s1, u32 s0) {
 	u32 r0 = ((u32)(0U));
 	u32 r1 = ((u32)(0U));
 	u32 r2 = ((u32)(0U));
@@ -3610,7 +3721,7 @@ VV_LOCAL_SYMBOL multi_return_u32_u32_u32 strconv__lsl96(u32 s2, u32 s1, u32 s0) 
 	return (multi_return_u32_u32_u32){.arg0=r2, .arg1=r1, .arg2=r0};
 }
 
-VV_LOCAL_SYMBOL multi_return_u32_u32_u32 strconv__add96(u32 s2, u32 s1, u32 s0, u32 d2, u32 d1, u32 d0) {
+multi_return_u32_u32_u32 strconv__add96(u32 s2, u32 s1, u32 s0, u32 d2, u32 d1, u32 d0) {
 	u64 w = ((u64)(0U));
 	u32 r0 = ((u32)(0U));
 	u32 r1 = ((u32)(0U));
@@ -3626,7 +3737,7 @@ VV_LOCAL_SYMBOL multi_return_u32_u32_u32 strconv__add96(u32 s2, u32 s1, u32 s0, 
 	return (multi_return_u32_u32_u32){.arg0=r2, .arg1=r1, .arg2=r0};
 }
 
-VV_LOCAL_SYMBOL multi_return_u32_u32_u32 strconv__sub96(u32 s2, u32 s1, u32 s0, u32 d2, u32 d1, u32 d0) {
+multi_return_u32_u32_u32 strconv__sub96(u32 s2, u32 s1, u32 s0, u32 d2, u32 d1, u32 d0) {
 	u64 w = ((u64)(0U));
 	u32 r0 = ((u32)(0U));
 	u32 r1 = ((u32)(0U));
@@ -3642,20 +3753,20 @@ VV_LOCAL_SYMBOL multi_return_u32_u32_u32 strconv__sub96(u32 s2, u32 s1, u32 s0, 
 	return (multi_return_u32_u32_u32){.arg0=r2, .arg1=r1, .arg2=r0};
 }
 
-VV_LOCAL_SYMBOL bool strconv__is_digit(u8 x) {
+bool strconv__is_digit(u8 x) {
 	return x >= _const_strconv__c_zero && x <= _const_strconv__c_nine;
 }
 
-VV_LOCAL_SYMBOL bool strconv__is_space(u8 x) {
+bool strconv__is_space(u8 x) {
 	return x == '\t' || x == '\n' || x == '\v' || x == '\f' || x == '\r' || x == ' ';
 }
 
-VV_LOCAL_SYMBOL bool strconv__is_exp(u8 x) {
+bool strconv__is_exp(u8 x) {
 	return x == 'E' || x == 'e';
 }
 
 // Attr: [direct_array_access]
-VV_LOCAL_SYMBOL multi_return_strconv__ParserState_strconv__PrepNumber strconv__parser(string s) {
+multi_return_strconv__ParserState_strconv__PrepNumber strconv__parser(string s) {
 	int digx = 0;
 	strconv__ParserState result = strconv__ParserState__ok;
 	bool expneg = false;
@@ -3745,7 +3856,7 @@ VV_LOCAL_SYMBOL multi_return_strconv__ParserState_strconv__PrepNumber strconv__p
 	return (multi_return_strconv__ParserState_strconv__PrepNumber){.arg0=result, .arg1=pn};
 }
 
-VV_LOCAL_SYMBOL u64 strconv__converter(strconv__PrepNumber* pn) {
+u64 strconv__converter(strconv__PrepNumber* pn) {
 	int binexp = 92;
 	u32 s2 = ((u32)(0U));
 	u32 s1 = ((u32)(0U));
@@ -4218,7 +4329,7 @@ _result_int strconv__atoi(string s) {
 	if ((s).len == 0) {
 		return (_result_int){ .is_error=true, .err=_v_error(_SLIT("strconv.atoi: parsing \"\": invalid syntax")), .data={EMPTY_STRUCT_INITIALIZATION} };
 	}
-	if ((true && (0 < s.len && s.len < 10)) || (false && (0 < s.len && s.len < 19))) {
+	if ((32 == 32 && (0 < s.len && s.len < 10)) || (32 == 64 && (0 < s.len && s.len < 19))) {
 		int start_idx = 0;
 		if (s.str[ 0] == '-' || s.str[ 0] == '+') {
 			start_idx++;
@@ -4334,7 +4445,7 @@ string strconv__Dec32_get_string_32(strconv__Dec32 d, bool neg, int i_n_digit, i
 	return tos(((u8*)(&((u8*)buf.data)[0])), i);
 }
 
-VV_LOCAL_SYMBOL multi_return_strconv__Dec32_bool strconv__f32_to_decimal_exact_int(u32 i_mant, u32 exp) {
+multi_return_strconv__Dec32_bool strconv__f32_to_decimal_exact_int(u32 i_mant, u32 exp) {
 	strconv__Dec32 d = ((strconv__Dec32){.m = 0,.e = 0,});
 	u32 e = (u32)(exp - 127U);
 	if (e > _const_strconv__mantbits32) {
@@ -4354,11 +4465,11 @@ VV_LOCAL_SYMBOL multi_return_strconv__Dec32_bool strconv__f32_to_decimal_exact_i
 	return (multi_return_strconv__Dec32_bool){.arg0=d, .arg1=true};
 }
 
-VV_LOCAL_SYMBOL strconv__Dec32 strconv__f32_to_decimal(u32 mant, u32 exp) {
+strconv__Dec32 strconv__f32_to_decimal(u32 mant, u32 exp) {
 	int e2 = 0;
 	u32 m2 = ((u32)(0U));
 	if (exp == 0U) {
-		e2 = (int)((int)(-126 - ((int)(_const_strconv__mantbits32))) - 2);
+		e2 = (int)((int)((int_literal)(1 - 127) - ((int)(_const_strconv__mantbits32))) - 2);
 		m2 = mant;
 	} else {
 		e2 = (int)((int)((int)(((int)(exp)) - 127) - ((int)(_const_strconv__mantbits32))) - 2);
@@ -4506,7 +4617,7 @@ string strconv__f32_to_str_pad(f32 f, int n_digit) {
 }
 
 // Attr: [direct_array_access]
-VV_LOCAL_SYMBOL string strconv__Dec64_get_string_64(strconv__Dec64 d, bool neg, int i_n_digit, int i_pad_digit) {
+string strconv__Dec64_get_string_64(strconv__Dec64 d, bool neg, int i_n_digit, int i_pad_digit) {
 	int n_digit = (int)(i_n_digit + 1);
 	int pad_digit = (int)(i_pad_digit + 1);
 	u64 out = d.m;
@@ -4593,7 +4704,7 @@ VV_LOCAL_SYMBOL string strconv__Dec64_get_string_64(strconv__Dec64 d, bool neg, 
 	return tos(((u8*)(&((u8*)buf.data)[0])), i);
 }
 
-VV_LOCAL_SYMBOL multi_return_strconv__Dec64_bool strconv__f64_to_decimal_exact_int(u64 i_mant, u64 exp) {
+multi_return_strconv__Dec64_bool strconv__f64_to_decimal_exact_int(u64 i_mant, u64 exp) {
 	strconv__Dec64 d = ((strconv__Dec64){.m = 0,.e = 0,});
 	u64 e = (u64)(exp - 1023U);
 	if (e > _const_strconv__mantbits64) {
@@ -4613,11 +4724,11 @@ VV_LOCAL_SYMBOL multi_return_strconv__Dec64_bool strconv__f64_to_decimal_exact_i
 	return (multi_return_strconv__Dec64_bool){.arg0=d, .arg1=true};
 }
 
-VV_LOCAL_SYMBOL strconv__Dec64 strconv__f64_to_decimal(u64 mant, u64 exp) {
+strconv__Dec64 strconv__f64_to_decimal(u64 mant, u64 exp) {
 	int e2 = 0;
 	u64 m2 = ((u64)(0U));
 	if (exp == 0U) {
-		e2 = (int)((int)(-1022 - ((int)(_const_strconv__mantbits64))) - 2);
+		e2 = (int)((int)((int_literal)(1 - 1023) - ((int)(_const_strconv__mantbits64))) - 2);
 		m2 = mant;
 	} else {
 		e2 = (int)((int)((int)(((int)(exp)) - 1023) - ((int)(_const_strconv__mantbits64))) - 2);
@@ -5273,7 +5384,7 @@ inline string strconv__ftoa_long_32(f32 f) {
 string strconv__format_int(i64 n, int radix) {
 	{ // Unsafe block
 		if (radix < 2 || radix > 36) {
-			_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("invalid radix: "), 0xfe07, {.d_i32 = radix}}, {_SLIT(" . It should be => 2 and <= 36"), 0, { .d_c = 0 }}})));
+			panic_debug(11, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/strconv/number_to_base.c.v"), tos3("strconv"), tos3("format_int"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("invalid radix: "), 0xfe07, {.d_i32 = radix}}, {_SLIT(" . It should be => 2 and <= 36"), 0, { .d_c = 0 }}})));
 			VUNREACHABLE();
 		}
 		if (n == 0) {
@@ -5311,7 +5422,7 @@ string strconv__format_int(i64 n, int radix) {
 string strconv__format_uint(u64 n, int radix) {
 	{ // Unsafe block
 		if (radix < 2 || radix > 36) {
-			_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("invalid radix: "), 0xfe07, {.d_i32 = radix}}, {_SLIT(" . It should be => 2 and <= 36"), 0, { .d_c = 0 }}})));
+			panic_debug(48, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/strconv/number_to_base.c.v"), tos3("strconv"), tos3("format_uint"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("invalid radix: "), 0xfe07, {.d_i32 = radix}}, {_SLIT(" . It should be => 2 and <= 36"), 0, { .d_c = 0 }}})));
 			VUNREACHABLE();
 		}
 		if (n == 0U) {
@@ -5605,7 +5716,7 @@ string strconv__fxx_to_str_l_parse_with_dot(string s) {
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL int strconv__bool_to_int(bool b) {
+inline int strconv__bool_to_int(bool b) {
 	if (b) {
 		return 1;
 	}
@@ -5613,7 +5724,7 @@ inline VV_LOCAL_SYMBOL int strconv__bool_to_int(bool b) {
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL u32 strconv__bool_to_u32(bool b) {
+inline u32 strconv__bool_to_u32(bool b) {
 	if (b) {
 		return ((u32)(1U));
 	}
@@ -5621,14 +5732,14 @@ inline VV_LOCAL_SYMBOL u32 strconv__bool_to_u32(bool b) {
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL u64 strconv__bool_to_u64(bool b) {
+inline u64 strconv__bool_to_u64(bool b) {
 	if (b) {
 		return ((u64)(1U));
 	}
 	return ((u64)(0U));
 }
 
-VV_LOCAL_SYMBOL string strconv__get_string_special(bool neg, bool expZero, bool mantZero) {
+string strconv__get_string_special(bool neg, bool expZero, bool mantZero) {
 	if (!mantZero) {
 		return _SLIT("nan");
 	}
@@ -5645,7 +5756,7 @@ VV_LOCAL_SYMBOL string strconv__get_string_special(bool neg, bool expZero, bool 
 	return _SLIT("0e+00");
 }
 
-VV_LOCAL_SYMBOL u32 strconv__mul_shift_32(u32 m, u64 mul, int ishift) {
+u32 strconv__mul_shift_32(u32 m, u64 mul, int ishift) {
 	multi_return_u64_u64 mr_750 = math__bits__mul_64(((u64)(m)), mul);
 	u64 hi = mr_750.arg0;
 	u64 lo = mr_750.arg1;
@@ -5656,19 +5767,19 @@ VV_LOCAL_SYMBOL u32 strconv__mul_shift_32(u32 m, u64 mul, int ishift) {
 
 // Attr: [direct_array_access]
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL u32 strconv__mul_pow5_invdiv_pow2(u32 m, u32 q, int j) {
+inline u32 strconv__mul_pow5_invdiv_pow2(u32 m, u32 q, int j) {
 	;
 	return strconv__mul_shift_32(m, _const_strconv__pow5_inv_split_32[q], j);
 }
 
 // Attr: [direct_array_access]
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL u32 strconv__mul_pow5_div_pow2(u32 m, u32 i, int j) {
+inline u32 strconv__mul_pow5_div_pow2(u32 m, u32 i, int j) {
 	;
 	return strconv__mul_shift_32(m, _const_strconv__pow5_split_32[i], j);
 }
 
-VV_LOCAL_SYMBOL u32 strconv__pow5_factor_32(u32 i_v) {
+u32 strconv__pow5_factor_32(u32 i_v) {
 	u32 v = i_v;
 	for (u32 n = ((u32)(0U)); true; n++) {
 		u32 q = (u32)(v / 5U);
@@ -5681,38 +5792,38 @@ VV_LOCAL_SYMBOL u32 strconv__pow5_factor_32(u32 i_v) {
 	return v;
 }
 
-VV_LOCAL_SYMBOL bool strconv__multiple_of_power_of_five_32(u32 v, u32 p) {
+bool strconv__multiple_of_power_of_five_32(u32 v, u32 p) {
 	return strconv__pow5_factor_32(v) >= p;
 }
 
-VV_LOCAL_SYMBOL bool strconv__multiple_of_power_of_two_32(u32 v, u32 p) {
+bool strconv__multiple_of_power_of_two_32(u32 v, u32 p) {
 	return ((u32)(math__bits__trailing_zeros_32(v))) >= p;
 }
 
-VV_LOCAL_SYMBOL u32 strconv__log10_pow2(int e) {
+u32 strconv__log10_pow2(int e) {
 	;
 	;
 	return (((u32)(((u32)(e)) * 78913U)) >> 18U);
 }
 
-VV_LOCAL_SYMBOL u32 strconv__log10_pow5(int e) {
+u32 strconv__log10_pow5(int e) {
 	;
 	;
 	return (((u32)(((u32)(e)) * 732923U)) >> 20U);
 }
 
-VV_LOCAL_SYMBOL int strconv__pow5_bits(int e) {
+int strconv__pow5_bits(int e) {
 	;
 	;
 	return ((int)((u32)(((((u32)(((u32)(e)) * 1217359U)) >> 19U)) + 1U)));
 }
 
-VV_LOCAL_SYMBOL u64 strconv__shift_right_128(strconv__Uint128 v, int shift) {
+u64 strconv__shift_right_128(strconv__Uint128 v, int shift) {
 	;
 	return (((v.hi << ((u64)((int)(64 - shift))))) | ((v.lo >> ((u32)(shift)))));
 }
 
-VV_LOCAL_SYMBOL u64 strconv__mul_shift_64(u64 m, strconv__Uint128 mul, int shift) {
+u64 strconv__mul_shift_64(u64 m, strconv__Uint128 mul, int shift) {
 	multi_return_u64_u64 mr_3253 = math__bits__mul_64(m, mul.hi);
 	u64 hihi = mr_3253.arg0;
 	u64 hilo = mr_3253.arg1;
@@ -5725,7 +5836,7 @@ VV_LOCAL_SYMBOL u64 strconv__mul_shift_64(u64 m, strconv__Uint128 mul, int shift
 	return strconv__shift_right_128(sum, (int)(shift - 64));
 }
 
-VV_LOCAL_SYMBOL u32 strconv__pow5_factor_64(u64 v_i) {
+u32 strconv__pow5_factor_64(u64 v_i) {
 	u64 v = v_i;
 	for (u32 n = ((u32)(0U)); true; n++) {
 		u64 q = (u64)(v / 5U);
@@ -5738,11 +5849,11 @@ VV_LOCAL_SYMBOL u32 strconv__pow5_factor_64(u64 v_i) {
 	return ((u32)(0U));
 }
 
-VV_LOCAL_SYMBOL bool strconv__multiple_of_power_of_five_64(u64 v, u32 p) {
+bool strconv__multiple_of_power_of_five_64(u64 v, u32 p) {
 	return strconv__pow5_factor_64(v) >= p;
 }
 
-VV_LOCAL_SYMBOL bool strconv__multiple_of_power_of_two_64(u64 v, u32 p) {
+bool strconv__multiple_of_power_of_two_64(u64 v, u32 p) {
 	return ((u32)(math__bits__trailing_zeros_64(v))) >= p;
 }
 
@@ -6278,7 +6389,7 @@ string strconv__v_sprintf(string str, Array_voidptr pt) {
 		i++;
 	}
 	if (p_index != pt.len) {
-		_v_panic( str_intp(3, _MOV((StrIntpData[]){{_SLIT0, 0xfe07, {.d_i32 = p_index}}, {_SLIT(" % conversion specifiers, but given "), 0xfe07, {.d_i32 = pt.len}}, {_SLIT(" args"), 0, { .d_c = 0 }}})));
+		panic_debug(554, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/strconv/vprintf.c.v"), tos3("strconv"), tos3("v_sprintf"),   str_intp(3, _MOV((StrIntpData[]){{_SLIT0, 0xfe07, {.d_i32 = p_index}}, {_SLIT(" % conversion specifiers, but given "), 0xfe07, {.d_i32 = pt.len}}, {_SLIT(" args"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	string _t4 = strings__Builder_str(&res);
@@ -6291,14 +6402,14 @@ string strconv__v_sprintf(string str, Array_voidptr pt) {
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL void strconv__v_sprintf_panic(int idx, int len) {
+inline void strconv__v_sprintf_panic(int idx, int len) {
 	if (idx >= len) {
-		_v_panic( str_intp(3, _MOV((StrIntpData[]){{_SLIT0, 0xfe07, {.d_i32 = (int)(idx + 1)}}, {_SLIT(" % conversion specifiers, but given only "), 0xfe07, {.d_i32 = len}}, {_SLIT(" args"), 0, { .d_c = 0 }}})));
+		panic_debug(563, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/strconv/vprintf.c.v"), tos3("strconv"), tos3("v_sprintf_panic"),   str_intp(3, _MOV((StrIntpData[]){{_SLIT0, 0xfe07, {.d_i32 = (int)(idx + 1)}}, {_SLIT(" % conversion specifiers, but given only "), 0xfe07, {.d_i32 = len}}, {_SLIT(" args"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 }
 
-VV_LOCAL_SYMBOL f64 strconv__fabs(f64 x) {
+f64 strconv__fabs(f64 x) {
 	if (x < ((f64)(0.0))) {
 		return -x;
 	}
@@ -6381,7 +6492,7 @@ string strconv__format_fl_old(f64 f, strconv__BF_param p) {
 }
 
 // Attr: [manualfree]
-VV_LOCAL_SYMBOL string strconv__format_es_old(f64 f, strconv__BF_param p) {
+string strconv__format_es_old(f64 f, strconv__BF_param p) {
 	bool strconv__format_es_old_defer_0 = false;
 	strings__Builder res;
 	string fs;
@@ -6452,7 +6563,7 @@ VV_LOCAL_SYMBOL string strconv__format_es_old(f64 f, strconv__BF_param p) {
 	return (string){.str=(byteptr)"", .is_lit=1};
 }
 
-VV_LOCAL_SYMBOL string strconv__remove_tail_zeros_old(string s) {
+string strconv__remove_tail_zeros_old(string s) {
 	int i = 0;
 	int last_zero_start = -1;
 	int dot_pos = -1;
@@ -6553,13 +6664,13 @@ string strconv__format_dec_old(u64 d, strconv__BF_param p) {
 	return _t1;
 }
 
-VV_LOCAL_SYMBOL array __new_array(int mylen, int cap, int elm_size) {
+array __new_array(int mylen, int cap, int elm_size) {
 	int cap_ = (cap < mylen ? (mylen) : (cap));
 	array arr = ((array){.data = vcalloc((u64)(((u64)(cap_)) * ((u64)(elm_size)))),.offset = 0,.len = mylen,.cap = cap_,.flags = 0,.element_size = elm_size,});
 	return arr;
 }
 
-VV_LOCAL_SYMBOL array __new_array_with_default(int mylen, int cap, int elm_size, voidptr val) {
+array __new_array_with_default(int mylen, int cap, int elm_size, voidptr val) {
 	int cap_ = (cap < mylen ? (mylen) : (cap));
 	array arr = ((array){.data = 0,.offset = 0,.len = mylen,.cap = cap_,.flags = 0,.element_size = elm_size,});
 	u64 total_size = (u64)(((u64)(cap_)) * ((u64)(elm_size)));
@@ -6589,7 +6700,7 @@ VV_LOCAL_SYMBOL array __new_array_with_default(int mylen, int cap, int elm_size,
 	return arr;
 }
 
-VV_LOCAL_SYMBOL array __new_array_with_multi_default(int mylen, int cap, int elm_size, voidptr val) {
+array __new_array_with_multi_default(int mylen, int cap, int elm_size, voidptr val) {
 	int cap_ = (cap < mylen ? (mylen) : (cap));
 	array arr = ((array){.data = 0,.offset = 0,.len = mylen,.cap = cap_,.flags = 0,.element_size = elm_size,});
 	u64 total_size = (u64)(((u64)(cap_)) * ((u64)(elm_size)));
@@ -6608,7 +6719,7 @@ VV_LOCAL_SYMBOL array __new_array_with_multi_default(int mylen, int cap, int elm
 	return arr;
 }
 
-VV_LOCAL_SYMBOL array __new_array_with_array_default(int mylen, int cap, int elm_size, array val, int depth) {
+array __new_array_with_array_default(int mylen, int cap, int elm_size, array val, int depth) {
 	int cap_ = (cap < mylen ? (mylen) : (cap));
 	array arr = ((array){.data = _v_malloc(__at_least_one((u64)(((u64)(cap_)) * ((u64)(elm_size))))),.offset = 0,.len = mylen,.cap = cap_,.flags = 0,.element_size = elm_size,});
 	u8* eptr = ((u8*)(arr.data));
@@ -6624,7 +6735,7 @@ VV_LOCAL_SYMBOL array __new_array_with_array_default(int mylen, int cap, int elm
 	return arr;
 }
 
-VV_LOCAL_SYMBOL array __new_array_with_map_default(int mylen, int cap, int elm_size, map val) {
+array __new_array_with_map_default(int mylen, int cap, int elm_size, map val) {
 	int cap_ = (cap < mylen ? (mylen) : (cap));
 	array arr = ((array){.data = _v_malloc(__at_least_one((u64)(((u64)(cap_)) * ((u64)(elm_size))))),.offset = 0,.len = mylen,.cap = cap_,.flags = 0,.element_size = elm_size,});
 	u8* eptr = ((u8*)(arr.data));
@@ -6640,24 +6751,24 @@ VV_LOCAL_SYMBOL array __new_array_with_map_default(int mylen, int cap, int elm_s
 	return arr;
 }
 
-VV_LOCAL_SYMBOL array new_array_from_c_array(int len, int cap, int elm_size, voidptr c_array) {
+array new_array_from_c_array(int len, int cap, int elm_size, voidptr c_array) {
 	int cap_ = (cap < len ? (len) : (cap));
 	array arr = ((array){.data = vcalloc((u64)(((u64)(cap_)) * ((u64)(elm_size)))),.offset = 0,.len = len,.cap = cap_,.flags = 0,.element_size = elm_size,});
 	vmemcpy(arr.data, c_array, (u64)(((u64)(len)) * ((u64)(elm_size))));
 	return arr;
 }
 
-VV_LOCAL_SYMBOL array new_array_from_c_array_no_alloc(int len, int cap, int elm_size, voidptr c_array) {
+array new_array_from_c_array_no_alloc(int len, int cap, int elm_size, voidptr c_array) {
 	array arr = ((array){.data = c_array,.offset = 0,.len = len,.cap = cap,.flags = 0,.element_size = elm_size,});
 	return arr;
 }
 
-VV_LOCAL_SYMBOL void array_ensure_cap(array* a, int required) {
+void array_ensure_cap(array* a, int required) {
 	if (required <= a->cap) {
 		return;
 	}
 	if (ArrayFlags_has(&a->flags, ArrayFlags__nogrow)) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.ensure_cap: array with the flag `.nogrow` cannot grow in size, array required new size: "), 0xfe07, {.d_i32 = required}}, {_SLIT0, 0, { .d_c = 0 }}})));
+		panic_debug(183, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("ensure_cap"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.ensure_cap: array with the flag `.nogrow` cannot grow in size, array required new size: "), 0xfe07, {.d_i32 = required}}, {_SLIT0, 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	i64 cap = (a->cap > 0 ? (((i64)(a->cap))) : (((i64)(2))));
@@ -6669,7 +6780,7 @@ VV_LOCAL_SYMBOL void array_ensure_cap(array* a, int required) {
 		if (a->cap < _const_max_int) {
 			cap = _const_max_int;
 		} else {
-			_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.ensure_cap: array needs to grow to cap = "), 0xfe09, {.d_i64 = cap}}, {_SLIT(", which is > 2^31"), 0, { .d_c = 0 }}})));
+			panic_debug(194, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("ensure_cap"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.ensure_cap: array needs to grow to cap = "), 0xfe09, {.d_i64 = cap}}, {_SLIT(", which is > 2^31"), 0, { .d_c = 0 }}})));
 			VUNREACHABLE();
 		}
 	}
@@ -6694,7 +6805,7 @@ array array_repeat(array a, int count) {
 // Attr: [unsafe]
 array array_repeat_to_depth(array a, int count, int depth) {
 	if (count < 0) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.repeat: count is negative: "), 0xfe07, {.d_i32 = count}}, {_SLIT0, 0, { .d_c = 0 }}})));
+		panic_debug(229, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("repeat_to_depth"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.repeat: count is negative: "), 0xfe07, {.d_i32 = count}}, {_SLIT0, 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	u64 size = (u64)((u64)(((u64)(count)) * ((u64)(a.len))) * ((u64)(a.element_size)));
@@ -6725,11 +6836,11 @@ array array_repeat_to_depth(array a, int count, int depth) {
 
 void array_insert(array* a, int i, voidptr val) {
 	if (i < 0 || i > a->len) {
-		_v_panic( str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.insert: index out of range (i == "), 0xfe07, {.d_i32 = i}}, {_SLIT(", a.len == "), 0xfe07, {.d_i32 = a->len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
+		panic_debug(282, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("insert"),   str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.insert: index out of range (i == "), 0xfe07, {.d_i32 = i}}, {_SLIT(", a.len == "), 0xfe07, {.d_i32 = a->len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	if (a->len == _const_max_int) {
-		_v_panic(_SLIT("array.insert: a.len reached max_int"));
+		panic_debug(285, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("insert"),  _SLIT("array.insert: a.len reached max_int"));
 		VUNREACHABLE();
 	}
 	if (a->len >= a->cap) {
@@ -6743,14 +6854,14 @@ void array_insert(array* a, int i, voidptr val) {
 }
 
 // Attr: [unsafe]
-VV_LOCAL_SYMBOL void array_insert_many(array* a, int i, voidptr val, int size) {
+void array_insert_many(array* a, int i, voidptr val, int size) {
 	if (i < 0 || i > a->len) {
-		_v_panic( str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.insert_many: index out of range (i == "), 0xfe07, {.d_i32 = i}}, {_SLIT(", a.len == "), 0xfe07, {.d_i32 = a->len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
+		panic_debug(302, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("insert_many"),   str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.insert_many: index out of range (i == "), 0xfe07, {.d_i32 = i}}, {_SLIT(", a.len == "), 0xfe07, {.d_i32 = a->len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	i64 new_len = (i64)(((i64)(a->len)) + ((i64)(size)));
 	if (new_len > _const_max_int) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.insert_many: a.len = "), 0xfe09, {.d_i64 = new_len}}, {_SLIT(" will exceed max_int"), 0, { .d_c = 0 }}})));
+		panic_debug(306, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("insert_many"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.insert_many: a.len = "), 0xfe09, {.d_i64 = new_len}}, {_SLIT(" will exceed max_int"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	array_ensure_cap(a, ((int)(new_len)));
@@ -6768,7 +6879,7 @@ void array_prepend(array* a, voidptr val) {
 }
 
 // Attr: [unsafe]
-VV_LOCAL_SYMBOL void array_prepend_many(array* a, voidptr val, int size) {
+void array_prepend_many(array* a, voidptr val, int size) {
 	array_insert_many(a, 0, val, size);
 }
 
@@ -6779,7 +6890,7 @@ void array_delete(array* a, int i) {
 void array_delete_many(array* a, int i, int size) {
 	if (i < 0 || (i64)(((i64)(i)) + ((i64)(size))) > ((i64)(a->len))) {
 		string endidx = (size > 1 ? ( str_intp(2, _MOV((StrIntpData[]){{_SLIT(".."), 0xfe07, {.d_i32 = (int)(i + size)}}, {_SLIT0, 0, { .d_c = 0 }}}))) : (_SLIT("")));
-		_v_panic( str_intp(4, _MOV((StrIntpData[]){{_SLIT("array.delete: index out of range (i == "), 0xfe07, {.d_i32 = i}}, {_SLIT0, 0xfe10, {.d_s = endidx}}, {_SLIT(", a.len == "), 0xfe07, {.d_i32 = a->len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
+		panic_debug(364, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("delete_many"),   str_intp(4, _MOV((StrIntpData[]){{_SLIT("array.delete: index out of range (i == "), 0xfe07, {.d_i32 = i}}, {_SLIT0, 0xfe10, {.d_s = endidx}}, {_SLIT(", a.len == "), 0xfe07, {.d_i32 = a->len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	if (ArrayFlags_all(&a->flags, (ArrayFlags__noshrink | ArrayFlags__noslices))) {
@@ -6829,18 +6940,18 @@ void array_drop(array* a, int num) {
 
 // Attr: [inline]
 // Attr: [unsafe]
-inline VV_LOCAL_SYMBOL voidptr array_get_unsafe(array a, int i) {
+inline voidptr array_get_unsafe(array a, int i) {
 	{ // Unsafe block
 		return ((u8*)(a.data)) + (u64)(((u64)(i)) * ((u64)(a.element_size)));
 	}
 	return 0;
 }
 
-VV_LOCAL_SYMBOL voidptr array_get(array a, int i) {
+voidptr array_get(array a, int i) {
 	#if !defined(CUSTOM_DEFINE_no_bounds_checking)
 	{
 		if (i < 0 || i >= a.len) {
-			_v_panic( str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.get: index out of range (i == "), 0xfe07, {.d_i32 = i}}, {_SLIT(", a.len == "), 0xfe07, {.d_i32 = a.len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
+			panic_debug(454, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("get"),   str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.get: index out of range (i == "), 0xfe07, {.d_i32 = i}}, {_SLIT(", a.len == "), 0xfe07, {.d_i32 = a.len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
 			VUNREACHABLE();
 		}
 	}
@@ -6851,7 +6962,7 @@ VV_LOCAL_SYMBOL voidptr array_get(array a, int i) {
 	return 0;
 }
 
-VV_LOCAL_SYMBOL voidptr array_get_with_check(array a, int i) {
+voidptr array_get_with_check(array a, int i) {
 	if (i < 0 || i >= a.len) {
 		return 0;
 	}
@@ -6863,7 +6974,7 @@ VV_LOCAL_SYMBOL voidptr array_get_with_check(array a, int i) {
 
 voidptr array_first(array a) {
 	if (a.len == 0) {
-		_v_panic(_SLIT("array.first: array is empty"));
+		panic_debug(478, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("first"),  _SLIT("array.first: array is empty"));
 		VUNREACHABLE();
 	}
 	return a.data;
@@ -6871,7 +6982,7 @@ voidptr array_first(array a) {
 
 voidptr array_last(array a) {
 	if (a.len == 0) {
-		_v_panic(_SLIT("array.last: array is empty"));
+		panic_debug(487, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("last"),  _SLIT("array.last: array is empty"));
 		VUNREACHABLE();
 	}
 	{ // Unsafe block
@@ -6882,7 +6993,7 @@ voidptr array_last(array a) {
 
 voidptr array_pop(array* a) {
 	if (a->len == 0) {
-		_v_panic(_SLIT("array.pop: array is empty"));
+		panic_debug(512, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("pop"),  _SLIT("array.pop: array is empty"));
 		VUNREACHABLE();
 	}
 	int new_len = (int)(a->len - 1);
@@ -6893,26 +7004,26 @@ voidptr array_pop(array* a) {
 
 void array_delete_last(array* a) {
 	if (a->len == 0) {
-		_v_panic(_SLIT("array.delete_last: array is empty"));
+		panic_debug(528, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("delete_last"),  _SLIT("array.delete_last: array is empty"));
 		VUNREACHABLE();
 	}
 	a->len--;
 }
 
-VV_LOCAL_SYMBOL array array_slice(array a, int start, int _end) {
+array array_slice(array a, int start, int _end) {
 	int end = (_end == _const_max_int ? (a.len) : (_end));
 	#if !defined(CUSTOM_DEFINE_no_bounds_checking)
 	{
 		if (start > end) {
-			_v_panic( str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.slice: invalid slice index ("), 0xfe07, {.d_i32 = start}}, {_SLIT(" > "), 0xfe07, {.d_i32 = end}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
+			panic_debug(546, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("slice"),   str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.slice: invalid slice index ("), 0xfe07, {.d_i32 = start}}, {_SLIT(" > "), 0xfe07, {.d_i32 = end}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
 			VUNREACHABLE();
 		}
 		if (end > a.len) {
-			_v_panic( str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.slice: slice bounds out of range ("), 0xfe07, {.d_i32 = end}}, {_SLIT(" >= "), 0xfe07, {.d_i32 = a.len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
+			panic_debug(549, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("slice"),   str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.slice: slice bounds out of range ("), 0xfe07, {.d_i32 = end}}, {_SLIT(" >= "), 0xfe07, {.d_i32 = a.len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
 			VUNREACHABLE();
 		}
 		if (start < 0) {
-			_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.slice: slice bounds out of range ("), 0xfe07, {.d_i32 = start}}, {_SLIT(" < 0)"), 0, { .d_c = 0 }}})));
+			panic_debug(552, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("slice"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.slice: slice bounds out of range ("), 0xfe07, {.d_i32 = start}}, {_SLIT(" < 0)"), 0, { .d_c = 0 }}})));
 			VUNREACHABLE();
 		}
 	}
@@ -6924,7 +7035,7 @@ VV_LOCAL_SYMBOL array array_slice(array a, int start, int _end) {
 	return res;
 }
 
-VV_LOCAL_SYMBOL array array_slice_ni(array a, int _start, int _end) {
+array array_slice_ni(array a, int _start, int _end) {
 	int end = (_end == _const_max_int ? (a.len) : (_end));
 	int start = _start;
 	if (start < 0) {
@@ -6953,7 +7064,7 @@ VV_LOCAL_SYMBOL array array_slice_ni(array a, int _start, int _end) {
 	return res;
 }
 
-VV_LOCAL_SYMBOL array array_clone_static_to_depth(array a, int depth) {
+array array_clone_static_to_depth(array a, int depth) {
 	return array_clone_to_depth(&a, depth);
 }
 
@@ -6983,15 +7094,15 @@ array array_clone_to_depth(array* a, int depth) {
 
 // Attr: [inline]
 // Attr: [unsafe]
-inline VV_LOCAL_SYMBOL void array_set_unsafe(array* a, int i, voidptr val) {
+inline void array_set_unsafe(array* a, int i, voidptr val) {
 	vmemcpy(((u8*)(a->data)) + (u64)(((u64)(a->element_size)) * ((u64)(i))), val, a->element_size);
 }
 
-VV_LOCAL_SYMBOL void array_set(array* a, int i, voidptr val) {
+void array_set(array* a, int i, voidptr val) {
 	#if !defined(CUSTOM_DEFINE_no_bounds_checking)
 	{
 		if (i < 0 || i >= a->len) {
-			_v_panic( str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.set: index out of range (i == "), 0xfe07, {.d_i32 = i}}, {_SLIT(", a.len == "), 0xfe07, {.d_i32 = a->len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
+			panic_debug(672, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("set"),   str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.set: index out of range (i == "), 0xfe07, {.d_i32 = i}}, {_SLIT(", a.len == "), 0xfe07, {.d_i32 = a->len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
 			VUNREACHABLE();
 		}
 	}
@@ -6999,13 +7110,13 @@ VV_LOCAL_SYMBOL void array_set(array* a, int i, voidptr val) {
 	vmemcpy(((u8*)(a->data)) + (u64)(((u64)(a->element_size)) * ((u64)(i))), val, a->element_size);
 }
 
-VV_LOCAL_SYMBOL void array_push(array* a, voidptr val) {
+void array_push(array* a, voidptr val) {
 	if (a->len < 0) {
-		_v_panic(_SLIT("array.push: negative len"));
+		panic_debug(680, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("push"),  _SLIT("array.push: negative len"));
 		VUNREACHABLE();
 	}
 	if (a->len >= _const_max_int) {
-		_v_panic(_SLIT("array.push: len bigger than max_int"));
+		panic_debug(683, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("push"),  _SLIT("array.push: len bigger than max_int"));
 		VUNREACHABLE();
 	}
 	if (a->len >= a->cap) {
@@ -7022,7 +7133,7 @@ void array_push_many(array* a3, voidptr val, int size) {
 	}
 	i64 new_len = (i64)(((i64)(a3->len)) + ((i64)(size)));
 	if (new_len > _const_max_int) {
-		_v_panic(_SLIT("array.push_many: new len exceeds max_int"));
+		panic_debug(702, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("push_many"),  _SLIT("array.push_many: new len exceeds max_int"));
 		VUNREACHABLE();
 	}
 	if (new_len >= a3->cap) {
@@ -7191,7 +7302,7 @@ int copy(Array_u8* dst, Array_u8 src) {
 void array_grow_cap(array* a, int amount) {
 	i64 new_cap = (i64)(((i64)(amount)) + ((i64)(a->cap)));
 	if (new_cap > _const_max_int) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.grow_cap: new capacity "), 0xfe09, {.d_i64 = new_cap}}, {_SLIT(" will exceed max_int"), 0, { .d_c = 0 }}})));
+		panic_debug(997, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("grow_cap"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.grow_cap: new capacity "), 0xfe09, {.d_i64 = new_cap}}, {_SLIT(" will exceed max_int"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	array_ensure_cap(a, ((int)(new_cap)));
@@ -7201,7 +7312,7 @@ void array_grow_cap(array* a, int amount) {
 void array_grow_len(array* a, int amount) {
 	i64 new_len = (i64)(((i64)(amount)) + ((i64)(a->len)));
 	if (new_len > _const_max_int) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.grow_len: new len "), 0xfe09, {.d_i64 = new_len}}, {_SLIT(" will exceed max_int"), 0, { .d_c = 0 }}})));
+		panic_debug(1010, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array.v"), tos3("builtin"), tos3("grow_len"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.grow_len: new len "), 0xfe09, {.d_i64 = new_len}}, {_SLIT(" will exceed max_int"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	array_ensure_cap(a, ((int)(new_len)));
@@ -7228,13 +7339,13 @@ Array_u8 u8_vbytes(u8* data, int len) {
 	return voidptr_vbytes(((voidptr)(data)), len);
 }
 
-VV_LOCAL_SYMBOL array __new_array_noscan(int mylen, int cap, int elm_size) {
+array __new_array_noscan(int mylen, int cap, int elm_size) {
 	int cap_ = (cap < mylen ? (mylen) : (cap));
 	array arr = ((array){.data = vcalloc_noscan((u64)(((u64)(cap_)) * ((u64)(elm_size)))),.offset = 0,.len = mylen,.cap = cap_,.flags = 0,.element_size = elm_size,});
 	return arr;
 }
 
-VV_LOCAL_SYMBOL array __new_array_with_default_noscan(int mylen, int cap, int elm_size, voidptr val) {
+array __new_array_with_default_noscan(int mylen, int cap, int elm_size, voidptr val) {
 	int cap_ = (cap < mylen ? (mylen) : (cap));
 	array arr = ((array){.data = vcalloc_noscan((u64)(((u64)(cap_)) * ((u64)(elm_size)))),.offset = 0,.len = mylen,.cap = cap_,.flags = 0,.element_size = elm_size,});
 	if (val != 0 && arr.data != ((void*)0)) {
@@ -7255,7 +7366,7 @@ VV_LOCAL_SYMBOL array __new_array_with_default_noscan(int mylen, int cap, int el
 	return arr;
 }
 
-VV_LOCAL_SYMBOL array __new_array_with_multi_default_noscan(int mylen, int cap, int elm_size, voidptr val) {
+array __new_array_with_multi_default_noscan(int mylen, int cap, int elm_size, voidptr val) {
 	int cap_ = (cap < mylen ? (mylen) : (cap));
 	array arr = ((array){.data = vcalloc_noscan((u64)(((u64)(cap_)) * ((u64)(elm_size)))),.offset = 0,.len = mylen,.cap = cap_,.flags = 0,.element_size = elm_size,});
 	if (val != 0 && arr.data != ((void*)0)) {
@@ -7266,7 +7377,7 @@ VV_LOCAL_SYMBOL array __new_array_with_multi_default_noscan(int mylen, int cap, 
 	return arr;
 }
 
-VV_LOCAL_SYMBOL array __new_array_with_array_default_noscan(int mylen, int cap, int elm_size, array val) {
+array __new_array_with_array_default_noscan(int mylen, int cap, int elm_size, array val) {
 	int cap_ = (cap < mylen ? (mylen) : (cap));
 	array arr = ((array){.data = vcalloc_noscan((u64)(((u64)(cap_)) * ((u64)(elm_size)))),.offset = 0,.len = mylen,.cap = cap_,.flags = 0,.element_size = elm_size,});
 	for (int i = 0; i < arr.len; ++i) {
@@ -7276,19 +7387,19 @@ VV_LOCAL_SYMBOL array __new_array_with_array_default_noscan(int mylen, int cap, 
 	return arr;
 }
 
-VV_LOCAL_SYMBOL array new_array_from_c_array_noscan(int len, int cap, int elm_size, voidptr c_array) {
+array new_array_from_c_array_noscan(int len, int cap, int elm_size, voidptr c_array) {
 	int cap_ = (cap < len ? (len) : (cap));
 	array arr = ((array){.data = vcalloc_noscan((u64)(((u64)(cap_)) * ((u64)(elm_size)))),.offset = 0,.len = len,.cap = cap_,.flags = 0,.element_size = elm_size,});
 	vmemcpy(arr.data, c_array, (u64)(((u64)(len)) * ((u64)(elm_size))));
 	return arr;
 }
 
-VV_LOCAL_SYMBOL void array_ensure_cap_noscan(array* a, int required) {
+void array_ensure_cap_noscan(array* a, int required) {
 	if (required <= a->cap) {
 		return;
 	}
 	if (ArrayFlags_has(&a->flags, ArrayFlags__nogrow)) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.ensure_cap_noscan: array with the flag `.nogrow` cannot grow in size, array required new size: "), 0xfe07, {.d_i32 = required}}, {_SLIT0, 0, { .d_c = 0 }}})));
+		panic_debug(96, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array_d_gcboehm_opt.v"), tos3("builtin"), tos3("ensure_cap_noscan"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.ensure_cap_noscan: array with the flag `.nogrow` cannot grow in size, array required new size: "), 0xfe07, {.d_i32 = required}}, {_SLIT0, 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	i64 cap = (a->cap > 0 ? (((i64)(a->cap))) : (((i64)(2))));
@@ -7300,7 +7411,7 @@ VV_LOCAL_SYMBOL void array_ensure_cap_noscan(array* a, int required) {
 		if (a->cap < _const_max_int) {
 			cap = _const_max_int;
 		} else {
-			_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.ensure_cap_noscan: array needs to grow to cap = "), 0xfe09, {.d_i64 = cap}}, {_SLIT(", which is > 2^31"), 0, { .d_c = 0 }}})));
+			panic_debug(107, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array_d_gcboehm_opt.v"), tos3("builtin"), tos3("ensure_cap_noscan"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.ensure_cap_noscan: array needs to grow to cap = "), 0xfe09, {.d_i64 = cap}}, {_SLIT(", which is > 2^31"), 0, { .d_c = 0 }}})));
 			VUNREACHABLE();
 		}
 	}
@@ -7315,9 +7426,9 @@ VV_LOCAL_SYMBOL void array_ensure_cap_noscan(array* a, int required) {
 }
 
 // Attr: [unsafe]
-VV_LOCAL_SYMBOL array array_repeat_to_depth_noscan(array a, int count, int depth) {
+array array_repeat_to_depth_noscan(array a, int count, int depth) {
 	if (count < 0) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.repeat: count is negative: "), 0xfe07, {.d_i32 = count}}, {_SLIT0, 0, { .d_c = 0 }}})));
+		panic_debug(129, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array_d_gcboehm_opt.v"), tos3("builtin"), tos3("repeat_to_depth_noscan"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.repeat: count is negative: "), 0xfe07, {.d_i32 = count}}, {_SLIT0, 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	u64 size = (u64)((u64)(((u64)(count)) * ((u64)(a.len))) * ((u64)(a.element_size)));
@@ -7344,13 +7455,13 @@ VV_LOCAL_SYMBOL array array_repeat_to_depth_noscan(array a, int count, int depth
 	return arr;
 }
 
-VV_LOCAL_SYMBOL void array_insert_noscan(array* a, int i, voidptr val) {
+void array_insert_noscan(array* a, int i, voidptr val) {
 	if (i < 0 || i > a->len) {
-		_v_panic( str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.insert_noscan: index out of range (i == "), 0xfe07, {.d_i32 = i}}, {_SLIT(", a.len == "), 0xfe07, {.d_i32 = a->len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
+		panic_debug(163, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array_d_gcboehm_opt.v"), tos3("builtin"), tos3("insert_noscan"),   str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.insert_noscan: index out of range (i == "), 0xfe07, {.d_i32 = i}}, {_SLIT(", a.len == "), 0xfe07, {.d_i32 = a->len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	if (a->len == _const_max_int) {
-		_v_panic(_SLIT("array.insert_noscan: a.len reached max_int"));
+		panic_debug(166, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array_d_gcboehm_opt.v"), tos3("builtin"), tos3("insert_noscan"),  _SLIT("array.insert_noscan: a.len reached max_int"));
 		VUNREACHABLE();
 	}
 	array_ensure_cap_noscan(a, (int)(a->len + 1));
@@ -7362,14 +7473,14 @@ VV_LOCAL_SYMBOL void array_insert_noscan(array* a, int i, voidptr val) {
 }
 
 // Attr: [unsafe]
-VV_LOCAL_SYMBOL void array_insert_many_noscan(array* a, int i, voidptr val, int size) {
+void array_insert_many_noscan(array* a, int i, voidptr val, int size) {
 	if (i < 0 || i > a->len) {
-		_v_panic( str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.insert_many: index out of range (i == "), 0xfe07, {.d_i32 = i}}, {_SLIT(", a.len == "), 0xfe07, {.d_i32 = a->len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
+		panic_debug(180, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array_d_gcboehm_opt.v"), tos3("builtin"), tos3("insert_many_noscan"),   str_intp(3, _MOV((StrIntpData[]){{_SLIT("array.insert_many: index out of range (i == "), 0xfe07, {.d_i32 = i}}, {_SLIT(", a.len == "), 0xfe07, {.d_i32 = a->len}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	i64 new_len = (i64)(((i64)(a->len)) + ((i64)(size)));
 	if (new_len > _const_max_int) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.insert_many_noscan: a.len = "), 0xfe09, {.d_i64 = new_len}}, {_SLIT(" will exceed max_int"), 0, { .d_c = 0 }}})));
+		panic_debug(184, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array_d_gcboehm_opt.v"), tos3("builtin"), tos3("insert_many_noscan"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.insert_many_noscan: a.len = "), 0xfe09, {.d_i64 = new_len}}, {_SLIT(" will exceed max_int"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	array_ensure_cap_noscan(a, (int)(a->len + size));
@@ -7382,18 +7493,18 @@ VV_LOCAL_SYMBOL void array_insert_many_noscan(array* a, int i, voidptr val, int 
 	a->len += size;
 }
 
-VV_LOCAL_SYMBOL void array_prepend_noscan(array* a, voidptr val) {
+void array_prepend_noscan(array* a, voidptr val) {
 	array_insert_noscan(a, 0, val);
 }
 
 // Attr: [unsafe]
-VV_LOCAL_SYMBOL void array_prepend_many_noscan(array* a, voidptr val, int size) {
+void array_prepend_many_noscan(array* a, voidptr val, int size) {
 	array_insert_many_noscan(a, 0, val, size);
 }
 
-VV_LOCAL_SYMBOL voidptr array_pop_noscan(array* a) {
+voidptr array_pop_noscan(array* a) {
 	if (a->len == 0) {
-		_v_panic(_SLIT("array.pop: array is empty"));
+		panic_debug(211, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array_d_gcboehm_opt.v"), tos3("builtin"), tos3("pop_noscan"),  _SLIT("array.pop: array is empty"));
 		VUNREACHABLE();
 	}
 	int new_len = (int)(a->len - 1);
@@ -7402,12 +7513,12 @@ VV_LOCAL_SYMBOL voidptr array_pop_noscan(array* a) {
 	return memdup_noscan(last_elem, a->element_size);
 }
 
-VV_LOCAL_SYMBOL array array_clone_static_to_depth_noscan(array a, int depth) {
+array array_clone_static_to_depth_noscan(array a, int depth) {
 	return array_clone_to_depth_noscan(&a, depth);
 }
 
 // Attr: [unsafe]
-VV_LOCAL_SYMBOL array array_clone_to_depth_noscan(array* a, int depth) {
+array array_clone_to_depth_noscan(array* a, int depth) {
 	u64 size = (u64)(((u64)(a->cap)) * ((u64)(a->element_size)));
 	if (size == 0U) {
 		size++;
@@ -7430,13 +7541,13 @@ VV_LOCAL_SYMBOL array array_clone_to_depth_noscan(array* a, int depth) {
 	return (array){.data = 0,.offset = 0,.len = 0,.cap = 0,.element_size = 0,};
 }
 
-VV_LOCAL_SYMBOL void array_push_noscan(array* a, voidptr val) {
+void array_push_noscan(array* a, voidptr val) {
 	if (a->len < 0) {
-		_v_panic(_SLIT("array.push_noscan: negative len"));
+		panic_debug(260, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array_d_gcboehm_opt.v"), tos3("builtin"), tos3("push_noscan"),  _SLIT("array.push_noscan: negative len"));
 		VUNREACHABLE();
 	}
 	if (a->len >= _const_max_int) {
-		_v_panic(_SLIT("array.push_noscan: len bigger than max_int"));
+		panic_debug(263, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array_d_gcboehm_opt.v"), tos3("builtin"), tos3("push_noscan"),  _SLIT("array.push_noscan: len bigger than max_int"));
 		VUNREACHABLE();
 	}
 	if (a->len >= a->cap) {
@@ -7447,13 +7558,13 @@ VV_LOCAL_SYMBOL void array_push_noscan(array* a, voidptr val) {
 }
 
 // Attr: [unsafe]
-VV_LOCAL_SYMBOL void array_push_many_noscan(array* a3, voidptr val, int size) {
+void array_push_many_noscan(array* a3, voidptr val, int size) {
 	if (size == 0 || val == ((void*)0)) {
 		return;
 	}
 	i64 new_len = (i64)(((i64)(a3->len)) + ((i64)(size)));
 	if (new_len > _const_max_int) {
-		_v_panic(_SLIT("array.push_many_noscan: new len exceeds max_int"));
+		panic_debug(282, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array_d_gcboehm_opt.v"), tos3("builtin"), tos3("push_many_noscan"),  _SLIT("array.push_many_noscan: new len exceeds max_int"));
 		VUNREACHABLE();
 	}
 	if (a3->data == val && a3->data != 0) {
@@ -7469,7 +7580,7 @@ VV_LOCAL_SYMBOL void array_push_many_noscan(array* a3, voidptr val, int size) {
 	a3->len = ((int)(new_len));
 }
 
-VV_LOCAL_SYMBOL array array_reverse_noscan(array a) {
+array array_reverse_noscan(array a) {
 	if (a.len < 2) {
 		return a;
 	}
@@ -7480,20 +7591,20 @@ VV_LOCAL_SYMBOL array array_reverse_noscan(array a) {
 	return arr;
 }
 
-VV_LOCAL_SYMBOL void array_grow_cap_noscan(array* a, int amount) {
+void array_grow_cap_noscan(array* a, int amount) {
 	i64 new_cap = (i64)(((i64)(amount)) + ((i64)(a->cap)));
 	if (new_cap > _const_max_int) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.grow_cap: new capacity "), 0xfe09, {.d_i64 = new_cap}}, {_SLIT(" will exceed max_int"), 0, { .d_c = 0 }}})));
+		panic_debug(321, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array_d_gcboehm_opt.v"), tos3("builtin"), tos3("grow_cap_noscan"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.grow_cap: new capacity "), 0xfe09, {.d_i64 = new_cap}}, {_SLIT(" will exceed max_int"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	array_ensure_cap_noscan(a, ((int)(new_cap)));
 }
 
 // Attr: [unsafe]
-VV_LOCAL_SYMBOL void array_grow_len_noscan(array* a, int amount) {
+void array_grow_len_noscan(array* a, int amount) {
 	i64 new_len = (i64)(((i64)(amount)) + ((i64)(a->len)));
 	if (new_len > _const_max_int) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.grow_len: new len "), 0xfe09, {.d_i64 = new_len}}, {_SLIT(" will exceed max_int"), 0, { .d_c = 0 }}})));
+		panic_debug(331, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/array_d_gcboehm_opt.v"), tos3("builtin"), tos3("grow_len_noscan"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("array.grow_len: new len "), 0xfe09, {.d_i64 = new_len}}, {_SLIT(" will exceed max_int"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	array_ensure_cap_noscan(a, ((int)(new_len)));
@@ -7555,7 +7666,7 @@ bool print_backtrace_skipping_top_frames(int xskipframes) {
 	return false;
 }
 
-VV_LOCAL_SYMBOL bool print_backtrace_skipping_top_frames_bsd(int skipframes) {
+bool print_backtrace_skipping_top_frames_bsd(int skipframes) {
 	#if defined(CUSTOM_DEFINE_no_backtrace)
 	{
 	}
@@ -7578,7 +7689,7 @@ VV_LOCAL_SYMBOL bool print_backtrace_skipping_top_frames_bsd(int skipframes) {
 	return 0;
 }
 
-VV_LOCAL_SYMBOL bool print_backtrace_skipping_top_frames_linux(int skipframes) {
+bool print_backtrace_skipping_top_frames_linux(int skipframes) {
 	#if !defined(__GLIBC__)
 	{
 		eprintln(_SLIT("backtrace_symbols is missing => printing backtraces is not available."));
@@ -7603,14 +7714,14 @@ VV_LOCAL_SYMBOL bool print_backtrace_skipping_top_frames_linux(int skipframes) {
 
 // TypeDecl
 // Attr: [noreturn]
-VNORETURN VV_LOCAL_SYMBOL void vhalt(void) {
+VNORETURN void vhalt(void) {
 	for (;;) {
 	}
 	while(1);
 }
 
 // Attr: [markused]
-VV_LOCAL_SYMBOL void v_segmentation_fault_handler(i32 signal_number) {
+void v_segmentation_fault_handler(i32 signal_number) {
 	#if defined(_VFREESTANDING)
 	{
 	}
@@ -7654,7 +7765,7 @@ _result_void at_exit(void (*cb)(void)) {
 }
 
 // Attr: [noreturn]
-VNORETURN VV_LOCAL_SYMBOL void panic_debug(int line_no, string file, string mod, string fn_name, string s) {
+VNORETURN void panic_debug(int line_no, string file, string mod, string fn_name, string s) {
 	#if defined(_VFREESTANDING)
 	{
 	}
@@ -7701,14 +7812,14 @@ VNORETURN VV_LOCAL_SYMBOL void panic_debug(int line_no, string file, string mod,
 
 // Attr: [noreturn]
 VNORETURN void panic_option_not_set(string s) {
-	_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("option not set ("), 0xfe10, {.d_s = s}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
+	panic_debug(105, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin.c.v"), tos3("builtin"), tos3("panic_option_not_set"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("option not set ("), 0xfe10, {.d_s = s}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
 	VUNREACHABLE();
 	while(1);
 }
 
 // Attr: [noreturn]
 VNORETURN void panic_result_not_set(string s) {
-	_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("result not set ("), 0xfe10, {.d_s = s}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
+	panic_debug(112, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin.c.v"), tos3("builtin"), tos3("panic_result_not_set"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("result not set ("), 0xfe10, {.d_s = s}}, {_SLIT(")"), 0, { .d_c = 0 }}})));
 	VUNREACHABLE();
 	while(1);
 }
@@ -7776,7 +7887,7 @@ string c_error_number_str(int errnum) {
 
 // Attr: [noreturn]
 VNORETURN void panic_error_number(string basestr, int errnum) {
-	_v_panic(string__plus(basestr, c_error_number_str(errnum)));
+	panic_debug(177, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin.c.v"), tos3("builtin"), tos3("panic_error_number"),  string__plus(basestr, c_error_number_str(errnum)));
 	VUNREACHABLE();
 	while(1);
 }
@@ -7897,7 +8008,7 @@ void println(string s) {
 }
 
 // Attr: [manualfree]
-VV_LOCAL_SYMBOL void _writeln_to_fd(int fd, string s) {
+void _writeln_to_fd(int fd, string s) {
 	bool _writeln_to_fd_defer_0 = false;
 	u8* buf;
 	#if !defined(CUSTOM_DEFINE_builtin_writeln_should_write_at_once)
@@ -7924,7 +8035,7 @@ if (_writeln_to_fd_defer_0) {
 }
 
 // Attr: [manualfree]
-VV_LOCAL_SYMBOL void _write_buf_to_fd(int fd, u8* buf, int buf_len) {
+void _write_buf_to_fd(int fd, u8* buf, int buf_len) {
 	if (buf_len <= 0) {
 		return;
 	}
@@ -7956,7 +8067,7 @@ VV_LOCAL_SYMBOL void _write_buf_to_fd(int fd, u8* buf, int buf_len) {
 u8* _v_malloc(isize n) {
 	;
 	if (n < 0) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("malloc("), 0xfe09, {.d_i64 = n}}, {_SLIT(" < 0)"), 0, { .d_c = 0 }}})));
+		panic_debug(389, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin.c.v"), tos3("builtin"), tos3("malloc"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("malloc("), 0xfe09, {.d_i64 = n}}, {_SLIT(" < 0)"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	u8* res = ((u8*)(0));
@@ -7977,7 +8088,7 @@ u8* _v_malloc(isize n) {
 	}
 	#endif
 	if (res == 0) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("malloc("), 0xfe09, {.d_i64 = n}}, {_SLIT(") failed"), 0, { .d_c = 0 }}})));
+		panic_debug(406, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin.c.v"), tos3("builtin"), tos3("malloc"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("malloc("), 0xfe09, {.d_i64 = n}}, {_SLIT(") failed"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	return res;
@@ -7987,7 +8098,7 @@ u8* _v_malloc(isize n) {
 u8* malloc_noscan(isize n) {
 	;
 	if (n < 0) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("malloc_noscan("), 0xfe09, {.d_i64 = n}}, {_SLIT(" < 0)"), 0, { .d_c = 0 }}})));
+		panic_debug(425, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin.c.v"), tos3("builtin"), tos3("malloc_noscan"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("malloc_noscan("), 0xfe09, {.d_i64 = n}}, {_SLIT(" < 0)"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	u8* res = ((u8*)(0));
@@ -8015,14 +8126,14 @@ u8* malloc_noscan(isize n) {
 	}
 	#endif
 	if (res == 0) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("malloc_noscan("), 0xfe09, {.d_i64 = n}}, {_SLIT(") failed"), 0, { .d_c = 0 }}})));
+		panic_debug(446, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin.c.v"), tos3("builtin"), tos3("malloc_noscan"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("malloc_noscan("), 0xfe09, {.d_i64 = n}}, {_SLIT(") failed"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	return res;
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL u64 __at_least_one(u64 how_many) {
+inline u64 __at_least_one(u64 how_many) {
 	if (how_many == 0U) {
 		return 1U;
 	}
@@ -8033,7 +8144,7 @@ inline VV_LOCAL_SYMBOL u64 __at_least_one(u64 how_many) {
 u8* malloc_uncollectable(isize n) {
 	;
 	if (n < 0) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("malloc_uncollectable("), 0xfe09, {.d_i64 = n}}, {_SLIT(" < 0)"), 0, { .d_c = 0 }}})));
+		panic_debug(477, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin.c.v"), tos3("builtin"), tos3("malloc_uncollectable"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("malloc_uncollectable("), 0xfe09, {.d_i64 = n}}, {_SLIT(" < 0)"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	u8* res = ((u8*)(0));
@@ -8054,7 +8165,7 @@ u8* malloc_uncollectable(isize n) {
 	}
 	#endif
 	if (res == 0) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("malloc_uncollectable("), 0xfe09, {.d_i64 = n}}, {_SLIT(") failed"), 0, { .d_c = 0 }}})));
+		panic_debug(492, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin.c.v"), tos3("builtin"), tos3("malloc_uncollectable"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("malloc_uncollectable("), 0xfe09, {.d_i64 = n}}, {_SLIT(") failed"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	return res;
@@ -8075,7 +8186,7 @@ u8* v_realloc(u8* b, isize n) {
 	}
 	#endif
 	if (new_ptr == 0) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("realloc("), 0xfe09, {.d_i64 = n}}, {_SLIT(") failed"), 0, { .d_c = 0 }}})));
+		panic_debug(524, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin.c.v"), tos3("builtin"), tos3("v_realloc"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("realloc("), 0xfe09, {.d_i64 = n}}, {_SLIT(") failed"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	return new_ptr;
@@ -8093,7 +8204,7 @@ u8* realloc_data(u8* old_data, int old_size, int new_size) {
 	}
 	#endif
 	if (nptr == 0) {
-		_v_panic( str_intp(4, _MOV((StrIntpData[]){{_SLIT("realloc_data("), 0xfe11, {.d_p = (void*)(old_data)}}, {_SLIT(", "), 0xfe07, {.d_i32 = old_size}}, {_SLIT(", "), 0xfe07, {.d_i32 = new_size}}, {_SLIT(") failed"), 0, { .d_c = 0 }}})));
+		panic_debug(570, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin.c.v"), tos3("builtin"), tos3("realloc_data"),   str_intp(4, _MOV((StrIntpData[]){{_SLIT("realloc_data("), 0xfe11, {.d_p = (void*)(old_data)}}, {_SLIT(", "), 0xfe07, {.d_i32 = old_size}}, {_SLIT(", "), 0xfe07, {.d_i32 = new_size}}, {_SLIT(") failed"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	return nptr;
@@ -8101,7 +8212,7 @@ u8* realloc_data(u8* old_data, int old_size, int new_size) {
 
 u8* vcalloc(isize n) {
 	if (n < 0) {
-		_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("calloc("), 0xfe09, {.d_i64 = n}}, {_SLIT(" < 0)"), 0, { .d_c = 0 }}})));
+		panic_debug(584, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin.c.v"), tos3("builtin"), tos3("vcalloc"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("calloc("), 0xfe09, {.d_i64 = n}}, {_SLIT(" < 0)"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	} else if (n == 0) {
 		return ((u8*)(0));
@@ -8128,7 +8239,7 @@ u8* vcalloc_noscan(isize n) {
 	#elif defined(_VGCBOEHM)
 	{
 		if (n < 0) {
-			_v_panic( str_intp(2, _MOV((StrIntpData[]){{_SLIT("calloc_noscan("), 0xfe09, {.d_i64 = n}}, {_SLIT(" < 0)"), 0, { .d_c = 0 }}})));
+			panic_debug(609, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin.c.v"), tos3("builtin"), tos3("vcalloc_noscan"),   str_intp(2, _MOV((StrIntpData[]){{_SLIT("calloc_noscan("), 0xfe09, {.d_i64 = n}}, {_SLIT(" < 0)"), 0, { .d_c = 0 }}})));
 			VUNREACHABLE();
 		}
 		u8* _t3;
@@ -8223,12 +8334,12 @@ usize gc_memory_use(void) {
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL int v_fixed_index(int i, int len) {
+inline int v_fixed_index(int i, int len) {
 	#if !defined(CUSTOM_DEFINE_no_bounds_checking)
 	{
 		if (i < 0 || i >= len) {
 			string s =  str_intp(3, _MOV((StrIntpData[]){{_SLIT("fixed array index out of range (index: "), 0xfe07, {.d_i32 = i}}, {_SLIT(", len: "), 0xfe07, {.d_i32 = len}}, {_SLIT(")"), 0, { .d_c = 0 }}}));
-			_v_panic(s);
+			panic_debug(724, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin.c.v"), tos3("builtin"), tos3("v_fixed_index"),  s);
 			VUNREACHABLE();
 		}
 	}
@@ -8257,7 +8368,7 @@ inline bool isnil(voidptr v) {
 	return v == 0;
 }
 
-VV_LOCAL_SYMBOL voidptr __as_cast(voidptr obj, int obj_type, int expected_type) {
+voidptr __as_cast(voidptr obj, int obj_type, int expected_type) {
 	if (obj_type != expected_type) {
 		string obj_name = string_clone((*(VCastTypeIndexName*)array_get(as_cast_type_indexes, 0)).tname);
 		string expected_name = string_clone((*(VCastTypeIndexName*)array_get(as_cast_type_indexes, 0)).tname);
@@ -8270,7 +8381,7 @@ VV_LOCAL_SYMBOL voidptr __as_cast(voidptr obj, int obj_type, int expected_type) 
 				expected_name = string_clone(x.tname);
 			}
 		}
-		_v_panic( str_intp(3, _MOV((StrIntpData[]){{_SLIT("as cast: cannot cast `"), 0xfe10, {.d_s = obj_name}}, {_SLIT("` to `"), 0xfe10, {.d_s = expected_name}}, {_SLIT("`"), 0, { .d_c = 0 }}})));
+		panic_debug(39, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin.v"), tos3("builtin"), tos3("__as_cast"),   str_intp(3, _MOV((StrIntpData[]){{_SLIT("as cast: cannot cast `"), 0xfe10, {.d_s = obj_name}}, {_SLIT("` to `"), 0xfe10, {.d_s = expected_name}}, {_SLIT("`"), 0, { .d_c = 0 }}})));
 		VUNREACHABLE();
 	}
 	return obj;
@@ -8292,7 +8403,7 @@ void VAssertMetaInfo_free(VAssertMetaInfo* ami) {
 	}
 }
 
-VV_LOCAL_SYMBOL void __print_assert_failure(VAssertMetaInfo* i) {
+void __print_assert_failure(VAssertMetaInfo* i) {
 	eprintln( str_intp(5, _MOV((StrIntpData[]){{_SLIT0, 0xfe10, {.d_s = i->fpath}}, {_SLIT(":"), 0xfe07, {.d_i32 = (int)(i->line_nr + 1)}}, {_SLIT(": FAIL: fn "), 0xfe10, {.d_s = i->fn_name}}, {_SLIT(": assert "), 0xfe10, {.d_s = i->src}}, {_SLIT0, 0, { .d_c = 0 }}})));
 	if (i->op.len > 0 && !string__eq(i->op, _SLIT("call"))) {
 		eprintln( str_intp(3, _MOV((StrIntpData[]){{_SLIT("   left value: "), 0xfe10, {.d_s = i->llabel}}, {_SLIT(" = "), 0xfe10, {.d_s = i->lvalue}}, {_SLIT0, 0, { .d_c = 0 }}})));
@@ -8350,10 +8461,10 @@ void gc_set_warn_proc(void (*cb)(char* msg, usize arg)) {
 	GC_set_warn_proc((voidptr)cb);
 }
 
-VV_LOCAL_SYMBOL void internal_gc_warn_proc_none(char* msg, usize arg) {
+void internal_gc_warn_proc_none(char* msg, usize arg) {
 }
 
-VV_LOCAL_SYMBOL void builtin_init(void) {
+void builtin_init(void) {
 	#if defined(_VGCBOEHM)
 	{
 		#if !defined(CUSTOM_DEFINE_gc_warn_on_stderr)
@@ -8365,7 +8476,7 @@ VV_LOCAL_SYMBOL void builtin_init(void) {
 	#endif
 }
 
-VV_LOCAL_SYMBOL void break_if_debugger_attached(void) {
+void break_if_debugger_attached(void) {
 	{ // Unsafe block
 		voidptr* ptr = ((voidptr*)(0));
 		*ptr = ((void*)0);
@@ -8375,16 +8486,16 @@ VV_LOCAL_SYMBOL void break_if_debugger_attached(void) {
 // Attr: [markused]
 // Attr: [noreturn]
 VNORETURN void panic_lasterr(string base) {
-	_v_panic(string__plus(base, _SLIT(" unknown")));
+	panic_debug(24, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/builtin_nix.c.v"), tos3("builtin"), tos3("panic_lasterr"),  string__plus(base, _SLIT(" unknown")));
 	VUNREACHABLE();
 	while(1);
 }
 
-VV_LOCAL_SYMBOL void print_libbacktrace(int frames_to_skip) {
+void print_libbacktrace(int frames_to_skip) {
 }
 
 // Attr: [noinline]
-__NOINLINE VV_LOCAL_SYMBOL void eprint_libbacktrace(int frames_to_skip) {
+__NOINLINE void eprint_libbacktrace(int frames_to_skip) {
 }
 
 // Attr: [trusted]
@@ -8479,7 +8590,7 @@ inline voidptr vmemset(voidptr s, int c, isize n) {
 // TypeDecl
 // Attr: [inline]
 // Attr: [unsafe]
-inline VV_LOCAL_SYMBOL void vqsort(voidptr base, usize nmemb, usize size, int (*sort_cb)(const voidptr const_a, const voidptr const_b)) {
+inline void vqsort(voidptr base, usize nmemb, usize size, int (*sort_cb)(const voidptr const_a, const voidptr const_b)) {
 	qsort(base, nmemb, size, ((voidptr)(sort_cb)));
 }
 
@@ -8647,7 +8758,7 @@ inline f32 f32_abs(f32 a) {
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL f64 f64_abs(f64 a) {
+inline f64 f64_abs(f64 a) {
 	return (a < 0 ? (-a) : (a));
 }
 
@@ -8667,7 +8778,7 @@ inline f64 f64_max(f64 a, f64 b) {
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL f64 f64_min(f64 a, f64 b) {
+inline f64 f64_min(f64 a, f64 b) {
 	return (a < b ? (a) : (b));
 }
 
@@ -8719,7 +8830,7 @@ inline bool f64_eq_epsilon(f64 a, f64 b) {
 	return 0;
 }
 
-VV_LOCAL_SYMBOL void float_test(void) {
+void float_test(void) {
 }
 
 // TypeDecl
@@ -8742,7 +8853,7 @@ string char_str(char* cptr) {
 
 // Attr: [direct_array_access]
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL string int_str_l(int nn, int max) {
+inline string int_str_l(int nn, int max) {
 	{ // Unsafe block
 		i64 n = ((i64)(nn));
 		int d = 0;
@@ -8941,7 +9052,7 @@ string bool_str(bool b) {
 
 // Attr: [direct_array_access]
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL string u64_to_hex(u64 nn, u8 len) {
+inline string u64_to_hex(u64 nn, u8 len) {
 	u64 n = nn;
 	Array_fixed_u8_17 buf = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	buf[len] = 0;
@@ -8956,7 +9067,7 @@ inline VV_LOCAL_SYMBOL string u64_to_hex(u64 nn, u8 len) {
 
 // Attr: [direct_array_access]
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL string u64_to_hex_no_leading_zeros(u64 nn, u8 len) {
+inline string u64_to_hex_no_leading_zeros(u64 nn, u8 len) {
 	u64 n = nn;
 	Array_fixed_u8_17 buf = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	buf[len] = 0;
@@ -9175,12 +9286,12 @@ string u8_repeat(u8 b, int count) {
 	return u8_vstring_with_len(bytes, count);
 }
 
-VV_LOCAL_SYMBOL string _Atomic__int_str(int x) {
+string _Atomic__int_str(int x) {
 	return int_str(x);
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL bool fast_string_eq(string a, string b) {
+inline bool fast_string_eq(string a, string b) {
 	if (a.len != b.len) {
 		return false;
 	}
@@ -9190,28 +9301,28 @@ inline VV_LOCAL_SYMBOL bool fast_string_eq(string a, string b) {
 	return 0;
 }
 
-VV_LOCAL_SYMBOL u64 map_hash_string(voidptr pkey) {
+u64 map_hash_string(voidptr pkey) {
 	string key = *((string*)(pkey));
 	return wyhash(key.str, ((u64)(key.len)), 0U, ((u64*)(_wyp)));
 }
 
-VV_LOCAL_SYMBOL u64 map_hash_int_1(voidptr pkey) {
+u64 map_hash_int_1(voidptr pkey) {
 	return wyhash64(*((u8*)(pkey)), 0U);
 }
 
-VV_LOCAL_SYMBOL u64 map_hash_int_2(voidptr pkey) {
+u64 map_hash_int_2(voidptr pkey) {
 	return wyhash64(*((u16*)(pkey)), 0U);
 }
 
-VV_LOCAL_SYMBOL u64 map_hash_int_4(voidptr pkey) {
+u64 map_hash_int_4(voidptr pkey) {
 	return wyhash64(*((u32*)(pkey)), 0U);
 }
 
-VV_LOCAL_SYMBOL u64 map_hash_int_8(voidptr pkey) {
+u64 map_hash_int_8(voidptr pkey) {
 	return wyhash64(*((u64*)(pkey)), 0U);
 }
 
-VV_LOCAL_SYMBOL void DenseArray_zeros_to_end(DenseArray* d) {
+void DenseArray_zeros_to_end(DenseArray* d) {
 	u8* tmp_value = _v_malloc(d->value_bytes);
 	u8* tmp_key = _v_malloc(d->key_bytes);
 	int count = 0;
@@ -9246,7 +9357,7 @@ VV_LOCAL_SYMBOL void DenseArray_zeros_to_end(DenseArray* d) {
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL DenseArray new_dense_array(int key_bytes, int value_bytes) {
+inline DenseArray new_dense_array(int key_bytes, int value_bytes) {
 	int cap = 8;
 	return ((DenseArray){
 		.key_bytes = key_bytes,
@@ -9261,22 +9372,22 @@ inline VV_LOCAL_SYMBOL DenseArray new_dense_array(int key_bytes, int value_bytes
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL voidptr DenseArray_key(DenseArray* d, int i) {
+inline voidptr DenseArray_key(DenseArray* d, int i) {
 	return ((voidptr)(d->keys + (int)(i * d->key_bytes)));
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL voidptr DenseArray_value(DenseArray* d, int i) {
+inline voidptr DenseArray_value(DenseArray* d, int i) {
 	return ((voidptr)(d->values + (int)(i * d->value_bytes)));
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL bool DenseArray_has_index(DenseArray* d, int i) {
+inline bool DenseArray_has_index(DenseArray* d, int i) {
 	return d->deletes == 0U || d->all_deleted[i] == 0;
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL int DenseArray_expand(DenseArray* d) {
+inline int DenseArray_expand(DenseArray* d) {
 	int old_cap = d->cap;
 	int old_key_size = (int)(d->key_bytes * old_cap);
 	int old_value_size = (int)(d->value_bytes * old_cap);
@@ -9305,65 +9416,65 @@ inline VV_LOCAL_SYMBOL int DenseArray_expand(DenseArray* d) {
 // TypeDecl
 // TypeDecl
 // TypeDecl
-VV_LOCAL_SYMBOL bool map_eq_string(voidptr a, voidptr b) {
+bool map_eq_string(voidptr a, voidptr b) {
 	return fast_string_eq(*((string*)(a)), *((string*)(b)));
 }
 
-VV_LOCAL_SYMBOL bool map_eq_int_1(voidptr a, voidptr b) {
+bool map_eq_int_1(voidptr a, voidptr b) {
 	return *((u8*)(a)) == *((u8*)(b));
 }
 
-VV_LOCAL_SYMBOL bool map_eq_int_2(voidptr a, voidptr b) {
+bool map_eq_int_2(voidptr a, voidptr b) {
 	return *((u16*)(a)) == *((u16*)(b));
 }
 
-VV_LOCAL_SYMBOL bool map_eq_int_4(voidptr a, voidptr b) {
+bool map_eq_int_4(voidptr a, voidptr b) {
 	return *((u32*)(a)) == *((u32*)(b));
 }
 
-VV_LOCAL_SYMBOL bool map_eq_int_8(voidptr a, voidptr b) {
+bool map_eq_int_8(voidptr a, voidptr b) {
 	return *((u64*)(a)) == *((u64*)(b));
 }
 
-VV_LOCAL_SYMBOL void map_clone_string(voidptr dest, voidptr pkey) {
+void map_clone_string(voidptr dest, voidptr pkey) {
 	{ // Unsafe block
 		string s = *((string*)(pkey));
 		*((string*)(dest)) = string_clone(s);
 	}
 }
 
-VV_LOCAL_SYMBOL void map_clone_int_1(voidptr dest, voidptr pkey) {
+void map_clone_int_1(voidptr dest, voidptr pkey) {
 	{ // Unsafe block
 		*((u8*)(dest)) = *((u8*)(pkey));
 	}
 }
 
-VV_LOCAL_SYMBOL void map_clone_int_2(voidptr dest, voidptr pkey) {
+void map_clone_int_2(voidptr dest, voidptr pkey) {
 	{ // Unsafe block
 		*((u16*)(dest)) = *((u16*)(pkey));
 	}
 }
 
-VV_LOCAL_SYMBOL void map_clone_int_4(voidptr dest, voidptr pkey) {
+void map_clone_int_4(voidptr dest, voidptr pkey) {
 	{ // Unsafe block
 		*((u32*)(dest)) = *((u32*)(pkey));
 	}
 }
 
-VV_LOCAL_SYMBOL void map_clone_int_8(voidptr dest, voidptr pkey) {
+void map_clone_int_8(voidptr dest, voidptr pkey) {
 	{ // Unsafe block
 		*((u64*)(dest)) = *((u64*)(pkey));
 	}
 }
 
-VV_LOCAL_SYMBOL void map_free_string(voidptr pkey) {
+void map_free_string(voidptr pkey) {
 	string_free(ADDR(string, (*((string*)(pkey)))));
 }
 
-VV_LOCAL_SYMBOL void map_free_nop(voidptr _d1) {
+void map_free_nop(voidptr _d1) {
 }
 
-VV_LOCAL_SYMBOL map new_map(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr )) {
+map new_map(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr )) {
 	int metasize = ((int)((u32)(sizeof(u32) * ((int_literal)(_const_init_capicity + _const_extra_metas_inc)))));
 	bool has_string_keys = _us32_lt(sizeof(voidptr),key_bytes);
 	return ((map){
@@ -9384,7 +9495,7 @@ VV_LOCAL_SYMBOL map new_map(int key_bytes, int value_bytes, u64 (*hash_fn)(voidp
 	});
 }
 
-VV_LOCAL_SYMBOL map new_map_init(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values) {
+map new_map_init(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values) {
 	map out = new_map(key_bytes, value_bytes, (voidptr)hash_fn, (voidptr)key_eq_fn, (voidptr)clone_fn, (voidptr)free_fn);
 	u8* pkey = ((u8*)(keys));
 	u8* pval = ((u8*)(values));
@@ -9398,7 +9509,7 @@ VV_LOCAL_SYMBOL map new_map_init(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voi
 	return out;
 }
 
-VV_LOCAL_SYMBOL map new_map_update_init(map* update, int n, int key_bytes, int value_bytes, voidptr keys, voidptr values) {
+map new_map_update_init(map* update, int n, int key_bytes, int value_bytes, voidptr keys, voidptr values) {
 	map out = map_clone(update);
 	u8* pkey = ((u8*)(keys));
 	u8* pval = ((u8*)(values));
@@ -9436,7 +9547,7 @@ void map_clear(map* m) {
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL multi_return_u32_u32 map_key_to_index(map* m, voidptr pkey) {
+inline multi_return_u32_u32 map_key_to_index(map* m, voidptr pkey) {
 	u64 hash = m->hash_fn(pkey);
 	u64 index = (hash & m->even_index);
 	u64 meta = (((((hash >> m->shift)) & _const_hash_mask)) | _const_probe_inc);
@@ -9444,7 +9555,7 @@ inline VV_LOCAL_SYMBOL multi_return_u32_u32 map_key_to_index(map* m, voidptr pke
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL multi_return_u32_u32 map_meta_less(map* m, u32 _index, u32 _metas) {
+inline multi_return_u32_u32 map_meta_less(map* m, u32 _index, u32 _metas) {
 	u32 index = _index;
 	u32 meta = _metas;
 	for (;;) {
@@ -9456,7 +9567,7 @@ inline VV_LOCAL_SYMBOL multi_return_u32_u32 map_meta_less(map* m, u32 _index, u3
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL void map_meta_greater(map* m, u32 _index, u32 _metas, u32 kvi) {
+inline void map_meta_greater(map* m, u32 _index, u32 _metas, u32 kvi) {
 	u32 meta = _metas;
 	u32 index = _index;
 	u32 kv_index = kvi;
@@ -9484,7 +9595,7 @@ inline VV_LOCAL_SYMBOL void map_meta_greater(map* m, u32 _index, u32 _metas, u32
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL void map_ensure_extra_metas(map* m, u32 probe_count) {
+inline void map_ensure_extra_metas(map* m, u32 probe_count) {
 	if (((probe_count << 1U)) == m->extra_metas) {
 		u32 size_of_u32 = sizeof(u32);
 		u32 old_mem_size = ((u32)((u32)(m->even_index + 2U) + m->extra_metas));
@@ -9496,13 +9607,13 @@ inline VV_LOCAL_SYMBOL void map_ensure_extra_metas(map* m, u32 probe_count) {
 			vmemset(m->metas + mem_size - _const_extra_metas_inc, 0, ((int)((u32)(sizeof(u32) * _const_extra_metas_inc))));
 		}
 		if (probe_count == 252U) {
-			_v_panic(_SLIT("Probe overflow"));
+			panic_debug(393, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/map.v"), tos3("builtin"), tos3("ensure_extra_metas"),  _SLIT("Probe overflow"));
 			VUNREACHABLE();
 		}
 	}
 }
 
-VV_LOCAL_SYMBOL void map_set(map* m, voidptr key, voidptr value) {
+void map_set(map* m, voidptr key, voidptr value) {
 	f32 load_factor = (f32)(((f32)((((u32)(m->len)) << 1U))) / ((f32)(m->even_index)));
 	if (load_factor > ((f32)(_const_max_load_factor))) {
 		map_expand(m);
@@ -9538,7 +9649,7 @@ VV_LOCAL_SYMBOL void map_set(map* m, voidptr key, voidptr value) {
 	m->len++;
 }
 
-VV_LOCAL_SYMBOL void map_expand(map* m) {
+void map_expand(map* m) {
 	u32 old_cap = m->even_index;
 	m->even_index = (u32)(((((u32)(m->even_index + 2U)) << 1U)) - 2U);
 	if (m->cached_hashbits == 0) {
@@ -9551,7 +9662,7 @@ VV_LOCAL_SYMBOL void map_expand(map* m) {
 	}
 }
 
-VV_LOCAL_SYMBOL void map_rehash(map* m) {
+void map_rehash(map* m) {
 	u32 meta_bytes = (u32)(sizeof(u32) * ((u32)((u32)(m->even_index + 2U) + m->extra_metas)));
 	map_reserve(m, meta_bytes);
 }
@@ -9577,7 +9688,7 @@ void map_reserve(map* m, u32 meta_bytes) {
 	}
 }
 
-VV_LOCAL_SYMBOL void map_cached_rehash(map* m, u32 old_cap) {
+void map_cached_rehash(map* m, u32 old_cap) {
 	u32* old_metas = m->metas;
 	int metasize = ((int)((u32)(sizeof(u32) * ((u32)((u32)(m->even_index + 2U) + m->extra_metas)))));
 	m->metas = ((u32*)(vcalloc(metasize)));
@@ -9600,7 +9711,7 @@ VV_LOCAL_SYMBOL void map_cached_rehash(map* m, u32 old_cap) {
 	_v_free(old_metas);
 }
 
-VV_LOCAL_SYMBOL voidptr map_get_and_set(map* m, voidptr key, voidptr zero) {
+voidptr map_get_and_set(map* m, voidptr key, voidptr zero) {
 	for (;;) {
 		multi_return_u32_u32 mr_15283 = map_key_to_index(m, key);
 		u32 index = mr_15283.arg0;
@@ -9625,7 +9736,7 @@ VV_LOCAL_SYMBOL voidptr map_get_and_set(map* m, voidptr key, voidptr zero) {
 	return ((void*)0);
 }
 
-VV_LOCAL_SYMBOL voidptr map_get(map* m, voidptr key, voidptr zero) {
+voidptr map_get(map* m, voidptr key, voidptr zero) {
 	multi_return_u32_u32 mr_16010 = map_key_to_index(m, key);
 	u32 index = mr_16010.arg0;
 	u32 meta = mr_16010.arg1;
@@ -9647,7 +9758,7 @@ VV_LOCAL_SYMBOL voidptr map_get(map* m, voidptr key, voidptr zero) {
 	return zero;
 }
 
-VV_LOCAL_SYMBOL voidptr map_get_check(map* m, voidptr key) {
+voidptr map_get_check(map* m, voidptr key) {
 	multi_return_u32_u32 mr_16675 = map_key_to_index(m, key);
 	u32 index = mr_16675.arg0;
 	u32 meta = mr_16675.arg1;
@@ -9669,7 +9780,7 @@ VV_LOCAL_SYMBOL voidptr map_get_check(map* m, voidptr key) {
 	return 0;
 }
 
-VV_LOCAL_SYMBOL bool map_exists(map* m, voidptr key) {
+bool map_exists(map* m, voidptr key) {
 	multi_return_u32_u32 mr_17185 = map_key_to_index(m, key);
 	u32 index = mr_17185.arg0;
 	u32 meta = mr_17185.arg1;
@@ -9691,7 +9802,7 @@ VV_LOCAL_SYMBOL bool map_exists(map* m, voidptr key) {
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL void DenseArray_delete(DenseArray* d, int i) {
+inline void DenseArray_delete(DenseArray* d, int i) {
 	if (d->deletes == 0U) {
 		d->all_deleted = vcalloc(d->cap);
 	}
@@ -9790,7 +9901,7 @@ array map_values(map* m) {
 }
 
 // Attr: [unsafe]
-VV_LOCAL_SYMBOL DenseArray DenseArray_clone(DenseArray* d) {
+DenseArray DenseArray_clone(DenseArray* d) {
 	DenseArray res = ((DenseArray){
 		.key_bytes = d->key_bytes,
 		.value_bytes = d->value_bytes,
@@ -9890,7 +10001,7 @@ void map_free(map* m) {
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL u8* __malloc_at_least_one(u64 how_many_bytes, bool noscan) {
+inline u8* __malloc_at_least_one(u64 how_many_bytes, bool noscan) {
 	if (noscan) {
 		return malloc_noscan(__at_least_one(how_many_bytes));
 	}
@@ -9898,7 +10009,7 @@ inline VV_LOCAL_SYMBOL u8* __malloc_at_least_one(u64 how_many_bytes, bool noscan
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL DenseArray new_dense_array_noscan(int key_bytes, bool key_noscan, int value_bytes, bool value_noscan) {
+inline DenseArray new_dense_array_noscan(int key_bytes, bool key_noscan, int value_bytes, bool value_noscan) {
 	int cap = 8;
 	return ((DenseArray){
 		.key_bytes = key_bytes,
@@ -9912,7 +10023,7 @@ inline VV_LOCAL_SYMBOL DenseArray new_dense_array_noscan(int key_bytes, bool key
 	});
 }
 
-VV_LOCAL_SYMBOL map new_map_noscan_key(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr )) {
+map new_map_noscan_key(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr )) {
 	int metasize = ((int)((u32)(sizeof(u32) * ((int_literal)(_const_init_capicity + _const_extra_metas_inc)))));
 	bool has_string_keys = _us32_lt(sizeof(voidptr),key_bytes);
 	return ((map){
@@ -9933,7 +10044,7 @@ VV_LOCAL_SYMBOL map new_map_noscan_key(int key_bytes, int value_bytes, u64 (*has
 	});
 }
 
-VV_LOCAL_SYMBOL map new_map_noscan_value(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr )) {
+map new_map_noscan_value(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr )) {
 	int metasize = ((int)((u32)(sizeof(u32) * ((int_literal)(_const_init_capicity + _const_extra_metas_inc)))));
 	bool has_string_keys = _us32_lt(sizeof(voidptr),key_bytes);
 	return ((map){
@@ -9954,7 +10065,7 @@ VV_LOCAL_SYMBOL map new_map_noscan_value(int key_bytes, int value_bytes, u64 (*h
 	});
 }
 
-VV_LOCAL_SYMBOL map new_map_noscan_key_value(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr )) {
+map new_map_noscan_key_value(int key_bytes, int value_bytes, u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr )) {
 	int metasize = ((int)((u32)(sizeof(u32) * ((int_literal)(_const_init_capicity + _const_extra_metas_inc)))));
 	bool has_string_keys = _us32_lt(sizeof(voidptr),key_bytes);
 	return ((map){
@@ -9975,7 +10086,7 @@ VV_LOCAL_SYMBOL map new_map_noscan_key_value(int key_bytes, int value_bytes, u64
 	});
 }
 
-VV_LOCAL_SYMBOL map new_map_init_noscan_key(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values) {
+map new_map_init_noscan_key(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values) {
 	map out = new_map_noscan_key(key_bytes, value_bytes, (voidptr)hash_fn, (voidptr)key_eq_fn, (voidptr)clone_fn, (voidptr)free_fn);
 	u8* pkey = ((u8*)(keys));
 	u8* pval = ((u8*)(values));
@@ -9989,7 +10100,7 @@ VV_LOCAL_SYMBOL map new_map_init_noscan_key(u64 (*hash_fn)(voidptr ), bool (*key
 	return out;
 }
 
-VV_LOCAL_SYMBOL map new_map_init_noscan_value(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values) {
+map new_map_init_noscan_value(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values) {
 	map out = new_map_noscan_value(key_bytes, value_bytes, (voidptr)hash_fn, (voidptr)key_eq_fn, (voidptr)clone_fn, (voidptr)free_fn);
 	u8* pkey = ((u8*)(keys));
 	u8* pval = ((u8*)(values));
@@ -10003,7 +10114,7 @@ VV_LOCAL_SYMBOL map new_map_init_noscan_value(u64 (*hash_fn)(voidptr ), bool (*k
 	return out;
 }
 
-VV_LOCAL_SYMBOL map new_map_init_noscan_key_value(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values) {
+map new_map_init_noscan_key_value(u64 (*hash_fn)(voidptr ), bool (*key_eq_fn)(voidptr , voidptr ), void (*clone_fn)(voidptr , voidptr ), void (*free_fn)(voidptr ), int n, int key_bytes, int value_bytes, voidptr keys, voidptr values) {
 	map out = new_map_noscan_key_value(key_bytes, value_bytes, (voidptr)hash_fn, (voidptr)key_eq_fn, (voidptr)clone_fn, (voidptr)free_fn);
 	u8* pkey = ((u8*)(keys));
 	u8* pval = ((u8*)(values));
@@ -10026,7 +10137,7 @@ void IError_free(IError* ie) {
 }
 
 // Attr: [markused]
-VV_LOCAL_SYMBOL void _option_none(voidptr data, _option* option, int size) {
+void _option_none(voidptr data, _option* option, int size) {
 	{ // Unsafe block
 		*option = ((_option){.state = 2,.err = _const_none__,});
 		vmemcpy(((u8*)(&option->err)) + sizeof(IError), data, size);
@@ -10034,14 +10145,14 @@ VV_LOCAL_SYMBOL void _option_none(voidptr data, _option* option, int size) {
 }
 
 // Attr: [markused]
-VV_LOCAL_SYMBOL void _option_ok(voidptr data, _option* option, int size) {
+void _option_ok(voidptr data, _option* option, int size) {
 	{ // Unsafe block
 		*option = ((_option){.state = 0,.err = _const_none__,});
 		vmemcpy(((u8*)(&option->err)) + sizeof(IError), data, size);
 	}
 }
 
-VV_LOCAL_SYMBOL string None___str(None__ _d1) {
+string None___str(None__ _d1) {
 	return _SLIT("none");
 }
 
@@ -10050,7 +10161,7 @@ string none_str(none _d2) {
 }
 
 // Attr: [markused]
-VV_LOCAL_SYMBOL void _result_ok(voidptr data, _result* res, int size) {
+void _result_ok(voidptr data, _result* res, int size) {
 	{ // Unsafe block
 		*res = ((_result){.is_error = 0,.err = _const_none__,});
 		vmemcpy(((u8*)(&res->err)) + sizeof(IError), data, size);
@@ -10149,11 +10260,11 @@ int rune_length_in_bytes(rune c) {
 	return -1;
 }
 
-VV_LOCAL_SYMBOL SortedMap new_sorted_map(int n, int value_bytes) {
+SortedMap new_sorted_map(int n, int value_bytes) {
 	return ((SortedMap){.value_bytes = value_bytes,.root = new_node(),.len = 0,});
 }
 
-VV_LOCAL_SYMBOL SortedMap new_sorted_map_init(int n, int value_bytes, string* keys, voidptr values) {
+SortedMap new_sorted_map_init(int n, int value_bytes, string* keys, voidptr values) {
 	SortedMap out = new_sorted_map(n, value_bytes);
 	for (int i = 0; i < n; ++i) {
 		SortedMap_set(&out, keys[i], ((u8*)(values)) + (int)(i * value_bytes));
@@ -10161,11 +10272,11 @@ VV_LOCAL_SYMBOL SortedMap new_sorted_map_init(int n, int value_bytes, string* ke
 	return out;
 }
 
-VV_LOCAL_SYMBOL mapnode* new_node(void) {
+mapnode* new_node(void) {
 	return ((mapnode*)memdup(&(mapnode){.children = ((void*)0),.len = 0,.keys = {(string){.str=(byteptr)"", .is_lit=1}, (string){.str=(byteptr)"", .is_lit=1}, (string){.str=(byteptr)"", .is_lit=1}, (string){.str=(byteptr)"", .is_lit=1}, (string){.str=(byteptr)"", .is_lit=1}, (string){.str=(byteptr)"", .is_lit=1}, (string){.str=(byteptr)"", .is_lit=1}, (string){.str=(byteptr)"", .is_lit=1}, (string){.str=(byteptr)"", .is_lit=1}, (string){.str=(byteptr)"", .is_lit=1}, (string){.str=(byteptr)"", .is_lit=1}},.values = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},}, sizeof(mapnode)));
 }
 
-VV_LOCAL_SYMBOL void SortedMap_set(SortedMap* m, string key, voidptr value) {
+void SortedMap_set(SortedMap* m, string key, voidptr value) {
 	mapnode* node = m->root;
 	int child_index = 0;
 	mapnode* parent = ((mapnode*)(((void*)0)));
@@ -10218,7 +10329,7 @@ VV_LOCAL_SYMBOL void SortedMap_set(SortedMap* m, string key, voidptr value) {
 	}
 }
 
-VV_LOCAL_SYMBOL void mapnode_split_child(mapnode* n, int child_index, mapnode* y) {
+void mapnode_split_child(mapnode* n, int child_index, mapnode* y) {
 	mapnode* z = new_node();
 	z->len = _const_mid_index;
 	y->len = _const_mid_index;
@@ -10256,7 +10367,7 @@ VV_LOCAL_SYMBOL void mapnode_split_child(mapnode* n, int child_index, mapnode* y
 	n->len++;
 }
 
-VV_LOCAL_SYMBOL bool SortedMap_get(SortedMap m, string key, voidptr out) {
+bool SortedMap_get(SortedMap m, string key, voidptr out) {
 	mapnode* node = m.root;
 	for (;;) {
 		int i = (int)(node->len - 1);
@@ -10276,7 +10387,7 @@ VV_LOCAL_SYMBOL bool SortedMap_get(SortedMap m, string key, voidptr out) {
 	return false;
 }
 
-VV_LOCAL_SYMBOL bool SortedMap_exists(SortedMap m, string key) {
+bool SortedMap_exists(SortedMap m, string key) {
 	if (m.root == ((void*)0)) {
 		return false;
 	}
@@ -10298,7 +10409,7 @@ VV_LOCAL_SYMBOL bool SortedMap_exists(SortedMap m, string key) {
 	return false;
 }
 
-VV_LOCAL_SYMBOL int mapnode_find_key(mapnode* n, string k) {
+int mapnode_find_key(mapnode* n, string k) {
 	int idx = 0;
 	for (;;) {
 		if (!(idx < n->len && string__lt(n->keys[v_fixed_index(idx, 11)], k))) break;
@@ -10307,7 +10418,7 @@ VV_LOCAL_SYMBOL int mapnode_find_key(mapnode* n, string k) {
 	return idx;
 }
 
-VV_LOCAL_SYMBOL bool mapnode_remove_key(mapnode* n, string k) {
+bool mapnode_remove_key(mapnode* n, string k) {
 	int idx = mapnode_find_key(n, k);
 	if (idx < n->len && string__eq(n->keys[v_fixed_index(idx, 11)], k)) {
 		if (n->children == ((void*)0)) {
@@ -10335,7 +10446,7 @@ VV_LOCAL_SYMBOL bool mapnode_remove_key(mapnode* n, string k) {
 	return 0;
 }
 
-VV_LOCAL_SYMBOL void mapnode_remove_from_leaf(mapnode* n, int idx) {
+void mapnode_remove_from_leaf(mapnode* n, int idx) {
 	for (int i = (int)(idx + 1); i < n->len; i++) {
 		n->keys[v_fixed_index((int)(i - 1), 11)] = n->keys[v_fixed_index(i, 11)];
 		n->values[v_fixed_index((int)(i - 1), 11)] = n->values[v_fixed_index(i, 11)];
@@ -10343,7 +10454,7 @@ VV_LOCAL_SYMBOL void mapnode_remove_from_leaf(mapnode* n, int idx) {
 	n->len--;
 }
 
-VV_LOCAL_SYMBOL void mapnode_remove_from_non_leaf(mapnode* n, int idx) {
+void mapnode_remove_from_non_leaf(mapnode* n, int idx) {
 	string k = n->keys[v_fixed_index(idx, 11)];
 	if (((mapnode*)(n->children[idx]))->len >= _const_degree) {
 		mapnode* current = ((mapnode*)(n->children[idx]));
@@ -10374,7 +10485,7 @@ VV_LOCAL_SYMBOL void mapnode_remove_from_non_leaf(mapnode* n, int idx) {
 	}
 }
 
-VV_LOCAL_SYMBOL void mapnode_fill(mapnode* n, int idx) {
+void mapnode_fill(mapnode* n, int idx) {
 	if (idx != 0 && ((mapnode*)(n->children[(int)(idx - 1)]))->len >= _const_degree) {
 		mapnode_borrow_from_prev(n, idx);
 	} else if (idx != n->len && ((mapnode*)(n->children[(int)(idx + 1)]))->len >= _const_degree) {
@@ -10386,7 +10497,7 @@ VV_LOCAL_SYMBOL void mapnode_fill(mapnode* n, int idx) {
 	}
 }
 
-VV_LOCAL_SYMBOL void mapnode_borrow_from_prev(mapnode* n, int idx) {
+void mapnode_borrow_from_prev(mapnode* n, int idx) {
 	mapnode* child = ((mapnode*)(n->children[idx]));
 	mapnode* sibling = ((mapnode*)(n->children[(int)(idx - 1)]));
 	for (int i = (int)(child->len - 1); i >= 0; i--) {
@@ -10413,7 +10524,7 @@ VV_LOCAL_SYMBOL void mapnode_borrow_from_prev(mapnode* n, int idx) {
 	sibling->len--;
 }
 
-VV_LOCAL_SYMBOL void mapnode_borrow_from_next(mapnode* n, int idx) {
+void mapnode_borrow_from_next(mapnode* n, int idx) {
 	mapnode* child = ((mapnode*)(n->children[idx]));
 	mapnode* sibling = ((mapnode*)(n->children[(int)(idx + 1)]));
 	child->keys[v_fixed_index(child->len, 11)] = n->keys[v_fixed_index(idx, 11)];
@@ -10440,7 +10551,7 @@ VV_LOCAL_SYMBOL void mapnode_borrow_from_next(mapnode* n, int idx) {
 	sibling->len--;
 }
 
-VV_LOCAL_SYMBOL void mapnode_merge(mapnode* n, int idx) {
+void mapnode_merge(mapnode* n, int idx) {
 	mapnode* child = ((mapnode*)(n->children[idx]));
 	mapnode* sibling = ((mapnode*)(n->children[(int)(idx + 1)]));
 	child->keys[v_fixed_index(_const_mid_index, 11)] = n->keys[v_fixed_index(idx, 11)];
@@ -10486,7 +10597,7 @@ void SortedMap_delete(SortedMap* m, string key) {
 	}
 }
 
-VV_LOCAL_SYMBOL int mapnode_subkeys(mapnode* n, Array_string* keys, int at) {
+int mapnode_subkeys(mapnode* n, Array_string* keys, int at) {
 	int position = at;
 	if (n->children != ((void*)0)) {
 		for (int i = 0; i < n->len; ++i) {
@@ -10515,7 +10626,7 @@ Array_string SortedMap_keys(SortedMap* m) {
 	return keys;
 }
 
-VV_LOCAL_SYMBOL void mapnode_free(mapnode* n) {
+void mapnode_free(mapnode* n) {
 	println(_SLIT("TODO"));
 }
 
@@ -10560,7 +10671,7 @@ string tos_clone(const u8* const_s) {
 // Attr: [unsafe]
 string tos(u8* s, int len) {
 	if (s == 0) {
-		_v_panic(_SLIT("tos(): nil string"));
+		panic_debug(105, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/string.v"), tos3("builtin"), tos3("tos"),  _SLIT("tos(): nil string"));
 		VUNREACHABLE();
 	}
 	return ((string){.str = s, .len = len});
@@ -10569,7 +10680,7 @@ string tos(u8* s, int len) {
 // Attr: [unsafe]
 string tos2(u8* s) {
 	if (s == 0) {
-		_v_panic(_SLIT("tos2: nil string"));
+		panic_debug(122, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/string.v"), tos3("builtin"), tos3("tos2"),  _SLIT("tos2: nil string"));
 		VUNREACHABLE();
 	}
 	return ((string){.str = s, .len = vstrlen(s)});
@@ -10578,7 +10689,7 @@ string tos2(u8* s) {
 // Attr: [unsafe]
 string tos3(char* s) {
 	if (s == 0) {
-		_v_panic(_SLIT("tos3: nil string"));
+		panic_debug(139, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/string.v"), tos3("builtin"), tos3("tos3"),  _SLIT("tos3: nil string"));
 		VUNREACHABLE();
 	}
 	return ((string){.str = ((u8*)(s)), .len = vstrlen_char(s)});
@@ -10652,13 +10763,13 @@ int string_len_utf8(string s) {
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL string string_clone_static(string a) {
+inline string string_clone_static(string a) {
 	return string_clone(a);
 }
 
 // Attr: [inline]
 // Attr: [markused]
-inline VV_LOCAL_SYMBOL _option_string string_option_clone_static(string a) {
+inline _option_string string_option_clone_static(string a) {
 	_option_string _t2;
 	_option_ok(&(string[]) { string_clone(a) }, (_option*)(&_t2), sizeof(string));
 	return _t2;
@@ -10833,7 +10944,7 @@ string string_replace_char(string s, u8 rep, u8 with, int repeat) {
 	#if !defined(CUSTOM_DEFINE_no_bounds_checking)
 	{
 		if (repeat <= 0) {
-			_v_panic(_SLIT("string.replace_char(): tab length too short"));
+			panic_debug(520, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/string.v"), tos3("builtin"), tos3("replace_char"),  _SLIT("string.replace_char(): tab length too short"));
 			VUNREACHABLE();
 		}
 	}
@@ -11097,9 +11208,9 @@ inline _result_i64 string_parse_int(string s, int _base, int _bit_size) {
 }
 
 // Attr: [direct_array_access]
-VV_LOCAL_SYMBOL bool string__eq(string s, string a) {
+bool string__eq(string s, string a) {
 	if (s.str == 0) {
-		_v_panic(_SLIT("string.eq(): nil string"));
+		panic_debug(743, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/string.v"), tos3("builtin"), tos3("=="),  _SLIT("string.eq(): nil string"));
 		VUNREACHABLE();
 	}
 	if (s.len != a.len) {
@@ -11138,7 +11249,7 @@ int string_compare(string s, string a) {
 }
 
 // Attr: [direct_array_access]
-VV_LOCAL_SYMBOL bool string__lt(string s, string a) {
+bool string__lt(string s, string a) {
 	for (int i = 0; i < s.len; ++i) {
 		if (i >= a.len || s.str[ i] > a.str[ i]) {
 			return false;
@@ -11153,7 +11264,7 @@ VV_LOCAL_SYMBOL bool string__lt(string s, string a) {
 }
 
 // Attr: [direct_array_access]
-VV_LOCAL_SYMBOL string string__plus(string s, string a) {
+string string__plus(string s, string a) {
 	int new_len = (int)(a.len + s.len);
 	string res = ((string){.str = malloc_noscan((int)(new_len + 1)), .len = new_len});
 	{ // Unsafe block
@@ -11167,7 +11278,7 @@ VV_LOCAL_SYMBOL string string__plus(string s, string a) {
 }
 
 // Attr: [direct_array_access]
-VV_LOCAL_SYMBOL string string_plus_two(string s, string a, string b) {
+string string_plus_two(string s, string a, string b) {
 	int new_len = (int)((int)(a.len + b.len) + s.len);
 	string res = ((string){.str = malloc_noscan((int)(new_len + 1)), .len = new_len});
 	{ // Unsafe block
@@ -11418,7 +11529,7 @@ string string_substr(string s, int start, int _end) {
 	#if !defined(CUSTOM_DEFINE_no_bounds_checking)
 	{
 		if (start > end || start > s.len || end > s.len || start < 0 || end < 0) {
-			_v_panic( str_intp(5, _MOV((StrIntpData[]){{_SLIT("substr("), 0xfe07, {.d_i32 = start}}, {_SLIT(", "), 0xfe07, {.d_i32 = end}}, {_SLIT(") out of bounds (len="), 0xfe07, {.d_i32 = s.len}}, {_SLIT(") s=\""), 0xfe10, {.d_s = s}}, {_SLIT("\""), 0, { .d_c = 0 }}})));
+			panic_debug(1107, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/string.v"), tos3("builtin"), tos3("substr"),   str_intp(5, _MOV((StrIntpData[]){{_SLIT("substr("), 0xfe07, {.d_i32 = start}}, {_SLIT(", "), 0xfe07, {.d_i32 = end}}, {_SLIT(") out of bounds (len="), 0xfe07, {.d_i32 = s.len}}, {_SLIT(") s=\""), 0xfe10, {.d_s = s}}, {_SLIT("\""), 0, { .d_c = 0 }}})));
 			VUNREACHABLE();
 		}
 	}
@@ -11499,7 +11610,7 @@ string string_substr_ni(string s, int _start, int _end) {
 }
 
 // Attr: [direct_array_access]
-VV_LOCAL_SYMBOL int string_index_(string s, string p) {
+int string_index_(string s, string p) {
 	if (p.len > s.len || p.len == 0) {
 		return -1;
 	}
@@ -11552,7 +11663,7 @@ inline _option_int string_last_index(string s, string needle) {
 
 // Attr: [direct_array_access]
 // Attr: [manualfree]
-VV_LOCAL_SYMBOL int string_index_kmp(string s, string p) {
+int string_index_kmp(string s, string p) {
 	bool string_index_kmp_defer_0 = false;
 	int* p_prefixes;
 	if (p.len > s.len) {
@@ -11623,7 +11734,7 @@ int string_index_any(string s, string chars) {
 }
 
 // Attr: [direct_array_access]
-VV_LOCAL_SYMBOL int string_index_last_(string s, string p) {
+int string_index_last_(string s, string p) {
 	if (p.len > s.len || p.len == 0) {
 		return -1;
 	}
@@ -12025,7 +12136,7 @@ multi_return_int_int string_trim_indexes(string s, string cutset) {
 }
 
 // Attr: [direct_array_access]
-VV_LOCAL_SYMBOL string string_trim_chars(string s, string cutset, TrimMode mode) {
+string string_trim_chars(string s, string cutset, TrimMode mode) {
 	int pos_left = 0;
 	int pos_right = (int)(s.len - 1);
 	bool cs_match = true;
@@ -12060,7 +12171,7 @@ VV_LOCAL_SYMBOL string string_trim_chars(string s, string cutset, TrimMode mode)
 }
 
 // Attr: [direct_array_access]
-VV_LOCAL_SYMBOL string string_trim_runes(string s, string cutset, TrimMode mode) {
+string string_trim_runes(string s, string cutset, TrimMode mode) {
 	Array_rune s_runes = string_runes(s);
 	Array_rune c_runes = string_runes(cutset);
 	int pos_left = 0;
@@ -12141,12 +12252,12 @@ int compare_strings(string* a, string* b) {
 		return ((_t2 == (string__lt(*a, *b)))? (-1) : (_t2 == (string__lt(*b, *a)))? (1) : (0));
 }
 
-VV_LOCAL_SYMBOL int compare_strings_by_len(string* a, string* b) {
+int compare_strings_by_len(string* a, string* b) {
 	bool _t2 = true;
 		return ((_t2 == (a->len < b->len))? (-1) : (_t2 == (a->len > b->len))? (1) : (0));
 }
 
-VV_LOCAL_SYMBOL int compare_lower_strings(string* a, string* b) {
+int compare_lower_strings(string* a, string* b) {
 	string aa = string_to_lower(*a);
 	string bb = string_to_lower(*b);
 	return compare_strings(&aa, &bb);
@@ -12167,11 +12278,11 @@ inline string string_str(string s) {
 	return string_clone(s);
 }
 
-VV_LOCAL_SYMBOL u8 string_at(string s, int idx) {
+u8 string_at(string s, int idx) {
 	#if !defined(CUSTOM_DEFINE_no_bounds_checking)
 	{
 		if (idx < 0 || idx >= s.len) {
-			_v_panic( str_intp(3, _MOV((StrIntpData[]){{_SLIT("string index out of range: "), 0xfe07, {.d_i32 = idx}}, {_SLIT(" / "), 0xfe07, {.d_i32 = s.len}}, {_SLIT0, 0, { .d_c = 0 }}})));
+			panic_debug(1926, tos3("/Users/daniel/homelab/GitHub/languages/v/vlib/builtin/string.v"), tos3("builtin"), tos3("at"),   str_intp(3, _MOV((StrIntpData[]){{_SLIT("string index out of range: "), 0xfe07, {.d_i32 = idx}}, {_SLIT(" / "), 0xfe07, {.d_i32 = s.len}}, {_SLIT0, 0, { .d_c = 0 }}})));
 			VUNREACHABLE();
 		}
 	}
@@ -12179,7 +12290,7 @@ VV_LOCAL_SYMBOL u8 string_at(string s, int idx) {
 	return s.str[idx];
 }
 
-VV_LOCAL_SYMBOL _option_u8 string_at_with_check(string s, int idx) {
+_option_u8 string_at_with_check(string s, int idx) {
 	if (idx < 0 || idx >= s.len) {
 		return (_option_u8){ .state=2, .err=_const_none__, .data={EMPTY_STRUCT_INITIALIZATION} };
 	}
@@ -13031,25 +13142,25 @@ string StrIntpType_str(StrIntpType x) {
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL f32 fabs32(f32 x) {
+inline f32 fabs32(f32 x) {
 	return (x < 0 ? (-x) : (x));
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL f64 fabs64(f64 x) {
+inline f64 fabs64(f64 x) {
 	return (x < 0 ? (-x) : (x));
 }
 
 // Attr: [inline]
-inline VV_LOCAL_SYMBOL u64 abs64(i64 x) {
+inline u64 abs64(i64 x) {
 	return (x < 0 ? (((u64)(-x))) : (((u64)(x))));
 }
 
 u64 get_str_intp_u64_format(StrIntpType fmt_type, int in_width, int in_precision, bool in_tail_zeros, bool in_sign, u8 in_pad_ch, int in_base, bool in_upper_case) {
 	u64 width = (in_width != 0 ? (abs64(in_width)) : (((u64)(0U))));
-	u64 align = (in_width > 0 ? (((u64)(32U))) : (((u64)(0U))));
-	u64 upper_case = (in_upper_case ? (((u64)(128U))) : (((u64)(0U))));
-	u64 sign = (in_sign ? (((u64)(256U))) : (((u64)(0U))));
+	u64 align = (in_width > 0 ? (((u64)((1 << 5)))) : (((u64)(0U))));
+	u64 upper_case = (in_upper_case ? (((u64)((1 << 7)))) : (((u64)(0U))));
+	u64 sign = (in_sign ? (((u64)((1 << 8)))) : (((u64)(0U))));
 	u64 precision = (in_precision != 987698 ? (((((u64)((in_precision & 0x7F))) << 9U))) : ((((u64)(0x7FU)) << 9U)));
 	u32 tail_zeros = (in_tail_zeros ? ((((u32)(1U)) << 16U)) : (((u32)(0U))));
 	u64 base = ((u64)((((u32)((in_base & 0xf))) << 27U)));
@@ -13059,9 +13170,9 @@ u64 get_str_intp_u64_format(StrIntpType fmt_type, int in_width, int in_precision
 
 u32 get_str_intp_u32_format(StrIntpType fmt_type, int in_width, int in_precision, bool in_tail_zeros, bool in_sign, u8 in_pad_ch, int in_base, bool in_upper_case) {
 	u64 width = (in_width != 0 ? (abs64(in_width)) : (((u32)(0U))));
-	u32 align = (in_width > 0 ? (((u32)(32U))) : (((u32)(0U))));
-	u32 upper_case = (in_upper_case ? (((u32)(128U))) : (((u32)(0U))));
-	u32 sign = (in_sign ? (((u32)(256U))) : (((u32)(0U))));
+	u32 align = (in_width > 0 ? (((u32)((1 << 5)))) : (((u32)(0U))));
+	u32 upper_case = (in_upper_case ? (((u32)((1 << 7)))) : (((u32)(0U))));
+	u32 sign = (in_sign ? (((u32)((1 << 8)))) : (((u32)(0U))));
 	u32 precision = (in_precision != 987698 ? (((((u32)((in_precision & 0x7F))) << 9U))) : ((((u32)(0x7FU)) << 9U)));
 	u32 tail_zeros = (in_tail_zeros ? ((((u32)(1U)) << 16U)) : (((u32)(0U))));
 	u32 base = ((u32)((((u32)((in_base & 0xf))) << 27U)));
@@ -13070,7 +13181,7 @@ u32 get_str_intp_u32_format(StrIntpType fmt_type, int in_width, int in_precision
 }
 
 // Attr: [manualfree]
-VV_LOCAL_SYMBOL void StrIntpData_process_str_intp_data(StrIntpData* data, strings__Builder* sb) {
+void StrIntpData_process_str_intp_data(StrIntpData* data, strings__Builder* sb) {
 	u32 x = data->fmt;
 	StrIntpType typ = ((StrIntpType)((x & 0x1FU)));
 	int align = ((int)((((x >> 5U)) & 0x01U)));
@@ -14158,7 +14269,8 @@ int vuv__fileno(const uv_handle_t* const_handle, int* fd) {
 	return _t1;
 }
 
-uv_buf_t vuv__buf_init(char* base, usize len) {
+// TypeDecl
+uv_buf_t vuv__buf_init(vuv__Buf* base, usize len) {
 	uv_buf_t _t1 = uv_buf_init(base, len);
 	return _t1;
 }
@@ -14439,6 +14551,11 @@ void vuv__pipe_connect(uv_connect_t* req, uv_pipe_t* handle, const char* const_n
 	uv_pipe_connect(req, handle, const_name, (voidptr)cb);
 }
 
+int vuv__pipe_connect2(uv_connect_t* req, uv_pipe_t* handle, const char* const_name, usize namelen, usize flags, void (*cb)(uv_connect_t* req, int status)) {
+	int _t1 = uv_pipe_connect2(req, handle, const_name, namelen, flags, (voidptr)cb);
+	return _t1;
+}
+
 int vuv__pipe_getsockname(uv_pipe_t* handle, char* name, usize* namelen) {
 	int _t1 = uv_pipe_getsockname(handle, name, namelen);
 	return _t1;
@@ -14471,6 +14588,19 @@ int vuv__pipe_chmod(uv_pipe_t* handle, int flags) {
 int vuv__poll_init(uv_loop_t* loop, uv_poll_t* handle, int fd) {
 	int _t1 = uv_poll_init(loop, handle, fd);
 	return _t1;
+}
+
+int vuv__poll_init_socket(uv_loop_t* loop, uv_poll_t* handle, int socket) {
+	#if defined(true)
+	{
+		int _t2 = uv_poll_init_socket(loop, handle, socket);
+		return _t2;
+	}
+	#else
+	{
+	}
+	#endif
+	return 0;
 }
 
 int vuv__poll_start(uv_poll_t* handle, int events, void (*cb)(uv_poll_t* handle, int status, int events)) {
@@ -14925,7 +15055,7 @@ int vuv__fs_utime_ex(uv_loop_t* loop, uv_fs_t* req, const char* const_path, f64 
 	}
 	#else
 	{
-		_v_panic(_SLIT("uv_fs_utime_ex is not available in static build"));
+		panic_debug(1413, tos3("/Users/daniel/homelab/GitHub/languages/v-projects/native/libuv_test/vuv/functions.c.v"), tos3("vuv"), tos3("fs_utime_ex"),  _SLIT("uv_fs_utime_ex is not available in static build"));
 		VUNREACHABLE();
 		int _t2 = -1;
 		return _t2;
@@ -14944,7 +15074,7 @@ int vuv__fs_futime_ex(uv_loop_t* loop, uv_fs_t* req, int file, f64 btime, f64 at
 	}
 	#else
 	{
-		_v_panic(_SLIT("uv_fs_futime_ex is not available in static build"));
+		panic_debug(1433, tos3("/Users/daniel/homelab/GitHub/languages/v-projects/native/libuv_test/vuv/functions.c.v"), tos3("vuv"), tos3("fs_futime_ex"),  _SLIT("uv_fs_futime_ex is not available in static build"));
 		VUNREACHABLE();
 		int _t2 = -1;
 		return _t2;
@@ -15278,9 +15408,18 @@ void vuv__once(uv_once_t* guard, void (*cb)(void)) {
 	uv_once(guard, (voidptr)cb);
 }
 
-int vuv__gettimeofday(uv_timeval_t* tv) {
-	int _t1 = uv_gettimeofday(tv);
-	return _t1;
+// TypeDecl
+int vuv__gettimeofday(vuv__Uv_timeval* tv) {
+	#if defined(true)
+	{
+		int _t2 = uv_gettimeofday(HEAP(vuv__Uv_timeval, C__uv_timeval64_t_to_sumtype_vuv__Uv_timeval(((uv_timeval64_t*)(tv)))));
+		return _t2;
+	}
+	#else
+	{
+	}
+	#endif
+	return 0;
 }
 
 int vuv__key_create(uv_key_t* key) {
@@ -15325,8 +15464,8 @@ void vuv__thread_join(uv_thread_t* tid) {
 	uv_thread_join(tid);
 }
 
-uv_thread_t* vuv__thread_self(void) {
-	uv_thread_t* _t1 = uv_thread_self();
+uv_thread_t vuv__thread_self(void) {
+	uv_thread_t _t1 = uv_thread_self();
 	return _t1;
 }
 
@@ -15354,15 +15493,12 @@ int vuv__utf16_to_wtf8(const u16* const_utf16, usize utf16_len, char** wtf8_ptr,
 	return _t1;
 }
 
-VV_LOCAL_SYMBOL void vuv__init(void) {
-	uv_replace_allocator((voidptr)_v_malloc, (voidptr)v_realloc, (voidptr)	anon_fn_efe1ab8975140a00_usize_usize__u8_193, (voidptr)_v_free);
+void vuv__init(void) {
+	uv_replace_allocator((voidptr)_v_malloc, (voidptr)v_realloc, (voidptr)	anon_fn_ac991afcff96cb3f_usize_usize__u8_193, (voidptr)_v_free);
 }
 
-// TypeDecl
-// TypeDecl
-// TypeDecl
 vuv__Uv_loop_t* vuv__Uv_loop_t__static__new(void) {
-	vuv__Uv_loop_t* _t1 = ((uv_loop_t*)memdup(&(uv_loop_t){EMPTY_STRUCT_INITIALIZATION}, sizeof(uv_loop_t)));
+	vuv__Uv_loop_t* _t1 = ((uv_loop_t*)memdup(&(uv_loop_t){.data = 0,.active_handles = 0,}, sizeof(uv_loop_t)));
 	return _t1;
 }
 
@@ -15403,15 +15539,18 @@ vuv__Uv_loop_t* vuv__Uv_loop_t__static__new(void) {
 // TypeDecl
 // TypeDecl
 // TypeDecl
-VV_LOCAL_SYMBOL main__HttpServer main__new_http_server(void) {
+// TypeDecl
+// TypeDecl
+// TypeDecl
+main__HttpServer main__new_http_server(void) {
 	uv_loop_t* loop = vuv__default_loop();
-	vuv__Uv_tcp_t* server = ((vuv__Uv_tcp_t*)memdup(&(vuv__Uv_tcp_t){EMPTY_STRUCT_INITIALIZATION}, sizeof(vuv__Uv_tcp_t)));
+	vuv__Uv_tcp_t* server = ((vuv__Uv_tcp_t*)memdup(&(vuv__Uv_tcp_t){.loop = 0,.write_queue_size = 0,.alloc_cb = 0,.read_cb = 0,.data = 0,}, sizeof(vuv__Uv_tcp_t)));
 	vuv__tcp_init(loop, server);
 	main__HttpServer _t1 = ((main__HttpServer){.server = server,.loop = loop,});
 	return _t1;
 }
 
-VV_LOCAL_SYMBOL _result_int main__HttpServer_bind(main__HttpServer hs, string ip, int port) {
+_result_int main__HttpServer_bind(main__HttpServer hs, string ip, int port) {
 	vuv__Sockaddr addr = ((vuv__Sockaddr){EMPTY_STRUCT_INITIALIZATION});
 	vuv__ip4_addr(((char*)(ip.str)), port, &addr);
 	_result_int _t1;
@@ -15419,26 +15558,26 @@ VV_LOCAL_SYMBOL _result_int main__HttpServer_bind(main__HttpServer hs, string ip
 	return _t1;
 }
 
-VV_LOCAL_SYMBOL _result_int main__HttpServer_listen(main__HttpServer hs) {
+_result_int main__HttpServer_listen(main__HttpServer hs) {
 	_result_int _t1;
 	_result_ok(&(int[]) { vuv__listen(((vuv__Uv_stream_t*)(hs.server)), 128, (voidptr)main__on_new_connection) }, (_result*)(&_t1), sizeof(int));
 	return _t1;
 }
 
-VV_LOCAL_SYMBOL void main__HttpServer_set_nodelay(main__HttpServer* server, bool enable) {
+void main__HttpServer_set_nodelay(main__HttpServer* server, bool enable) {
 	vuv__tcp_nodelay(server->server, (enable ? (1) : (0)));
 }
 
-VV_LOCAL_SYMBOL void main__on_close_cb(vuv__Uv_handle_t* handle) {
+void main__on_close_cb(vuv__Uv_handle_t* handle) {
 	_v_free(handle);
 }
 
-VV_LOCAL_SYMBOL void main__on_new_connection(vuv__Uv_stream_t* server, int status) {
+void main__on_new_connection(vuv__Uv_stream_t* server, int status) {
 	if (status < 0) {
 		println(_SLIT("New connection error"));
 		return;
 	}
-	vuv__Uv_tcp_t* client = ((vuv__Uv_tcp_t*)memdup(&(vuv__Uv_tcp_t){EMPTY_STRUCT_INITIALIZATION}, sizeof(vuv__Uv_tcp_t)));
+	vuv__Uv_tcp_t* client = ((vuv__Uv_tcp_t*)memdup(&(vuv__Uv_tcp_t){.loop = 0,.write_queue_size = 0,.alloc_cb = 0,.read_cb = 0,.data = 0,}, sizeof(vuv__Uv_tcp_t)));
 	vuv__tcp_init(vuv__default_loop(), client);
 	if (vuv__accept(server, ((vuv__Uv_stream_t*)(client))) == 0) {
 		vuv__read_start(((vuv__Uv_stream_t*)(client)), (voidptr)main__alloc_buffer, (voidptr)main__on_read);
@@ -15447,32 +15586,32 @@ VV_LOCAL_SYMBOL void main__on_new_connection(vuv__Uv_stream_t* server, int statu
 	}
 }
 
-VV_LOCAL_SYMBOL void main__alloc_buffer(vuv__Uv_handle_t* handle, usize suggested_size, vuv__Uv_buf_t* buf) {
+void main__alloc_buffer(vuv__Uv_handle_t* handle, usize suggested_size, vuv__Uv_buf_t* buf) {
 	{ // Unsafe block
-		buf->base = _v_malloc(suggested_size);
+		buf->base = ((char*)(_v_malloc(suggested_size)));
 		buf->len = suggested_size;
 	}
 }
 
-VV_LOCAL_SYMBOL void main__on_read(vuv__Uv_stream_t* client, isize nread, vuv__Uv_buf_t* buf) {
+void main__on_read(vuv__Uv_stream_t* client, isize nread, vuv__Uv_buf_t* buf) {
 	if (nread < 0) {
 		vuv__close(((vuv__Uv_handle_t*)(client)), (voidptr)main__on_close_cb);
 		return;
 	}
 	string response = _SLIT("HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!");
-	vuv__Uv_write_t* write_req = ((vuv__Uv_write_t*)memdup(&(vuv__Uv_write_t){EMPTY_STRUCT_INITIALIZATION}, sizeof(vuv__Uv_write_t)));
-	uv_buf_t write_buf = vuv__buf_init(response.str, ((usize)(response.len)));
+	vuv__Uv_write_t* write_req = ((vuv__Uv_write_t*)memdup(&(vuv__Uv_write_t){.handle = 0,.data = 0,}, sizeof(vuv__Uv_write_t)));
+	uv_buf_t write_buf = vuv__buf_init(HEAP(vuv__Buf, u8_to_sumtype_vuv__Buf(response.str)), ((usize)(response.len)));
 	vuv__write(write_req, client, &write_buf, 1, (voidptr)main__on_write);
 }
 
-VV_LOCAL_SYMBOL void main__on_write(vuv__Uv_write_t* req, int status) {
+void main__on_write(vuv__Uv_write_t* req, int status) {
 	if (status < 0) {
 		println(_SLIT("Write error"));
 	}
 	_v_free(req);
 }
 
-VV_LOCAL_SYMBOL void main__main(void) {
+void main__main(void) {
 	main__HttpServer server = main__new_http_server();
 	int port = 8080;
 	_result_int _t1 = main__HttpServer_bind(server, _SLIT("0.0.0.0"), port);
@@ -15496,6 +15635,11 @@ VV_LOCAL_SYMBOL void main__main(void) {
 }
 
 void _vinit(int ___argc, voidptr ___argv) {
+	// we call these functions in debug mode so that the C compiler
+	// does not optimize them and we can access them in the debugger.
+	v_typeof_interface_IError(0);
+	v_typeof_sumtype_vuv__Buf(0);
+	v_typeof_sumtype_vuv__Uv_timeval(0);
 #if __STDC_HOSTED__ == 1
 	signal(11, v_segmentation_fault_handler);
 #endif
