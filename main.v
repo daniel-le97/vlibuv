@@ -1,6 +1,8 @@
 module main
 
 import vuv
+import picohttpparser
+import net.http
 
 // Define a struct for the HTTP server
 struct HttpServer {
@@ -66,10 +68,18 @@ fn on_read(client &vuv.Uv_stream_t, nread isize, buf &vuv.Uv_buf_t) {
 		return
 	}
 
-	response := 'HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!'
+	request_raw := unsafe { cstring_to_vstring(buf.base) }
+	mut request := picohttpparser.Request{}
+	request.parse_request(request_raw) or { panic(err) }
+	// println(request.path)
+
+
+	mut response := http.new_response(
+		body: 'hello world!'
+	)
 
 	write_req := &vuv.Uv_write_t{}
-	write_buf := vuv.buf_init(response.str, usize(response.len))
+	write_buf := vuv.buf_init(response.bytestr().str, usize(response.bytes().len))
 	vuv.write(write_req, client, &write_buf, 1, on_write)
 }
 
@@ -82,7 +92,6 @@ fn on_write(req &vuv.Uv_write_t, status int) {
 	}
 }
 
-// pub const tcp_server = C.uv_tcp_t{}
 
 // Example usage
 fn main() {

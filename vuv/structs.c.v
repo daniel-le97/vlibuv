@@ -1,5 +1,6 @@
 module vuv
 
+
 // struct Foo {
 // 	a int // private immutable (default)
 // mut:
@@ -87,8 +88,8 @@ pub struct C.sockaddr_in6 {
 @[typedef]
 pub struct C.uv_uid_t {}
 
-@[typedef]
-pub struct C.stat {}
+// @[typedef]
+// pub struct C.stat {}
 
 // Loop, handle, and stream types
 @[typedef]
@@ -439,22 +440,22 @@ pub struct C.uv_timespec64_t {
 
 @[typedef]
 pub struct C.uv_stat_t {
-	st_dev      u64
-	st_mode     u64
-	st_nlink    u64
-	st_uid      u64
-	st_gid      u64
-	st_rdev     u64
-	st_ino      u64
-	st_size     i64
-	st_blksize  i64
-	st_blocks   i64
-	st_flags    u64
-	st_gen      u64
-	st_atim     C.uv_timespec_t
-	st_mtim     C.uv_timespec_t
-	st_ctim     C.uv_timespec_t
-	st_birthtim C.uv_timespec_t
+	// st_dev      u64
+	// st_mode     u64
+	// st_nlink    u64
+	// st_uid      u64
+	// st_gid      u64
+	// st_rdev     u64
+	// st_ino      u64
+	// st_size     i64
+	// st_blksize  i64
+	// st_blocks   i64
+	// st_flags    u64
+	// st_gen      u64
+	// st_atim     C.uv_timespec_t
+	// st_mtim     C.uv_timespec_t
+	// st_ctim     C.uv_timespec_t
+	// st_birthtim C.uv_timespec_t
 }
 
 @[typedef]
@@ -469,16 +470,18 @@ pub struct C.uv_process_options_t {
 	exit_cb     &fn (&C.uv_process_t, i64, i64)
 }
 
-pub struct C.addrinfo {
-	ai_flags     int
-	ai_family    int
-	ai_socktype  int
-	ai_protocol  int
-	ai_addrlen   usize
-	ai_canonname &char
-	ai_addr      &C.sockaddr
-	ai_next      &C.addrinfo
-}
+// this breaks compilation if net.http is imported
+// pub struct C.addrinfo {
+// // pub mut:
+// // 	ai_flags     int
+// // 	ai_family    int
+// // 	ai_socktype  int
+// // 	ai_protocol  int
+// // 	ai_addrlen   usize
+// // 	ai_canonname &char
+// // 	ai_addr      &C.sockaddr
+// // 	ai_next      &C.addrinfo
+// }
 
 pub struct C.sockaddr {}
 
@@ -524,7 +527,5 @@ struct C.uv_key_t {}
 
 @[typedef]
 struct C.uv_lib_t {}
-
-
 
 // Import necessary C functions and structures
