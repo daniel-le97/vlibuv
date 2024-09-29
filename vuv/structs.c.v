@@ -430,6 +430,7 @@ pub struct C.uv_timespec_t {
 	tv_sec  i64
 	tv_nsec i32
 }
+
 @[typedef]
 pub struct C.uv_timespec64_t {
 	tv_sec  i64
@@ -521,7 +522,9 @@ struct C.uv_once_t {}
 @[typedef]
 struct C.uv_key_t {}
 
-// @[typdef]
-// struct C.uv_lib_t {}
+@[typedef]
+struct C.uv_lib_t {}
+
+
 
 // Import necessary C functions and structures

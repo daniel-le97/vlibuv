@@ -85,8 +85,6 @@ pub fn loop_alive(const_loop &C.uv_loop_t) int {
 	return C.uv_loop_alive(const_loop)
 }
 
-// TODO idk how to handle the ... variadic
-// UV_EXTERN int uv_loop_configure(uv_loop_t* loop, uv_loop_option option, ...);
 fn C.uv_loop_configure(loop &C.uv_loop_t, option int, ...voidptr) int
 
 pub fn loop_configure(loop &C.uv_loop_t, option Uv_loop_option, args ...voidptr) int {
@@ -372,21 +370,17 @@ pub fn buf_init(base &u8, len usize) C.uv_buf_t {
 	return C.uv_buf_init(&char(base), len)
 }
 
-// TODO fds should be a fixed array of size 2 that holds 2 ints
-// TODO assing 'Array_int' (aka 'struct array') to parameter of incompatible type 'uv_os_fd_t *' (aka 'int *')
-// fn C.uv_pipe(fds []int, read_flags int, write_flags int) int
+fn C.uv_pipe(fds [2]int, read_flags int, write_flags int) int
 
-// pub fn pipe(fds []int, read_flags int, write_flags int) int {
-// 	return C.uv_pipe(fds, read_flags, write_flags)
-// }
+pub fn pipe(fds [2]int, read_flags int, write_flags int) int {
+	return C.uv_pipe(fds, read_flags, write_flags)
+}
 
-// TODO socker_vector should be a fixed array of size 2 that holds 2 ints
-// TODO assing 'Array_int' (aka 'struct array') to parameter of incompatible type 'uv_os_fd_t *' (aka 'int *')
-// fn C.uv_socketpair(socker_type int, protocol int, socket_vector []int, flags0 int, flags1 int) int
+fn C.uv_socketpair(socker_type int, protocol int, socket_vector [2]int, flags0 int, flags1 int) int
 
-// pub fn socketpair(socker_type int, protocol int, socket_vector []int, flags0 int, flags1 int) int {
-// 	return C.uv_socketpair(socker_type, protocol, socket_vector, flags0, flags1)
-// }
+pub fn socketpair(socker_type int, protocol int, socket_vector [2]int, flags0 int, flags1 int) int {
+	return C.uv_socketpair(socker_type, protocol, socket_vector, flags0, flags1)
+}
 
 fn C.uv_stream_get_write_queue_size(const_stream &C.uv_stream_t) usize
 
@@ -406,8 +400,6 @@ pub fn accept(server &C.uv_stream_t, client &C.uv_stream_t) int {
 	return C.uv_accept(server, client)
 }
 
-// fn C.uv_read_start(stream &C.uv_stream_t, alloc_cb fn (handle &C.uv_handle_t, suggested_size usize, buf &C.uv_buf_t), read_cb fn (stream &C.uv_stream_t, nread isize, buf &C.uv_buf_t)) int
-// fn C.uv_read_stop(stream &C.uv_stream_t) int
 fn C.uv_read_start(stream &C.uv_stream_t, alloc_cb Alloc_cb, read_cb Read_cb) int
 
 pub fn read_start(stream &C.uv_stream_t, alloc_cb Alloc_cb, read_cb Read_cb) int {
@@ -515,7 +507,7 @@ pub fn tcp_bind(handle &C.uv_tcp_t, const_sockaddr &C.sockaddr, flags int) int {
 	return C.uv_tcp_bind(handle, const_sockaddr, flags)
 }
 
-// TODO maybe need to change namelen to usize or isize
+
 fn C.uv_tcp_getsockname(handle &C.uv_tcp_t, name &C.sockaddr, namelen &int) int
 
 pub fn tcp_getsockname(const_handle &C.uv_tcp_t, name &C.sockaddr, namelen &int) int {
@@ -1033,7 +1025,7 @@ pub fn get_osfhandle(fd int) int {
 	return C.uv_get_osfhandle(fd)
 }
 
-// TODO error: call to undeclared function 'uv_set_osfhandle';
+
 // fn C.uv_set_osfhandle(os_fd int) int
 
 // pub fn set_osfhandle(os_fd int) int {
@@ -1256,13 +1248,11 @@ pub fn fs_get_path(const_fs &C.uv_fs_t) string {
 	}
 }
 
-// TODO must use 'struct' tag to refer to type 'stat'
+fn C.uv_fs_get_statbuf(fs_handle &C.uv_fs_t) &C.uv_stat_t
 
-// fn C.uv_fs_get_statbuf(const_fs &C.uv_fs_t) &C.stat
-
-// pub fn fs_get_statbuf(const_fs &C.uv_fs_t) &C.stat {
-// 	return C.uv_fs_get_statbuf(const_fs)
-// }
+pub fn fs_get_statbuf(fs_handle &C.uv_fs_t) &C.uv_stat_t {
+	return C.uv_fs_get_statbuf(fs_handle)
+}
 
 fn C.uv_fs_req_cleanup(fs &C.uv_fs_t)
 
@@ -1756,31 +1746,31 @@ pub fn disable_stdio_inheritance() {
 
 // dl functions
 
-// TODO warning: incompatible pointer types passing 'struct uv_lib_t *' to parameter of type 'uv_lib_t *'
+fn C.uv_dlopen(const_filename &char, lib &C.uv_lib_t) int
 
-// fn C.uv_dlopen(const_filename &char, lib &C.uv_lib_t) int
+pub fn dlopen(const_filename &char, lib &C.uv_lib_t) int {
+	return C.uv_dlopen(const_filename, lib)
+}
 
-// pub fn dlopen(const_filename &char, lib &C.uv_lib_t) int {
-// 	return C.uv_dlopen(const_filename, lib)
-// }
+fn C.uv_dlclose(lib &C.uv_lib_t)
 
-// fn C.uv_dlclose(lib &C.uv_lib_t)
+pub fn dlclose(lib &C.uv_lib_t) {
+	C.uv_dlclose(lib)
+}
 
-// pub fn dlclose(lib &C.uv_lib_t) {
-// 	C.uv_dlclose(lib)
-// }
+fn C.uv_dlsym(lib &C.uv_lib_t, const_name &char, ptr &voidptr) int
 
-// fn C.uv_dlsym(lib &C.uv_lib_t, const_name &char, ptr &voidptr) int
+pub fn dlsym(lib &C.uv_lib_t, const_name &char, ptr &voidptr) int {
+	return C.uv_dlsym(lib, const_name, ptr)
+}
 
-// pub fn dlsym(lib &C.uv_lib_t, const_name &char, ptr &voidptr) int {
-// 	return C.uv_dlsym(lib, const_name, ptr)
-// }
+fn C.uv_dlerror(const_lib &C.uv_lib_t) &char
 
-// fn C.uv_dlerror(const_lib &C.uv_lib_t) &char
-
-// pub fn dlerror(const_lib &C.uv_lib_t) &char {
-// 	return C.uv_dlerror(const_lib)
-// }
+pub fn dlerror(const_lib &C.uv_lib_t) string {
+	unsafe {
+		return cstring_to_vstring(C.uv_dlerror(const_lib))
+	}
+}
 
 // mutex functions
 
@@ -1976,6 +1966,8 @@ struct Uv_timeval {
 fn C.uv_gettimeofday(tv &C.uv_timeval_t) int
 fn C.uv_gettimeofday(tv &C.uv_timeval64_t) int
 
+// TODO i may be doing this wrong, the static library defines C.uv_timeval64_t and building from source
+// defines C.uv_timeval_t
 pub fn gettimeofday(tv &Uv_timeval) int {
 	$if compile_static {
 		return C.uv_gettimeofday(&C.uv_timeval64_t(tv))
@@ -2070,8 +2062,6 @@ pub fn loop_set_data(loop &C.uv_loop_t, data &voidptr) {
 	C.uv_loop_set_data(loop, data)
 }
 
-// TODO check c type to v conversion
-
 //  string util functions
 fn C.uv_utf16_length_as_wtf8(const_utf16 &u16, utf16_len usize) usize
 
@@ -2085,14 +2075,14 @@ pub fn utf16_to_wtf8(const_utf16 &u16, utf16_len usize, wtf8_ptr &&char, wtf8_le
 	return C.uv_utf16_to_wtf8(const_utf16, utf16_len, wtf8_ptr, wtf8_len_ptr)
 }
 
-// fn C.uv_wtf8_length_as_utf16(const_wtf8 &char, utf16 &u16, utf16_len usize) usize
+fn C.uv_wtf8_length_as_utf16(const_wtf8 &char) usize
 
-// pub fn wtf8_length_as_utf16(const_wtf8 &char, utf16ptr &u16, utf16_len usize) usize {
-// 	return C.uv_wtf8_length_as_utf16(const_wtf8, utf16ptr, utf16_len)
-// }
+pub fn wtf8_length_as_utf16(const_wtf8 &char) usize {
+	return C.uv_wtf8_length_as_utf16(const_wtf8)
+}
 
-// fn C.uv_wtf8_to_utf16(const_wtf8 &char, wtf8_len &u16, utf16_len usize) int
+fn C.uv_wtf8_to_utf16(const_wtf8 &char, wtf8_len &u16, utf16_len usize)
 
-// pub fn wtf8_to_utf16(const_wtf8 &char, wtf8_len &u16, utf16_len usize) int {
-// 	return C.uv_wtf8_to_utf16(const_wtf8, wtf8_len, utf16_len)
-// }
+pub fn wtf8_to_utf16(const_wtf8 &char, wtf8_len &u16, utf16_len usize) {
+	C.uv_wtf8_to_utf16(const_wtf8, wtf8_len, utf16_len)
+}

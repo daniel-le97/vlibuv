@@ -27,3 +27,4 @@ update:
 	# Exclude the docs/src directory
 	echo "!docs/src/" >> ./vuv/thirdparty/.git/info/sparse-checkout
 	cd ./vuv/thirdparty && git pull origin master
+	rm -rf .git

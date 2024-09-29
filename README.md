@@ -1,6 +1,6 @@
 # vlang libuv bindings
 
-you will need to run 'make update' before developing
+you may need to run 'make update' before developing
 
 ```bash
 make update
@@ -9,9 +9,7 @@ make update
 ## WIP
 note this is not fully complete
 
-about ~95% of the libuv api is available
-
-libuv's dynamic library api, and string api do not yet compile, but v standard library ( vlib ) has modules for these
+about ~99% of the libuv api is available
 
 this currently compiles libuv from source or a static library on macos, other platforms have not yet been tested
 
@@ -24,9 +22,6 @@ ie. fs functions will be at ./vuv/fs
 ```
 import vuv.fs
 ```
-
-## features
-1. compiles libuv from source with the v build system
 
 ## extra
 passing -d uv_static, assumes libuv is installed as a static library at /usr/local/ or /opt/homebrew on macOS
