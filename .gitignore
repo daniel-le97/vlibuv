@@ -1,6 +1,7 @@
 # Binaries for programs and plugins
 main
 vlibuv
+libuv_test
 *.exe
 *.exe~
 *.so
@@ -12,11 +13,11 @@ main.txt
 
 include/*
 
-src/thirdparty/*
-!src/thirdparty/src
-!src/thirdparty/include
-!src/thirdparty/LICENSE*
-!src/thirdparty/README*
+vuv/thirdparty/*
+!vuv/thirdparty/src
+!vuv/thirdparty/include
+!vuv/thirdparty/LICENSE*
+!vuv/thirdparty/README*
 
 # Ignore binary output folders
 bin/
