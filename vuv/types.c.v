@@ -41,7 +41,6 @@ pub type Uv_metrics_t = C.uv_metrics_t
 
 pub type Uv_buf_t = C.uv_buf_t
 
-
 pub type Sockaddr = C.sockaddr
 pub type Sockaddr_in = C.sockaddr_in
 

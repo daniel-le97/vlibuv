@@ -28,17 +28,18 @@ pub mut:
 	alloc_cb         ?Alloc_cb
 	read_cb          ?Read_cb
 }
+
 @[typedef]
 pub struct C.uv_timeval_t {
 	tv_sec  i64
 	tv_usec i32
 }
+
 @[typedef]
 pub struct C.uv_timeval64_t {
 	tv_sec  i64
 	tv_usec i32
 }
-
 
 @[typedef]
 pub struct C.uv_rusage_t {
@@ -426,6 +427,11 @@ pub mut:
 
 @[typedef]
 pub struct C.uv_timespec_t {
+	tv_sec  i64
+	tv_nsec i32
+}
+@[typedef]
+pub struct C.uv_timespec64_t {
 	tv_sec  i64
 	tv_nsec i32
 }

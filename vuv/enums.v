@@ -1,6 +1,5 @@
 module vuv
 
-
 pub enum Uv_dirent_type {
 	uv_dirent_unknown = 0
 	uv_dirent_file
@@ -16,7 +15,6 @@ pub enum Uv_tcp_flags {
 	tcp_ipv6_only = 1
 	tcp_reuse_port
 }
-
 
 pub enum Uv_udp_flags {
 	// Disables dual stack mode.
@@ -65,8 +63,6 @@ pub enum Uv_udp_flags {
 	udp_recvmmsg = 256
 }
 
-
-
 pub enum Uv_tty_mode {
 	// Initial/normal terminal mode
 	tty_mode_normal = 0
@@ -106,7 +102,6 @@ pub enum Uv_process_flags {
 	windows_hide_gui
 	windows_file_path_exact_name
 }
-
 
 pub enum Uv_fs_type {
 	fs_unknown = -1
@@ -149,7 +144,6 @@ pub enum Uv_fs_type {
 	fs_lutime
 }
 
-
 // Flags to be passed to uv_fs_event_start().
 pub enum Uv_fs_event_flags {
 	// By default, if the fs event watcher is given a directory name, we will
@@ -172,12 +166,10 @@ pub enum Uv_fs_event_flags {
 	fs_event_recursive = 4
 }
 
-
 pub enum Uv_thread_create_flags {
 	uv_thread_no_flags       = 0
 	uv_thread_has_stack_size = 1
 }
-
 
 pub enum Uv_thread_priority {
 	highest      = 2
@@ -186,9 +178,6 @@ pub enum Uv_thread_priority {
 	below_normal = -1
 	lowest       = -2
 }
-
-
-
 
 pub enum Mode {
 	default = 0
@@ -245,7 +234,6 @@ pub enum Uv_loop_option {
 	metrics_idle_time
 	loop_use_io_uring_sqpoll
 }
-
 
 pub enum Uv_clock_id {
 	monotonic = 0

@@ -20,7 +20,7 @@ fn new_http_server() HttpServer {
 fn (hs HttpServer) bind(ip string, port int) !int {
 	mut addr := vuv.Sockaddr_in{}
 	vuv.ip4_addr(&char(ip.str), port, &addr)
-	addy := unsafe { &vuv.Sockaddr(addr) }
+	addy := unsafe { &vuv.Sockaddr(&addr) }
 	return vuv.tcp_bind(hs.server, addy, 0)
 }
 

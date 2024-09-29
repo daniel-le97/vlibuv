@@ -368,8 +368,8 @@ pub fn fileno(const_handle &C.uv_handle_t, fd &int) int {
 
 fn C.uv_buf_init(base &char, len usize) C.uv_buf_t
 
-pub fn buf_init(base &char, len usize) C.uv_buf_t {
-	return C.uv_buf_init(base, len)
+pub fn buf_init(base &u8, len usize) C.uv_buf_t {
+	return C.uv_buf_init(&char(base), len)
 }
 
 // TODO fds should be a fixed array of size 2 that holds 2 ints
@@ -698,7 +698,6 @@ fn C.uv_tty_set_vterm_state(state int)
 pub fn tty_set_vterm_state(state Uv_tty_vtermstate) {
 	C.uv_tty_set_vterm_state(int(state))
 }
-
 
 // @[typedef]
 // struct C.uv_tty_vtermstate_t {}
@@ -1720,10 +1719,21 @@ pub fn get_available_memory() u64 {
 
 // clock functions
 
-fn C.uv_clock_gettime(clock_id int, ts &C.uv_timespec_t) int
+fn C.uv_clock_gettime(clock_id int, ts voidptr) int
 
-pub fn clock_gettime(clock_id Uv_clock_id, ts &C.uv_timespec_t) int {
-	return C.uv_clock_gettime(int(clock_id), ts)
+// fn C.uv_clock_gettime(clock_id int, ts &C.uv_timespec_t) int
+
+pub struct Uv_timespec {
+	tv_sec  i64
+	tv_nsec i32
+}
+
+pub fn clock_gettime(clock_id Uv_clock_id, ts &Uv_timespec) int {
+	$if compile_static {
+		return C.uv_clock_gettime(int(clock_id), &C.uv_timespec64_t(ts))
+	} $else {
+		return C.uv_clock_gettime(int(clock_id), &C.uv_timespec_t(ts))
+	}
 }
 
 fn C.uv_hrtime() u64
