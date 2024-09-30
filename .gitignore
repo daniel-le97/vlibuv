@@ -8,16 +8,17 @@ libuv_test
 *.dylib
 *.dll
 ./src/src
+.v-*
 
 main.txt
 
 include/*
 
-vuv/thirdparty/*
-!vuv/thirdparty/src
-!vuv/thirdparty/include
-!vuv/thirdparty/LICENSE*
-!vuv/thirdparty/README*
+vlibuv/thirdparty/*
+!vlibuv/thirdparty/src
+!vlibuv/thirdparty/include
+!vlibuv/thirdparty/LICENSE*
+!vlibuv/thirdparty/README*
 
 # Ignore binary output folders
 bin/

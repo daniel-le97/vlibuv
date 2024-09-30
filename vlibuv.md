@@ -1,4 +1,4 @@
-# module vuv
+# module vlibuv
 
 
 ## Contents
@@ -30,6 +30,10 @@
 - [cwd](#cwd)
 - [default_loop](#default_loop)
 - [disable_stdio_inheritance](#disable_stdio_inheritance)
+- [dlclose](#dlclose)
+- [dlerror](#dlerror)
+- [dlopen](#dlopen)
+- [dlsym](#dlsym)
 - [err_name](#err_name)
 - [err_name_r](#err_name_r)
 - [exepath](#exepath)
@@ -58,6 +62,7 @@
 - [fs_get_path](#fs_get_path)
 - [fs_get_ptr](#fs_get_ptr)
 - [fs_get_result](#fs_get_result)
+- [fs_get_statbuf](#fs_get_statbuf)
 - [fs_get_system_error](#fs_get_system_error)
 - [fs_get_type](#fs_get_type)
 - [fs_lchown](#fs_lchown)
@@ -170,10 +175,12 @@
 - [os_tmpdir](#os_tmpdir)
 - [os_uname](#os_uname)
 - [os_unsetenv](#os_unsetenv)
+- [pipe](#pipe)
 - [pipe_bind](#pipe_bind)
 - [pipe_bind2](#pipe_bind2)
 - [pipe_chmod](#pipe_chmod)
 - [pipe_connect](#pipe_connect)
+- [pipe_connect2](#pipe_connect2)
 - [pipe_getpeername](#pipe_getpeername)
 - [pipe_getsockname](#pipe_getsockname)
 - [pipe_init](#pipe_init)
@@ -182,6 +189,7 @@
 - [pipe_pending_instances](#pipe_pending_instances)
 - [pipe_pending_type](#pipe_pending_type)
 - [poll_init](#poll_init)
+- [poll_init_socket](#poll_init_socket)
 - [poll_start](#poll_start)
 - [poll_stop](#poll_stop)
 - [prepare_init](#prepare_init)
@@ -226,6 +234,7 @@
 - [signal_start_oneshot](#signal_start_oneshot)
 - [signal_stop](#signal_stop)
 - [sleep](#sleep)
+- [socketpair](#socketpair)
 - [stop](#stop)
 - [stream_get_write_queue_size](#stream_get_write_queue_size)
 - [stream_set_blocking](#stream_set_blocking)
@@ -259,11 +268,11 @@
 - [translate_sys_error](#translate_sys_error)
 - [try_write](#try_write)
 - [try_write2](#try_write2)
-- [tty_get_vterm_state](#tty_get_vterm_state)
 - [tty_get_winsize](#tty_get_winsize)
 - [tty_init](#tty_init)
 - [tty_reset_mode](#tty_reset_mode)
 - [tty_set_mode](#tty_set_mode)
+- [tty_set_vterm_state](#tty_set_vterm_state)
 - [udp_bind](#udp_bind)
 - [udp_connect](#udp_connect)
 - [udp_get_send_queue_count](#udp_get_send_queue_count)
@@ -296,6 +305,8 @@
 - [walk](#walk)
 - [write](#write)
 - [write2](#write2)
+- [wtf8_length_as_utf16](#wtf8_length_as_utf16)
+- [wtf8_to_utf16](#wtf8_to_utf16)
 - [Uv_loop_t.new](#Uv_loop_t.new)
 - [AfterWork_cb](#AfterWork_cb)
 - [Alloc_cb](#Alloc_cb)
@@ -369,6 +380,7 @@
 - [Write_cb](#Write_cb)
 - [Mode](#Mode)
 - [Uv_clock_id](#Uv_clock_id)
+- [Uv_dirent_type](#Uv_dirent_type)
 - [Uv_fs_event_flags](#Uv_fs_event_flags)
 - [Uv_fs_type](#Uv_fs_type)
 - [Uv_handle_type](#Uv_handle_type)
@@ -383,11 +395,9 @@
 - [Uv_tty_mode](#Uv_tty_mode)
 - [Uv_tty_vtermstate](#Uv_tty_vtermstate)
 - [Uv_udp_flags](#Uv_udp_flags)
-- [C.addrinfo](#C.addrinfo)
 - [C.sockaddr](#C.sockaddr)
 - [C.sockaddr_in](#C.sockaddr_in)
 - [C.sockaddr_in6](#C.sockaddr_in6)
-- [C.stat](#C.stat)
 - [C.uv_async_t](#C.uv_async_t)
 - [C.uv_buf_t](#C.uv_buf_t)
 - [C.uv_check_t](#C.uv_check_t)
@@ -424,6 +434,9 @@
 - [C.uv_tcp_t](#C.uv_tcp_t)
 - [C.uv_thread_t](#C.uv_thread_t)
 - [C.uv_timer_t](#C.uv_timer_t)
+- [C.uv_timespec64_t](#C.uv_timespec64_t)
+- [C.uv_timespec_t](#C.uv_timespec_t)
+- [C.uv_timeval64_t](#C.uv_timeval64_t)
 - [C.uv_timeval_t](#C.uv_timeval_t)
 - [C.uv_tty_t](#C.uv_tty_t)
 - [C.uv_udp_send_t](#C.uv_udp_send_t)
@@ -432,6 +445,8 @@
 - [C.uv_utsname_t](#C.uv_utsname_t)
 - [C.uv_work_t](#C.uv_work_t)
 - [C.uv_write_t](#C.uv_write_t)
+- [Hello_Cats](#Hello_Cats)
+- [Uv_timespec](#Uv_timespec)
 
 ## accept
 [[Return to contents]](#Contents)
@@ -517,6 +532,18 @@
 ## disable_stdio_inheritance
 [[Return to contents]](#Contents)
 
+## dlclose
+[[Return to contents]](#Contents)
+
+## dlerror
+[[Return to contents]](#Contents)
+
+## dlopen
+[[Return to contents]](#Contents)
+
+## dlsym
+[[Return to contents]](#Contents)
+
 ## err_name
 [[Return to contents]](#Contents)
 
@@ -599,6 +626,9 @@
 [[Return to contents]](#Contents)
 
 ## fs_get_result
+[[Return to contents]](#Contents)
+
+## fs_get_statbuf
 [[Return to contents]](#Contents)
 
 ## fs_get_system_error
@@ -937,6 +967,9 @@
 ## os_unsetenv
 [[Return to contents]](#Contents)
 
+## pipe
+[[Return to contents]](#Contents)
+
 ## pipe_bind
 [[Return to contents]](#Contents)
 
@@ -947,6 +980,9 @@
 [[Return to contents]](#Contents)
 
 ## pipe_connect
+[[Return to contents]](#Contents)
+
+## pipe_connect2
 [[Return to contents]](#Contents)
 
 ## pipe_getpeername
@@ -971,6 +1007,9 @@
 [[Return to contents]](#Contents)
 
 ## poll_init
+[[Return to contents]](#Contents)
+
+## poll_init_socket
 [[Return to contents]](#Contents)
 
 ## poll_start
@@ -1105,6 +1144,9 @@
 ## sleep
 [[Return to contents]](#Contents)
 
+## socketpair
+[[Return to contents]](#Contents)
+
 ## stop
 [[Return to contents]](#Contents)
 
@@ -1204,9 +1246,6 @@
 ## try_write2
 [[Return to contents]](#Contents)
 
-## tty_get_vterm_state
-[[Return to contents]](#Contents)
-
 ## tty_get_winsize
 [[Return to contents]](#Contents)
 
@@ -1217,6 +1256,9 @@
 [[Return to contents]](#Contents)
 
 ## tty_set_mode
+[[Return to contents]](#Contents)
+
+## tty_set_vterm_state
 [[Return to contents]](#Contents)
 
 ## udp_bind
@@ -1313,6 +1355,12 @@
 [[Return to contents]](#Contents)
 
 ## write2
+[[Return to contents]](#Contents)
+
+## wtf8_length_as_utf16
+[[Return to contents]](#Contents)
+
+## wtf8_to_utf16
 [[Return to contents]](#Contents)
 
 ## Uv_loop_t.new
@@ -1534,6 +1582,9 @@
 ## Uv_clock_id
 [[Return to contents]](#Contents)
 
+## Uv_dirent_type
+[[Return to contents]](#Contents)
+
 ## Uv_fs_event_flags
 [[Return to contents]](#Contents)
 
@@ -1576,9 +1627,6 @@
 ## Uv_udp_flags
 [[Return to contents]](#Contents)
 
-## C.addrinfo
-[[Return to contents]](#Contents)
-
 ## C.sockaddr
 [[Return to contents]](#Contents)
 
@@ -1586,9 +1634,6 @@
 [[Return to contents]](#Contents)
 
 ## C.sockaddr_in6
-[[Return to contents]](#Contents)
-
-## C.stat
 [[Return to contents]](#Contents)
 
 ## C.uv_async_t
@@ -1699,6 +1744,15 @@
 ## C.uv_timer_t
 [[Return to contents]](#Contents)
 
+## C.uv_timespec64_t
+[[Return to contents]](#Contents)
+
+## C.uv_timespec_t
+[[Return to contents]](#Contents)
+
+## C.uv_timeval64_t
+[[Return to contents]](#Contents)
+
 ## C.uv_timeval_t
 [[Return to contents]](#Contents)
 
@@ -1723,4 +1777,10 @@
 ## C.uv_write_t
 [[Return to contents]](#Contents)
 
-#### Powered by vdoc. Generated on: 28 Sep 2024 10:20:17
+## Hello_Cats
+[[Return to contents]](#Contents)
+
+## Uv_timespec
+[[Return to contents]](#Contents)
+
+#### Powered by vdoc. Generated on: 29 Sep 2024 17:39:04

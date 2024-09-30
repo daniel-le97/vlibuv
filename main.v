@@ -1,70 +1,71 @@
 module main
 
-import vuv
+import vlibuv
 import picohttpparser
 import net.http
 
 // Define a struct for the HTTP server
 struct HttpServer {
-	server &vuv.Uv_tcp_t
-	loop   &vuv.Uv_loop_t
+	server &vlibuv.Uv_tcp_t
+	loop   &vlibuv.Uv_loop_t
 	// baton  &C.uv_work_t
 }
 
 fn new_http_server() HttpServer {
-	loop := vuv.default_loop()
-	server := &vuv.Uv_tcp_t{}
+	loop := vlibuv.default_loop()
+
+	server := &vlibuv.Uv_tcp_t{}
 	// worker := &C.uv_work_t{}
-	vuv.tcp_init(loop, server)
+	vlibuv.tcp_init(loop, server)
 	return HttpServer{server, loop}
 }
 
 fn (hs HttpServer) bind(ip string, port int) !int {
-	mut addr := vuv.Sockaddr_in{}
-	vuv.ip4_addr(&char(ip.str), port, &addr)
-	addy := unsafe { &vuv.Sockaddr(&addr) }
-	return vuv.tcp_bind(hs.server, addy, 0)
+	mut addr := vlibuv.Sockaddr_in{}
+	vlibuv.ip4_addr(&char(ip.str), port, &addr)
+	addy := unsafe { &vlibuv.Sockaddr(&addr) }
+	return vlibuv.tcp_bind(hs.server, addy, 0)
 }
 
 fn (hs HttpServer) listen() !int {
-	return vuv.listen(unsafe { &vuv.Uv_stream_t(hs.server) }, 128, on_new_connection)
+	return vlibuv.listen(unsafe { &vlibuv.Uv_stream_t(hs.server) }, 128, on_new_connection)
 }
 
 // Function to set TCP_NODELAY
 fn (server &HttpServer) set_nodelay(enable bool) {
-	vuv.tcp_nodelay(server.server, if enable { 1 } else { 0 })
+	vlibuv.tcp_nodelay(server.server, if enable { 1 } else { 0 })
 }
 
-fn on_close_cb(handle &vuv.Uv_handle_t) {
+fn on_close_cb(handle &vlibuv.Uv_handle_t) {
 	unsafe {
 		free(handle)
 	}
 }
 
-fn on_new_connection(server &vuv.Uv_stream_t, status int) {
+fn on_new_connection(server &vlibuv.Uv_stream_t, status int) {
 	if status < 0 {
 		println('New connection error')
 		return
 	}
-	client := &vuv.Uv_tcp_t{}
-	vuv.tcp_init(vuv.default_loop(), client)
-	if vuv.accept(server, unsafe { &vuv.Uv_stream_t(client) }) == 0 {
-		vuv.read_start(unsafe { &vuv.Uv_stream_t(client) }, alloc_buffer, on_read)
+	client := &vlibuv.Uv_tcp_t{}
+	vlibuv.tcp_init(vlibuv.default_loop(), client)
+	if vlibuv.accept(server, unsafe { &vlibuv.Uv_stream_t(client) }) == 0 {
+		vlibuv.read_start(unsafe { &vlibuv.Uv_stream_t(client) }, alloc_buffer, on_read)
 	} else {
-		vuv.close(unsafe { &vuv.Uv_handle_t(client) }, on_close_cb)
+		vlibuv.close(unsafe { &vlibuv.Uv_handle_t(client) }, on_close_cb)
 	}
 }
 
-fn alloc_buffer(handle &vuv.Uv_handle_t, suggested_size usize, mut buf vuv.Uv_buf_t) {
+fn alloc_buffer(handle &vlibuv.Uv_handle_t, suggested_size usize, mut buf vlibuv.Uv_buf_t) {
 	unsafe {
 		buf.base = &char(malloc(suggested_size))
 		buf.len = suggested_size
 	}
 }
 
-fn on_read(client &vuv.Uv_stream_t, nread isize, buf &vuv.Uv_buf_t) {
+fn on_read(client &vlibuv.Uv_stream_t, nread isize, buf &vlibuv.Uv_buf_t) {
 	if nread < 0 {
-		vuv.close(unsafe { &vuv.Uv_handle_t(client) }, on_close_cb)
+		vlibuv.close(unsafe { &vlibuv.Uv_handle_t(client) }, on_close_cb)
 		return
 	}
 
@@ -77,12 +78,12 @@ fn on_read(client &vuv.Uv_stream_t, nread isize, buf &vuv.Uv_buf_t) {
 		body: 'hello world!'
 	)
 
-	write_req := &vuv.Uv_write_t{}
-	write_buf := vuv.buf_init(response.bytestr().str, usize(response.bytes().len))
-	vuv.write(write_req, client, &write_buf, 1, on_write)
+	write_req := &vlibuv.Uv_write_t{}
+	write_buf := vlibuv.buf_init(response.bytestr().str, usize(response.bytes().len))
+	vlibuv.write(write_req, client, &write_buf, 1, on_write)
 }
 
-fn on_write(req &vuv.Uv_write_t, status int) {
+fn on_write(req &vlibuv.Uv_write_t, status int) {
 	if status < 0 {
 		println('Write error')
 	}
@@ -115,5 +116,5 @@ fn main() {
 	println('http://localhost:${port}')
 
 	// Run the event loop
-	vuv.run(server.loop, vuv.Mode.default)
+	vlibuv.run(server.loop, vlibuv.Mode.default)
 }

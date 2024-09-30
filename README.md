@@ -16,11 +16,11 @@ this currently compiles libuv from source or a static library on macos, other pl
 
 API is very subject to change, i will most likely be splitting this into submodules
 
-ie. fs functions will be at ./vuv/fs
+ie. fs functions will be at ./vlibuv/fs
 
 
 ```
-import vuv.fs
+import vlibuv.fs
 ```
 
 ## extra
