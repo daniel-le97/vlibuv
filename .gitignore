@@ -8,7 +8,7 @@ libuv_test
 *.dylib
 *.dll
 ./src/src
-.v-*
+.v-analyzer
 
 main.txt
 
