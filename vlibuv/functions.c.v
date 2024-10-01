@@ -247,6 +247,7 @@ pub fn handle_size(handle_type Uv_handle_type) usize {
 fn C.uv_handle_get_type(const_handle &C.uv_handle_t) Uv_handle_type
 
 pub fn handle_get_type(const_handle &C.uv_handle_t) Uv_handle_type {
+	// handle := const_handle['type']
 	unsafe {
 		return Uv_handle_type(C.uv_handle_get_type(const_handle))
 	}

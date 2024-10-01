@@ -9,6 +9,7 @@ libuv_test
 *.dll
 ./src/src
 .v-analyzer
+docs/html
 
 main.txt
 
