@@ -1,6 +1,6 @@
 # Binaries for programs and plugins
 main
-vlibuv
+
 libuv_test
 *.exe
 *.exe~
