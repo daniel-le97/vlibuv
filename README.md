@@ -1,4 +1,7 @@
-# vlang libuv bindings
+# vlibuv
+
+v bindings for libuv
+
 
 you may need to run 'make update' before developing
 

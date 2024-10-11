@@ -16,7 +16,7 @@ run:
 	v run .
 
 symlink:
-	ln -s /Users/daniel/homelab/GitHub/languages/v-projects/vlibuv ~/.vmodules/vlibuv
+	ln -s $(CURDIR) $(HOME)/.vmodules/vlibuv
 
 clean-symlink:
 	rm -rf ~/.vmodules/vlibuv
