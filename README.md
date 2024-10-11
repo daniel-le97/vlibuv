@@ -2,6 +2,12 @@
 
 v bindings for libuv
 
+## install
+
+```
+v install --git https://github.com/daniel-le97/vlibuv.git
+```
+
 
 you may need to run 'make update' before developing
 
