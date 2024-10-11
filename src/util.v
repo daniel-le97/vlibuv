@@ -1,5 +1,11 @@
 module vlibuv
 
+pub fn get_error_message(i int) string {
+	unsafe {
+		return cstring_to_vstring(C.uv_strerror(i))
+	}
+}
+
 @[inline]
 pub fn error_checker(i int) !int {
 	if i < 0 {

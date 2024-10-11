@@ -279,41 +279,41 @@ pub fn shutdown(req &C.uv_shutdown_t, handle &C.uv_stream_t, cb Shutdown_cb) int
 // 	C.uv_handle_set_data(handle, data)
 // }
 
-// request functions
+// // request functions
 
-fn C.uv_req_size(req_type int) usize
+// fn C.uv_req_size(req_type int) usize
 
-pub fn req_size(req_type Uv_req_type) usize {
-	return C.uv_req_size(int(req_type))
-}
+// pub fn req_size(req_type Uv_req_type) usize {
+// 	return C.uv_req_size(int(req_type))
+// }
 
-fn C.uv_req_get_data(const_req &C.uv_req_t) voidptr
+// fn C.uv_req_get_data(const_req &C.uv_req_t) voidptr
 
-pub fn req_get_data(const_req &C.uv_req_t) voidptr {
-	return C.uv_req_get_data(const_req)
-}
+// pub fn req_get_data(const_req &C.uv_req_t) voidptr {
+// 	return C.uv_req_get_data(const_req)
+// }
 
-fn C.uv_req_set_data(req &C.uv_req_t, data voidptr)
+// fn C.uv_req_set_data(req &C.uv_req_t, data voidptr)
 
-pub fn req_set_data(req &C.uv_req_t, data voidptr) {
-	C.uv_req_set_data(req, data)
-}
+// pub fn req_set_data(req &C.uv_req_t, data voidptr) {
+// 	C.uv_req_set_data(req, data)
+// }
 
-fn C.uv_req_get_type(const_req &C.uv_req_t) Uv_req_type
+// fn C.uv_req_get_type(const_req &C.uv_req_t) Uv_req_type
 
-pub fn req_get_type(const_req &C.uv_req_t) Uv_req_type {
-	unsafe {
-		return Uv_req_type(C.uv_req_get_type(const_req))
-	}
-}
+// pub fn req_get_type(const_req &C.uv_req_t) Uv_req_type {
+// 	unsafe {
+// 		return Uv_req_type(C.uv_req_get_type(const_req))
+// 	}
+// }
 
-fn C.uv_req_type_name(req_type int) &char
+// fn C.uv_req_type_name(req_type int) &char
 
-pub fn req_type_name(const_req_type Uv_req_type) string {
-	unsafe {
-		return cstring_to_vstring(C.uv_req_type_name(int(const_req_type)))
-	}
-}
+// pub fn req_type_name(const_req_type Uv_req_type) string {
+// 	unsafe {
+// 		return cstring_to_vstring(C.uv_req_type_name(int(const_req_type)))
+// 	}
+// }
 
 // fn C.uv_is_active(const_handle &C.uv_handle_t) int
 
@@ -369,6 +369,13 @@ fn C.uv_buf_init(base &char, len usize) C.uv_buf_t
 
 pub fn buf_init(base &u8, len usize) C.uv_buf_t {
 	return C.uv_buf_init(&char(base), len)
+}
+
+pub fn init_buf(mut buf C.uv_buf_t, size usize) {
+	unsafe {
+		buf.base = malloc(size)
+		buf.len = size
+	}
 }
 
 fn C.uv_pipe(fds [2]int, read_flags int, write_flags int) int

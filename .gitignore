@@ -28,3 +28,11 @@ bin/
 # vweb and database
 *.db
 *.js
+
+
+# Ignore everything in the examples directory
+examples/*
+
+# Except for .v/c files
+!examples/*.v
+!examples/*.c
