@@ -1,4 +1,4 @@
-import vuv.uv
+import vlibuv.uv
 import picohttpparser
 import net.http
 

@@ -1,4 +1,4 @@
-module vuv
+module vlibuv
 
 // barrier functions
 

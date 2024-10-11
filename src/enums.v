@@ -1,4 +1,4 @@
-module vuv
+module vlibuv
 
 @[flags]
 pub enum Uv_dirent_type {
