@@ -1,0 +1,30 @@
+# Binaries for programs and plugins
+main
+vansible
+*.exe
+*.exe~
+*.so
+*.dylib
+*.dll
+
+.v-analyzer/
+
+docs/
+
+progress/
+
+# Ignore binary output folders
+bin/
+
+# Ignore common editor/system specific metadata
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# ENV
+.env
+
+# vweb and database
+*.db
+*.js
