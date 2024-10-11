@@ -1,4 +1,4 @@
-module vuv
+module vlibuv
 
 // TODO need to figure out how to handle the process api
 

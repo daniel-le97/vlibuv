@@ -1,4 +1,4 @@
-module vuv
+module vlibuv
 
 // patch to get http imported without errors, it provides C.addrinfo
 // import net.http as _

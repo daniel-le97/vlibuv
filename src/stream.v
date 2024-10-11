@@ -1,4 +1,4 @@
-module vuv
+module vlibuv
 
 fn C.uv_stream_get_write_queue_size(const_stream &C.uv_stream_t) usize
 

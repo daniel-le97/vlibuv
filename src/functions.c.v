@@ -1,4 +1,4 @@
-module vuv
+module vlibuv
 
 // add documentation to each function for each wrapper of a underlying libuv function
 

@@ -1,4 +1,5 @@
-module vuv
+module vlibuv
+
 // semaphore functions
 fn C.uv_sem_init(sem &C.uv_sem_t, value usize) int
 fn C.uv_sem_destroy(sem &C.uv_sem_t)

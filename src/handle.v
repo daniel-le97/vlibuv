@@ -1,4 +1,4 @@
-module vuv
+module vlibuv
 
 fn C.uv_is_closing(const_handle &C.uv_handle_t) int
 fn C.uv_is_active(const_handle &C.uv_handle_t) int

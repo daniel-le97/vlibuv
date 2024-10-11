@@ -1,4 +1,4 @@
-module vuv
+module vlibuv
 
 // import os
 

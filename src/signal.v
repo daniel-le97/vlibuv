@@ -1,4 +1,4 @@
-module vuv
+module vlibuv
 
 // signal functions
 

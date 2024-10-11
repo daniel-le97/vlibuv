@@ -1,4 +1,4 @@
-module vuv
+module vlibuv
 
 @[inline]
 pub fn error_checker(i int) !int {

@@ -1,4 +1,4 @@
-module vuv
+module vlibuv
 
 // TODO must use 'struct' tag to refer to type 'sockaddr_in6'
 // i dont know how to make v to refer to the struct sockaddr_in6

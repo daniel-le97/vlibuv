@@ -1,4 +1,4 @@
-module vuv
+module vlibuv
 
 // struct Foo {
 // 	a int // private immutable (default)

@@ -1,4 +1,4 @@
-module vuv
+module vlibuv
 
 @[typedef]
 pub struct C.uv_tcp_t {

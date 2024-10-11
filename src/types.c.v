@@ -1,4 +1,4 @@
-module vuv
+module vlibuv
 
 // pub type Uv_handle_t = C.uv_handle_t
 // pub type Uv_dir_t = C.uv_dir_t

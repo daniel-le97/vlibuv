@@ -1,4 +1,4 @@
-module vuv
+module vlibuv
 
 fn C.uv_thread_detach(tid &C.uv_thread_t) int
 fn C.uv_thread_create_ex(tid &C.uv_thread_t, const_params &C.uv_thread_options_t, entry fn (arg voidptr), arg voidptr) int
