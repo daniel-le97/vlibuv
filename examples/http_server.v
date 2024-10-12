@@ -19,14 +19,18 @@ fn listen_callback(server vlibuv.Stream, status int) {
 	client.read_start(alloc_cb, read_cb) or { println('unable to read from client') }
 }
 
-struct Buf {
-pub mut:
-	base voidptr
-	len  usize
-}
+// struct Buf {
+// pub mut:
+// 	base voidptr
+// 	len  usize
+// }
 
-fn alloc_cb(handle voidptr, size usize, mut buf voidptr) {
-	vlibuv.init_buf(mut buf, size)
+fn alloc_cb(handle voidptr, size usize, mut buf vlibuv.Buf) {
+	unsafe {
+		buf.base = &char(malloc(size))
+		buf.len = size
+	}
+	// vlibuv.init_buf(mut buf, size)
 }
 
 fn read_cb(client vlibuv.Stream, nread isize, buf voidptr) {

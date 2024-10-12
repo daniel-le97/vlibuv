@@ -38,17 +38,34 @@ pub fn req_set_data(req &C.uv_req_t, data voidptr) {
 
 fn C.uv_req_get_loop(const_req &C.uv_req_t) &C.uv_loop_t
 
-
 struct Req {
-	req &C.uv_req_t
+	req voidptr
+pub mut:
+	data voidptr
 }
 
-pub fn (r Req) get_data[T]() T {
-	return C.uv_req_get_data(r.req)
+pub fn (r Req) get_data() voidptr {
+	// return r.data
+	return C.uv_req_get_data(r.to_req())
+	// unsafe {
+	// 	return &T(C.uv_req_get_data(r.req))
+	// }
 }
 
-pub fn (r Req) set_data(data voidptr) {
-	C.uv_req_set_data(r.req, data)
+pub fn (r Req) cancel() {
+	C.uv_cancel(r.req)
+}
+
+pub fn (mut r Req) set_data(data voidptr) {
+	// r.data = data
+
+	C.uv_req_set_data(r.to_req(), data)
+}
+
+pub fn (r Req) to_req() &C.uv_req_t {
+	unsafe {
+		return &C.uv_req_t(r.req)
+	}
 }
 
 // pub fn (r Req) get_type() Uv_req_type {

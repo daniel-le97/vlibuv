@@ -65,8 +65,8 @@ pub fn (s Stream) accept(client &Stream) !int {
 	return error_checker(C.uv_accept(s.to_stream(), client.to_stream()))
 }
 
-pub fn (s Stream) read_start(alloc_cb fn (handle &C.uv_handle_t, suggested_size usize, buf &C.uv_buf_t), read_cb fn (stream Stream, nread isize, buf &C.uv_buf_t)) !int {
-	callback := fn [read_cb] (stream &C.uv_stream_t, nread isize, buf &C.uv_buf_t) {
+pub fn (s Stream) read_start(alloc_cb fn (handle &C.uv_handle_t, suggested_size usize, buf &Buf), read_cb fn (stream Stream, nread isize, buf &C.uv_buf_t)) !int {
+	callback := fn [read_cb] (stream &C.uv_stream_t, nread isize, buf &Buf) {
 		read_cb(Stream{Handle{stream}}, nread, buf)
 	}
 	return error_checker(C.uv_read_start(s.to_stream(), alloc_cb, callback))

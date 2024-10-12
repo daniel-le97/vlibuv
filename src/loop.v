@@ -76,6 +76,28 @@ pub fn (l &Loop) stop() {
 	C.uv_stop(l.loop)
 }
 
+// pub fn (l &Loop) queue_work(mut w Work, work_cb fn (mut work Work), after_work_cb fn (mut work Work, status int)) {
+// 	new_work_cb := fn [work_cb, mut w] (work &C.uv_work_t) {
+// 		work_cb(mut w)
+// 	}
+// 	new_after_work_cb := fn [after_work_cb, mut w] (work &C.uv_work_t, status int) {
+// 		after_work_cb(mut w, status)
+// 	}
+// 	C.uv_queue_work(l.loop, w.to_work(), new_work_cb, new_after_work_cb)
+// }
+
+pub fn (l &Loop) queue_work(mut w Work, work_cb fn (mut work Work), after_work_cb fn (mut work Work, status int)) {
+	new_work_cb := fn [work_cb] (work &C.uv_work_t) {
+		mut wrk := Work{Req{work, unsafe { nil }}}
+		work_cb(mut wrk)
+	}
+	new_after_work_cb := fn [after_work_cb] (work &C.uv_work_t, status int) {
+		mut wrk := Work{Req{work, unsafe { nil }}}
+		after_work_cb(mut wrk, status)
+	}
+	C.uv_queue_work(l.loop, w.to_work(), new_work_cb, new_after_work_cb)
+}
+
 // pub fn (l &Loop) size() usize {
 // 	return C.uv_loop_size()
 // }

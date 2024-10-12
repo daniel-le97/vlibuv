@@ -22,13 +22,17 @@ pub struct C.uv_timer_t {
 }
 
 pub fn timer_init(l &Loop) Timer {
-	t := &C.uv_timer_t(unsafe { nil })
+	t := &C.uv_timer_t{}
 	C.uv_timer_init(l.loop, t)
+
 	return Timer{Handle{t}}
 }
 
-pub fn (t Timer) start(timeout u64, repeat u64, callback fn (handle &C.uv_timer_t)) !int {
-	r := C.uv_timer_start(t.handle, callback, timeout, repeat)
+pub fn (t Timer) start(timeout u64, repeat u64, callback fn (handle Timer)) !int {
+	cb := fn [callback] (handle &C.uv_timer_t) {
+		callback(Timer{Handle{handle}})
+	}
+	r := C.uv_timer_start(t.handle, cb, timeout, repeat)
 	return error_checker(r)
 }
 

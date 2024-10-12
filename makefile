@@ -19,12 +19,13 @@ symlink:
 	ln -s $(CURDIR) $(HOME)/.vmodules/vlibuv
 
 clean-symlink:
-	rm -rf ~/.vmodules/vlibuv
+	rm -rf $(HOME)/.vmodules/vlibuv
 
 
 examples:
 	v examples/http_server_uv.v
 	v examples/http_server.v
+	v examples/threadpool.v
 
 update:
 	rm -rf ./thirdparty
