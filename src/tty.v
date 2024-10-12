@@ -58,7 +58,7 @@ pub struct Tty {
 }
 
 pub fn tty_init(l &Loop, fd int, readable int) Tty {
-	t := &C.uv_tty_t(unsafe { nil })
+	t := &C.uv_tty_t{}
 	C.uv_tty_init(l.loop, t, fd, readable)
 	return Tty{Stream{Handle{t}}}
 }

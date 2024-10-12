@@ -79,7 +79,7 @@ pub struct Pipe {
 }
 
 pub fn pipe_init(l &Loop, is_ipc bool) Pipe {
-	p := &C.uv_pipe_t(unsafe { nil })
+	p := &C.uv_pipe_t{}
 	C.uv_pipe_init(l.loop, p, bool_to_int(is_ipc))
 	return Pipe{Stream{Handle{p}}}
 }
