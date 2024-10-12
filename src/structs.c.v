@@ -61,7 +61,6 @@ pub mut:
 	// more fields may be added at any time
 }
 
-@[typedef]
 pub struct C.sockaddr_in6 {
 	// sin6_family   int
 	// sin6_port     u16

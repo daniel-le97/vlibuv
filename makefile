@@ -10,7 +10,7 @@ fmt:
 	v fmt -w .
 
 test:
-	v -stats test vlibuv/tests
+	v -stats test ./tests
 
 run:
 	v run .
@@ -26,6 +26,7 @@ examples:
 	v examples/http_server_uv.v
 	v examples/http_server.v
 	v examples/threadpool.v
+	v examples/default_loop.v
 
 update:
 	rm -rf ./thirdparty

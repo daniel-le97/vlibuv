@@ -2,9 +2,9 @@ module vlibuv
 
 @[typedef]
 pub struct C.uv_loop_t {
-pub mut:
-	data           voidptr
-	active_handles usize
+	// pub mut:
+	// 	data           voidptr
+	// 	active_handles usize
 }
 
 fn C.uv_default_loop() &C.uv_loop_t
@@ -41,7 +41,7 @@ pub fn default_loop() Loop {
 	return Loop{loop}
 }
 
-pub fn (l &Loop) get_data[T]() &T {
+pub fn (l &Loop) get_data() voidptr {
 	return C.uv_loop_get_data(l.loop)
 }
 
