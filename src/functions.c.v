@@ -22,22 +22,22 @@ pub fn library_shutdown() {
 	C.uv_library_shutdown()
 }
 
-// typedef void* (*uv_malloc_func)(size_t size);
-pub type Malloc_fn = fn (size isize) &u8
+// // typedef void* (*uv_malloc_func)(size_t size);
+// pub type Malloc_fn = fn (size isize) &u8
 
-// typedef void* (*uv_realloc_func)(void* ptr, size_t size);
-pub type Realloc_fn = fn (ptr &u8, size isize) &u8
+// // typedef void* (*uv_realloc_func)(void* ptr, size_t size);
+// pub type Realloc_fn = fn (ptr &u8, size isize) &u8
 
-// typedef void* (*uv_calloc_func)(size_t count, size_t size);
-pub type Calloc_fn = fn (count usize, size usize) &u8
+// // typedef void* (*uv_calloc_func)(size_t count, size_t size);
+// pub type Calloc_fn = fn (count usize, size usize) &u8
 
-// typedef void (*uv_free_func)(void* ptr);
-pub type Free_fn = fn (ptr voidptr) voidptr
+// // typedef void (*uv_free_func)(void* ptr);
+// pub type Free_fn = fn (ptr voidptr) voidptr
 
-fn C.uv_replace_allocator(malloc Malloc_fn, realloc Realloc_fn, calloc Calloc_fn, free Free_fn) int
-pub fn replace_allocator(malloc_fn Malloc_fn, realloc_cb Realloc_fn, calloc_cb Calloc_fn, free_cb Free_fn) int {
-	return C.uv_replace_allocator(malloc_fn, realloc_cb, calloc_cb, free_cb)
-}
+// fn C.uv_replace_allocator(malloc Malloc_fn, realloc Realloc_fn, calloc Calloc_fn, free Free_fn) int
+// pub fn replace_allocator(malloc_fn Malloc_fn, realloc_cb Realloc_fn, calloc_cb Calloc_fn, free_cb Free_fn) int {
+// 	return C.uv_replace_allocator(malloc_fn, realloc_cb, calloc_cb, free_cb)
+// }
 
 // fn C.uv_default_loop() &C.uv_loop_t
 
@@ -373,7 +373,7 @@ pub fn buf_init(base &u8, len usize) C.uv_buf_t {
 
 pub fn init_buf(mut buf C.uv_buf_t, size usize) {
 	unsafe {
-		buf.base = malloc(size)
+		buf.base = &char(malloc(size))
 		buf.len = size
 	}
 }
@@ -979,11 +979,16 @@ pub fn getnameinfo(loop &C.uv_loop_t, req &C.uv_getnameinfo_t, cb fn (req &C.uv_
 // }
 
 // work functions
+// @[keep_args_alive]
+fn C.uv_queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int)) int
 
-fn C.uv_queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int))
-
-pub fn queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int)) {
-	C.uv_queue_work(loop, work, work_cb, after_work_cb)
+// @[keep_args_alive]
+pub fn queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int)) !int {
+	// gc_disable()
+	res := C.uv_queue_work(loop, work, work_cb, after_work_cb)
+	// gc_enable()
+	return error_checker(res)
+	// return error_checker(C.uv_queue_work(loop, work, work_cb, after_work_cb))
 }
 
 fn C.uv_cancel(req &C.uv_req_t) int
@@ -1042,72 +1047,72 @@ pub fn getrusage(rusage &C.uv_rusage_t) int {
 	return C.uv_getrusage(rusage)
 }
 
-// os functions
-fn C.uv_os_homedir(buf &char, size &usize) int
+// // os functions
+// fn C.uv_os_homedir(buf &char, size &usize) int
 
-pub fn os_homedir(buf &char, size &usize) int {
-	return C.uv_os_homedir(buf, size)
-}
+// pub fn os_homedir(buf &char, size &usize) int {
+// 	return C.uv_os_homedir(buf, size)
+// }
 
-fn C.uv_os_tmpdir(buff &char, size &usize) int
+// fn C.uv_os_tmpdir(buff &char, size &usize) int
 
-pub fn os_tmpdir(buf &char, size &usize) int {
-	return C.uv_os_tmpdir(buf, size)
-}
+// pub fn os_tmpdir(buf &char, size &usize) int {
+// 	return C.uv_os_tmpdir(buf, size)
+// }
 
-fn C.uv_os_get_passwd(pwd &C.uv_passwd_t) int
+// fn C.uv_os_get_passwd(pwd &C.uv_passwd_t) int
 
-pub fn os_get_passwd(pwd &C.uv_passwd_t) int {
-	return C.uv_os_get_passwd(pwd)
-}
+// pub fn os_get_passwd(pwd &C.uv_passwd_t) int {
+// 	return C.uv_os_get_passwd(pwd)
+// }
 
-fn C.uv_os_free_passwd(pwd &C.uv_passwd_t)
+// fn C.uv_os_free_passwd(pwd &C.uv_passwd_t)
 
-pub fn os_free_passwd(pwd &C.uv_passwd_t) {
-	C.uv_os_free_passwd(pwd)
-}
+// pub fn os_free_passwd(pwd &C.uv_passwd_t) {
+// 	C.uv_os_free_passwd(pwd)
+// }
 
-fn C.uv_os_get_passwd2(pwd &C.uv_passwd_t, uid C.uv_uid_t) int
+// fn C.uv_os_get_passwd2(pwd &C.uv_passwd_t, uid C.uv_uid_t) int
 
-pub fn os_get_passwd2(pwd &C.uv_passwd_t, uid C.uv_uid_t) int {
-	return C.uv_os_get_passwd2(pwd, uid)
-}
+// pub fn os_get_passwd2(pwd &C.uv_passwd_t, uid C.uv_uid_t) int {
+// 	return C.uv_os_get_passwd2(pwd, uid)
+// }
 
-fn C.uv_os_get_group(group &C.uv_group_t, gid C.uv_uid_t) int
+// fn C.uv_os_get_group(group &C.uv_group_t, gid C.uv_uid_t) int
 
-pub fn os_get_group(group &C.uv_group_t, gid C.uv_uid_t) int {
-	return C.uv_os_get_group(group, gid)
-}
+// pub fn os_get_group(group &C.uv_group_t, gid C.uv_uid_t) int {
+// 	return C.uv_os_get_group(group, gid)
+// }
 
-fn C.uv_os_free_group(group &C.uv_group_t)
+// fn C.uv_os_free_group(group &C.uv_group_t)
 
-pub fn os_free_group(group &C.uv_group_t) {
-	C.uv_os_free_group(group)
-}
+// pub fn os_free_group(group &C.uv_group_t) {
+// 	C.uv_os_free_group(group)
+// }
 
-fn C.uv_os_getpid() int
+// fn C.uv_os_getpid() int
 
-pub fn os_getpid() int {
-	return C.uv_os_getpid()
-}
+// pub fn os_getpid() int {
+// 	return C.uv_os_getpid()
+// }
 
-fn C.uv_os_getppid() int
+// fn C.uv_os_getppid() int
 
-pub fn os_getppid() int {
-	return C.uv_os_getppid()
-}
+// pub fn os_getppid() int {
+// 	return C.uv_os_getppid()
+// }
 
-fn C.uv_os_getpriority(pid int, priority &int) int
+// fn C.uv_os_getpriority(pid int, priority &int) int
 
-pub fn os_getpriority(pid int, priority &int) int {
-	return C.uv_os_getpriority(pid, priority)
-}
+// pub fn os_getpriority(pid int, priority &int) int {
+// 	return C.uv_os_getpriority(pid, priority)
+// }
 
-fn C.uv_os_setpriority(pid int, priority int) int
+// fn C.uv_os_setpriority(pid int, priority int) int
 
-pub fn os_setpriority(pid int, priority int) int {
-	return C.uv_os_setpriority(pid, priority)
-}
+// pub fn os_setpriority(pid int, priority int) int {
+// 	return C.uv_os_setpriority(pid, priority)
+// }
 
 // cpu functions
 

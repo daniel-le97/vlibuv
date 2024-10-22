@@ -7,6 +7,8 @@ pub struct C.uv_loop_t {
 	// 	active_handles usize
 }
 
+pub const default_loop_ = default_loop()
+
 fn C.uv_default_loop() &C.uv_loop_t
 fn C.uv_loop_init(loop &C.uv_loop_t) int
 fn C.uv_loop_close(loop &C.uv_loop_t) int
@@ -26,14 +28,15 @@ fn C.uv_backend_timeout(loop &C.uv_loop_t) int
 fn C.uv_update_time(loop &C.uv_loop_t)
 
 pub struct Loop {
-	loop &C.uv_loop_t = unsafe { nil }
+pub:
+	loop &C.uv_loop_t
 	// mut:
 	// 	initialized bool
 }
 
 pub fn new_loop() Loop {
-	loop := &C.uv_loop_t{}
-	return Loop{loop}
+	loop := C.uv_loop_t{}
+	return Loop{&loop}
 }
 
 pub fn default_loop() Loop {

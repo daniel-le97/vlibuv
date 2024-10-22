@@ -10,53 +10,48 @@ fn C.uv_thread_join(tid &C.uv_thread_t)
 fn C.uv_thread_self() C.uv_thread_t
 fn C.uv_thread_equal(const_t1 &C.uv_thread_t, const_t2 &C.uv_thread_t) int
 
-struct Thread {
+struct UVthread {
 	thread &C.uv_thread_t
 }
 
-pub fn new_thread() Thread {
+pub fn new_thread() UVthread {
 	t := &C.uv_thread_t(unsafe { nil })
-	return Thread{t}
+	return UVthread{t}
 }
 
-fn (t Thread) create(entry fn (voidptr), arg voidptr) !int {
+fn (t UVthread) create(entry fn (voidptr), arg voidptr) !int {
 	r := C.uv_thread_create(t.thread, entry, arg)
 	return error_checker(r)
 }
 
-struct Params {
-	flags      u8
-	stack_size usize
-}
-
-pub enum Thread_create_flags {
+pub enum UVthread_create_flags {
 	no_flags       = 0
 	has_stack_size = 1
 }
 
-// fn (t Thread) create_ex(flag Thread_create_flags, size usize, entry fn (voidptr), arg voidptr) !int {
+// fn (t UVthread) create_ex(flag UVthread_create_flags, size usize, entry fn (voidptr), arg voidptr) !int {
 
 // 	r := C.uv_thread_create_ex(t.thread, , entry, arg)
 // 	return error_checker(r)
 // }
 
-fn (t Thread) join() {
+fn (t UVthread) join() {
 	C.uv_thread_join(t.thread)
 }
 
-fn (t Thread) self() Thread {
+fn (t UVthread) self() UVthread {
 	th := C.uv_thread_self()
-	return Thread{&th}
+	return UVthread{&th}
 }
 
-fn (t Thread) equal(th Thread) bool {
+fn (t UVthread) equal(th UVthread) bool {
 	return C.uv_thread_equal(t.thread, th.thread) == 1
 }
 
-fn (t Thread) getcpu(th Thread) bool {
+fn (t UVthread) getcpu(th UVthread) bool {
 	return C.uv_thread_equal(t.thread, th.thread) == 1
 }
 
-fn (t Thread) detach(th Thread) !int {
+fn (t UVthread) detach(th UVthread) !int {
 	return error_checker(C.uv_thread_detach(t.thread))
 }

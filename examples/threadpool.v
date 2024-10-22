@@ -37,6 +37,7 @@ fn main() {
 		// assert &Example(work.get_data()).age == 200
 		println(&Example(work.get_data()))
 	}
+	// buf := vlibuv.Buf
 	loop.queue_work(mut work, work_cb, after_work_cb)
 	loop.run(.default) or { panic(err) }
 }

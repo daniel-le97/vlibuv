@@ -3,7 +3,7 @@ module vlibuv
 // import os
 
 
-const default_loop = C.uv_default_loop()
+
 
 struct Fs {
 	Handle

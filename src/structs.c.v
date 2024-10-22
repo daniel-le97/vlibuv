@@ -300,8 +300,8 @@ pub struct C.uv_fs_t {
 @[typedef]
 pub struct C.uv_work_t {
 	// 	loop &C.uv_loop_t
-	// pub mut:
-	// 	data voidptr
+pub mut:
+	data voidptr
 }
 
 @[typedef]

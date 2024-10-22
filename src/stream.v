@@ -61,8 +61,8 @@ pub fn (s Stream) listen(backlog int, callback fn (stream Stream, status int)) !
 	}))
 }
 
-pub fn (s Stream) accept(client &Stream) !int {
-	return error_checker(C.uv_accept(s.to_stream(), client.to_stream()))
+pub fn (s Stream) accept(client &Stream) int {
+	return C.uv_accept(s.to_stream(), client.to_stream())
 }
 
 pub fn (s Stream) read_start(alloc_cb fn (handle &C.uv_handle_t, suggested_size usize, buf &Buf), read_cb fn (stream Stream, nread isize, buf &C.uv_buf_t)) !int {

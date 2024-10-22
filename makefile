@@ -22,6 +22,9 @@ clean-symlink:
 	rm -rf $(HOME)/.vmodules/vlibuv
 
 
+clean-examples:
+	find ./examples -type f ! -name "*.v" -exec rm {} \;
+
 examples:
 	v examples/http_server_uv.v
 	v examples/http_server.v
@@ -39,6 +42,7 @@ update:
 	echo "src/" >> ./thirdparty/.git/info/sparse-checkout
 	echo "LICENSE*" >> ./thirdparty/.git/info/sparse-checkout
 	echo "README*" >> ./thirdparty/.git/info/sparse-checkout
+	echo "*.pc*" >> ./thirdparty/.git/info/sparse-checkout
 	# Exclude the docs/src directory
 	echo "!docs/src/" >> ./thirdparty/.git/info/sparse-checkout
 	cd ./thirdparty && git pull origin master

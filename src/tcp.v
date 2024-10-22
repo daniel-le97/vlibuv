@@ -40,13 +40,8 @@ fn C.uv_tcp_getpeername(handle &C.uv_tcp_t, name &C.sockaddr, namelen &int) int
 
 fn C.uv_tcp_connect(req &C.uv_connect_t, handle &C.uv_tcp_t, addr &C.sockaddr, cb fn (req &C.uv_connect_t, status int)) int
 
-// fn bool_to_int(b bool) int {
-// 	if b {
-// 		return 1
-// 	}
-// 	return 0
-// }
-
+// TCP is subclass of Stream, which is subclass of Handle,
+// meaning it has all the methods of Stream and Handle
 pub struct Tcp {
 	Stream // tcp C.uv_tcp_t
 mut:
@@ -55,9 +50,12 @@ mut:
 
 pub struct C.sockaddr {}
 
-pub fn tcp_init(l &Loop) Tcp {
+pub fn tcp_init(l Loop) !Tcp {
 	tcp := &C.uv_tcp_t{}
-	C.uv_tcp_init(l.loop, tcp)
+	res := C.uv_tcp_init(l.loop, tcp)
+	if res != 0 {
+		return error('failed to initialize tcp')
+	}
 	return Tcp{Stream{Handle{tcp}}, unsafe { nil }}
 }
 
