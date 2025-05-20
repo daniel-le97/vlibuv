@@ -8,7 +8,6 @@ v bindings for libuv
 v install --git https://github.com/daniel-le97/vlibuv.git
 ```
 
-
 you may need to run 'make update' before developing
 
 ```bash
@@ -17,14 +16,13 @@ make update
 
 ## version 0.0.2
 
-old bindings have been moved to ./uv
+direct lower level bindings to libuv are in ./uv and these should be mostly complete
 
 ```
-// http_server_uv.v
 import vlibuv.uv
 ```
 
-new bindings are now available via vlibuv
+higher level bindings are available via the main vlibuv module, but these are not fully complete
 
 ```
 import vlibuv

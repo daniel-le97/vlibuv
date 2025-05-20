@@ -1,7 +1,5 @@
 module vlibuv
 
-
-
 // os functions
 pub fn C.uv_os_homedir(buf &char, size &usize) int
 

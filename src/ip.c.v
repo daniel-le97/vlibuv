@@ -1,7 +1,5 @@
 module vlibuv
 
-
-
 fn C.uv_ip6_addr(const_ip &char, port int, addr &C.sockaddr_in6) int
 
 pub struct Address {

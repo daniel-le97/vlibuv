@@ -2,9 +2,6 @@ module vlibuv
 
 // import os
 
-
-
-
 struct Fs {
 	Handle
 }

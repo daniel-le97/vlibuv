@@ -1,6 +1,5 @@
 module vlibuv
 
-
 // #define GC_THREADS 2
 // patch to get http imported without errors, it provides C.addrinfo
 // import net.http as _
@@ -21,7 +20,6 @@ fn C.uv_replace_allocator(malloc Malloc_fn, realloc Realloc_fn, calloc Calloc_fn
 pub fn replace_allocator(malloc_fn Malloc_fn, realloc_cb Realloc_fn, calloc_cb Calloc_fn, free_cb Free_fn) int {
 	return C.uv_replace_allocator(malloc_fn, realloc_cb, calloc_cb, free_cb)
 }
-
 
 fn init() {
 	C.uv_replace_allocator(malloc, v_realloc, calloc_fn, free)

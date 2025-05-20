@@ -3,7 +3,6 @@ module main
 import vlibuv
 import vlibuv.os
 
-
 struct Context {
 	data int
 }

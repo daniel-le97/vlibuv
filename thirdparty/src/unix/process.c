@@ -56,7 +56,8 @@
 extern char **environ;
 #endif
 
-#if defined(__linux__)
+#if defined(__linux__) || \
+    defined(__GNU__)
 # include <grp.h>
 #endif
 
@@ -73,11 +74,7 @@ extern char **environ;
 # define uv__cpu_set_t cpuset_t
 #endif
 
-#if defined(__APPLE__) || \
-    defined(__DragonFly__) || \
-    defined(__FreeBSD__) || \
-    defined(__NetBSD__) || \
-    defined(__OpenBSD__)
+#ifdef UV_HAVE_KQUEUE
 #include <sys/event.h>
 #else
 #define UV_USE_SIGCHLD
@@ -1029,7 +1026,8 @@ int uv_spawn(uv_loop_t* loop,
                               UV_PROCESS_WINDOWS_HIDE |
                               UV_PROCESS_WINDOWS_HIDE_CONSOLE |
                               UV_PROCESS_WINDOWS_HIDE_GUI |
-                              UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS)));
+                              UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS |
+                              UV_PROCESS_WINDOWS_USE_PARENT_ERROR_MODE)));
 
   uv__handle_init(loop, (uv_handle_t*)process, UV_PROCESS);
   uv__queue_init(&process->queue);
