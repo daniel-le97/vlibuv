@@ -1,7 +1,6 @@
 #!/usr/bin/env -S v run
 
 import build
-import time
 import os
 
 // Define variables that can be used to change tasks in the build script
@@ -139,7 +138,18 @@ context.task(
 	run:  fn (self build.Task) ! {
 		if exists('./thirdparty/.git') {
 			println('Updating libuv: git pull origin master')
-			system('cd ./thirdparty && git pull origin master')
+			pulled := execute('cd ./thirdparty && git pull origin master').output
+			if pulled.contains('Already up to date') {
+				return
+			}
+			hash := execute('cd ./thirdparty && git rev-parse HEAD')
+			if system('v -stats test tests/') != 0 {
+				println('Tests failed, reverting to previous commit')
+				old_hash := os.read_file('./commit.txt')!
+				system('cd ./thirdparty && git reset --hard ${old_hash.trim_space()}')
+				return
+			}
+			write_file('./commit.txt', hash.output.trim_space())!
 			return
 		}
 		if !exists('./thirdparty') {
@@ -149,6 +159,7 @@ context.task(
 		system('cd ./thirdparty && git init')
 		system('cd ./thirdparty && git remote add origin https://github.com/libuv/libuv.git')
 		system('cd ./thirdparty && git config core.sparseCheckout true')
+		// only include the files we need/want
 		mut file := create('./thirdparty/.git/info/sparse-checkout')!
 		file.writeln('include/')!
 		file.writeln('src/')!
