@@ -86,5 +86,5 @@ pub fn (r Req) to_req() &C.uv_req_t {
 
 pub fn (r Req) get_loop() Loop {
 	l := C.uv_req_get_loop(r.req)
-	return Loop{l}
+	return Loop{l, false, false}
 }

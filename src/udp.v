@@ -34,19 +34,20 @@ pub struct C.uv_udp_t {
 }
 
 pub struct Udp {
-	Handle
+pub mut:
+	handle &C.uv_udp_t
 }
 
-pub fn udp_init(l &Loop) Udp {
+pub fn Udp.new(l &Loop) !Udp {
 	udp := &C.uv_udp_t{}
 	C.uv_udp_init(l.loop, udp)
-	return Udp{Handle{udp}}
+	return Udp{udp}
 }
 
 pub fn udp_init_ex(l &Loop, flags Uv_udp_flags) Udp {
 	udp := &C.uv_udp_t{}
 	C.uv_udp_init_ex(l.loop, udp, flags)
-	return Udp{Handle{udp}}
+	return Udp{udp}
 }
 
 pub fn (u &Udp) open(sock int) int {

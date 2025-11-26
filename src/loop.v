@@ -2,12 +2,7 @@ module vlibuv
 
 @[typedef]
 pub struct C.uv_loop_t {
-	// pub mut:
-	// 	data           voidptr
-	// 	active_handles usize
 }
-
-pub const default_loop_ = default_loop()
 
 fn C.uv_default_loop() &C.uv_loop_t
 fn C.uv_loop_init(loop &C.uv_loop_t) int
@@ -28,99 +23,127 @@ fn C.uv_backend_timeout(loop &C.uv_loop_t) int
 fn C.uv_update_time(loop &C.uv_loop_t)
 
 pub struct Loop {
-pub:
-	loop &C.uv_loop_t
-	// mut:
-	// 	initialized bool
+mut:
+	loop       &C.uv_loop_t
+	is_default bool
+	owned      bool
 }
 
-pub fn new_loop() Loop {
-	loop := C.uv_loop_t{}
-	return Loop{&loop}
+// Create a new loop that V owns
+pub fn Loop.new() !Loop {
+	loop := C.uv_loop_new()
+	if isnil(loop) {
+		return error('failed to create new loop')
+	}
+	result := C.uv_loop_init(loop)
+	if result < 0 {
+		C.uv_loop_delete(loop)
+		return error('failed to initialize loop')
+	}
+	return Loop{loop, false, true}
 }
 
-pub fn default_loop() Loop {
+// Get the default loop (V does not own this)
+pub fn Loop.default() Loop {
 	loop := C.uv_default_loop()
-	return Loop{loop}
+	return Loop{loop, true, false}
 }
 
-pub fn (l &Loop) get_data() voidptr {
-	return C.uv_loop_get_data(l.loop)
+@[unsafe]
+pub fn (mut l Loop) free() {
+	if !isnil(l.loop) && l.owned {
+		C.uv_loop_close(l.loop)
+		C.uv_loop_delete(l.loop)
+		unsafe {
+			l.loop = nil
+		}
+	}
 }
 
-pub fn (l &Loop) set_data(data voidptr) {
+pub fn (mut l Loop) close() ! {
+	if !isnil(l.loop) && l.owned {
+		result := C.uv_loop_close(l.loop)
+		if result < 0 {
+			return error('failed to close loop')
+		}
+		C.uv_loop_delete(l.loop)
+		unsafe {
+			l.loop = nil
+		}
+	}
+}
+
+pub fn (l Loop) get_data() ?voidptr {
+	if isnil(l.loop) {
+		return none
+	}
+	data := C.uv_loop_get_data(l.loop)
+	if isnil(data) {
+		return none
+	}
+	return data
+}
+
+pub fn (l Loop) set_data(data voidptr) ! {
+	if isnil(l.loop) {
+		return error('loop is nil')
+	}
 	C.uv_loop_set_data(l.loop, data)
 }
 
-pub fn (l &Loop) close() !int {
-	r := C.uv_loop_close(l.loop)
-	return error_checker(r)
+pub fn (l Loop) run(mode int) !int {
+	if isnil(l.loop) {
+		return error('loop is nil')
+	}
+	result := C.uv_run(l.loop, mode)
+	if result < 0 {
+		return error_checker(result)
+	}
+	return result
 }
 
-pub fn (l &Loop) run(mode Mode) !int {
-	// run(l.loop, mode)
-	r := C.uv_run(l.loop, mode.str().int())
-	return error_checker(r)
+pub fn (l Loop) stop() {
+	if !isnil(l.loop) {
+		C.uv_stop(l.loop)
+	}
 }
 
-pub fn (l &Loop) now() u64 {
+pub fn (l Loop) now() !u64 {
+	if isnil(l.loop) {
+		return error('loop is nil')
+	}
 	return C.uv_now(l.loop)
 }
 
-pub fn (l &Loop) fork() {
-	C.uv_loop_fork(l.loop)
-}
-
-pub fn (l &Loop) init() {
-	C.uv_loop_init(l.loop)
-}
-
-pub fn (l &Loop) stop() {
-	C.uv_stop(l.loop)
-}
-
-// pub fn (l &Loop) queue_work(mut w Work, work_cb fn (mut work Work), after_work_cb fn (mut work Work, status int)) {
-// 	new_work_cb := fn [work_cb, mut w] (work &C.uv_work_t) {
-// 		work_cb(mut w)
-// 	}
-// 	new_after_work_cb := fn [after_work_cb, mut w] (work &C.uv_work_t, status int) {
-// 		after_work_cb(mut w, status)
-// 	}
-// 	C.uv_queue_work(l.loop, w.to_work(), new_work_cb, new_after_work_cb)
-// }
-
-pub fn (l &Loop) queue_work(mut w Work, work_cb fn (mut work Work), after_work_cb fn (mut work Work, status int)) {
-	new_work_cb := fn [work_cb] (work &C.uv_work_t) {
-		mut wrk := Work{Req{work, unsafe { nil }}}
-		work_cb(mut wrk)
+pub fn (l Loop) alive() bool {
+	if isnil(l.loop) {
+		return false
 	}
-	new_after_work_cb := fn [after_work_cb] (work &C.uv_work_t, status int) {
-		mut wrk := Work{Req{work, unsafe { nil }}}
-		after_work_cb(mut wrk, status)
+	return C.uv_loop_alive(l.loop) == 1
+}
+
+pub fn (l Loop) backend_fd() !int {
+	if isnil(l.loop) {
+		return error('loop is nil')
 	}
-	C.uv_queue_work(l.loop, w.to_work(), new_work_cb, new_after_work_cb)
+	fd := C.uv_backend_fd(l.loop)
+	if fd < 0 {
+		return error('failed to get backend fd')
+	}
+	return fd
 }
 
-// pub fn (l &Loop) size() usize {
-// 	return C.uv_loop_size()
-// }
-
-pub fn (l &Loop) alive() bool {
-	return C.uv_loop_alive(l.loop) == 0
+pub fn (l Loop) backend_timeout() !int {
+	if isnil(l.loop) {
+		return error('loop is nil')
+	}
+	timeout := C.uv_backend_timeout(l.loop)
+	if timeout < 0 {
+		return error('failed to get backend timeout')
+	}
+	return timeout
 }
 
-pub fn (l &Loop) configure(option Uv_loop_option, args ...voidptr) {
-	C.uv_loop_configure(l.loop, option.str().int(), ...args)
-}
-
-pub fn (l &Loop) backend_fd() int {
-	return C.uv_backend_fd(l.loop)
-}
-
-pub fn (l &Loop) backend_timeout() int {
-	return C.uv_backend_timeout(l.loop)
-}
-
-pub fn (l &Loop) update_time() {
-	C.uv_update_time(l.loop)
+pub fn (l Loop) get_c_loop() &C.uv_loop_t {
+	return l.loop
 }

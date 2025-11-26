@@ -7,13 +7,14 @@ fn C.uv_prepare_start(handle &C.uv_prepare_t, cb fn (handle &C.uv_prepare_t)) in
 fn C.uv_prepare_stop(handle &C.uv_prepare_t) int
 
 pub struct Prepare {
-	Handle
+pub mut:
+	handle &C.uv_prepare_t
 }
 
 pub fn prepare_init(l &Loop) Prepare {
 	p := &C.uv_prepare_t{}
 	C.uv_prepare_init(l.loop, p)
-	return Prepare{Handle{p}}
+	return Prepare{p}
 }
 
 pub fn (p Prepare) start(callback fn (handle &C.uv_prepare_t)) !int {

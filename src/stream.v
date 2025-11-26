@@ -39,7 +39,8 @@ pub enum StreamType {
 // stream is a subclass of handle,
 // stream is a parent class of tcp, pipe, tty
 pub struct Stream {
-	Handle
+pub mut:
+	handle &C.uv_stream_t
 }
 
 // pub type Handler = C.uv_tcp_t | C.uv_pipe_t | C.uv_tty_t
@@ -57,7 +58,9 @@ pub struct C.uv_stream_t {
 pub fn (s Stream) listen(backlog int, callback fn (stream Stream, status int)) !int {
 	// return error_checker(C.uv_listen(s.to_stream(), backlog, callback))
 	return error_checker(C.uv_listen(s.to_stream(), backlog, fn [callback] (stream &C.uv_stream_t, status int) {
-		callback(Stream{Handle{stream}}, status)
+		unsafe {
+			callback(Stream{stream}, status)
+		}
 	}))
 }
 
@@ -67,7 +70,9 @@ pub fn (s Stream) accept(client &Stream) int {
 
 pub fn (s Stream) read_start(alloc_cb fn (handle &C.uv_handle_t, suggested_size usize, buf &Buf), read_cb fn (stream Stream, nread isize, buf &C.uv_buf_t)) !int {
 	callback := fn [read_cb] (stream &C.uv_stream_t, nread isize, buf &Buf) {
-		read_cb(Stream{Handle{stream}}, nread, buf)
+		unsafe {
+			read_cb(Stream{stream}, nread, buf)
+		}
 	}
 	return error_checker(C.uv_read_start(s.to_stream(), alloc_cb, callback))
 }

@@ -8,12 +8,11 @@ struct Context {
 }
 
 fn main() {
-
-	loop := vlibuv.default_loop()
+	mut loop := vlibuv.Loop.default()
 	ex := Context{10}
-	loop.set_data(&ex)
+	loop.set_data(&ex) or {}
 	println(loop.get_data())
-	l := vlibuv.default_loop()
-	l.set_data(&Context{20})
+	mut l := vlibuv.Loop.default()
+	l.set_data(&Context{20}) or {}
 	println(l.get_data())
 }

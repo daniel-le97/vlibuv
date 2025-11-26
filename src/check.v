@@ -7,13 +7,14 @@ fn C.uv_check_start(handle &C.uv_check_t, cb fn (handle &C.uv_check_t)) int
 fn C.uv_check_stop(handle &C.uv_check_t) int
 
 pub struct Check {
-	Handle
+pub mut:
+	handle &C.uv_check_t
 }
 
 pub fn check_init(l &Loop) Check {
 	c := &C.uv_check_t{}
 	C.uv_check_init(l.loop, c)
-	return Check{Handle{c}}
+	return Check{c}
 }
 
 pub fn (c Check) start(callback fn (handle &C.uv_check_t)) !int {

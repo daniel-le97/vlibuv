@@ -18,13 +18,14 @@ fn C.uv_poll_start(handle &C.uv_poll_t, events int, cb fn (handle &C.uv_poll_t, 
 fn C.uv_poll_stop(handle &C.uv_poll_t) int
 
 pub struct Poll {
-	Handle
+pub mut:
+	handle &C.uv_poll_t
 }
 
-pub fn poll_init(l &Loop, fd int) Poll {
+pub fn Poll.new(l &Loop, fd int) !Poll {
 	p := &C.uv_poll_t{}
 	C.uv_poll_init(l.loop, p, fd)
-	return Poll{Handle{p}}
+	return Poll{p}
 }
 
 pub fn (p Poll) start(events int, callback fn (handle &C.uv_poll_t, status int, events int)) !int {

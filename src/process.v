@@ -25,7 +25,8 @@ pub fn kill(pid int, signum int) int {
 fn C.uv_process_get_pid(const_process &C.uv_process_t) int
 
 struct Process {
-	Handle
+pub mut:
+	handle &C.uv_process_t
 }
 
 pub fn process_spawn(l Loop, options &C.uv_process_options_t) !int {

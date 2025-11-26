@@ -75,13 +75,14 @@ fn C.uv_pipe_chmod(handle &C.uv_pipe_t, flags int) int
 // }
 
 pub struct Pipe {
-	Stream
+pub mut:
+	handle &C.uv_pipe_t
 }
 
-pub fn pipe_init(l &Loop, is_ipc bool) Pipe {
+pub fn Pipe.new(l &Loop, is_ipc bool) !Pipe {
 	p := &C.uv_pipe_t{}
 	C.uv_pipe_init(l.loop, p, bool_to_int(is_ipc))
-	return Pipe{Stream{Handle{p}}}
+	return Pipe{p}
 }
 
 pub fn (p Pipe) open(file int) int {

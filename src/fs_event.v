@@ -1,41 +1,120 @@
 module vlibuv
 
-// fs event functions
-
 fn C.uv_fs_event_init(loop &C.uv_loop_t, handle &C.uv_fs_event_t) int
 fn C.uv_fs_event_start(handle &C.uv_fs_event_t, cb fn (handle &C.uv_fs_event_t, const_filename &char, events int, status int), const_path &char, flags int) int
 fn C.uv_fs_event_stop(handle &C.uv_fs_event_t) int
 fn C.uv_fs_event_getpath(handle &C.uv_fs_event_t, path &char, size &usize) int
 
-// pub struct FsEvent {
-// 	Handle
-// }
+@[typedef]
+pub struct C.uv_fs_event_t {
+}
 
-// pub fn fs_event_init(l &Loop) FsEvent {
-// 	f := &C.uv_fs_event_t{}
-// 	C.uv_fs_event_init(l.loop, f)
-// 	return FsEvent{Handle{f}}
-// }
+// High-level event type for users
+pub enum FsEventType {
+	rename = 1
+	change = 2
+}
 
-// pub fn (f FsEvent) start(path string, flags int, callback fn (handle FsEvent, filename &char, events int, status int)) !int {
-// 	cb := fn [callback] (handle &C.uv_fs_event_t, filename &char, events int, status int) {
-// 		unsafe {
-// 			callback(FsEvent{Handle{handle}}, filename, events, status)
-// 		}
-// 	}
-// 	r := C.uv_fs_event_start(f.handle, cb, charptr(path.str), flags)
-// 	return error_checker(r)
-// }
+pub struct FsEvent {
+pub mut:
+	handle &C.uv_fs_event_t
+mut:
+	path    string
+	stopped bool
+}
 
-// pub fn (f FsEvent) stop() !int {
-// 	r := C.uv_fs_event_stop(f.handle)
-// 	return error_checker(r)
-// }
+// Create a new filesystem event watcher
+pub fn FsEvent.new(loop Loop) !FsEvent {
+	c_loop := loop.get_c_loop()
+	if isnil(c_loop) {
+		return error('loop is nil')
+	}
 
-// pub fn (f FsEvent) getpath() string {
-// 	buf, size := new_buffer(path_max)
-// 	C.uv_fs_event_getpath(f.handle, buf, &size)
-// 	unsafe {
-// 		return cstring_to_vstring(buf)
-// 	}
-// }
+	handle := unsafe { malloc(sizeof(C.uv_fs_event_t)) }
+	fs_event_handle := unsafe { &C.uv_fs_event_t(handle) }
+
+	result := C.uv_fs_event_init(c_loop, fs_event_handle)
+	if result < 0 {
+		unsafe { free(handle) }
+		return error('failed to initialize fs_event')
+	}
+
+	return FsEvent{fs_event_handle, '', false}
+}
+
+// Start watching a path for filesystem events
+pub fn (mut f FsEvent) start(path string, flags int, callback fn(path string, events []FsEventType, status int)) ! {
+	if isnil(f.handle) || f.stopped {
+		return error('fs_event is invalid or stopped')
+	}
+
+	f.path = path
+
+	// Wrap C callback to call V callback
+	c_callback := fn [callback] (handle &C.uv_fs_event_t, const_filename &char, events int, status int) {
+		// Parse events into V enum
+		mut event_types := []FsEventType{}
+		if events & 1 != 0 {
+			event_types << .rename
+		}
+		if events & 2 != 0 {
+			event_types << .change
+		}
+
+		// Convert C filename to V string
+		filename := if isnil(const_filename) {
+			''
+		} else {
+			unsafe { cstring_to_vstring(const_filename) }
+		}
+
+		callback(filename, event_types, status)
+	}
+
+	result := C.uv_fs_event_start(f.handle, c_callback, charptr(path.str), flags)
+	if result < 0 {
+		return error('failed to start fs_event')
+	}
+}
+
+// Stop watching the filesystem
+pub fn (mut f FsEvent) stop() ! {
+	if isnil(f.handle) || f.stopped {
+		return error('fs_event is invalid or stopped')
+	}
+
+	result := C.uv_fs_event_stop(f.handle)
+	if result < 0 {
+		return error('failed to stop fs_event')
+	}
+
+	f.stopped = true
+}
+
+// Get the watched path
+pub fn (f FsEvent) get_path() !string {
+	if isnil(f.handle) {
+		return error('fs_event is nil')
+	}
+
+	mut buf := [4096]char{}
+	mut size := usize(4096)
+
+	result := C.uv_fs_event_getpath(f.handle, unsafe { &buf[0] }, &size)
+	if result < 0 {
+		return error('failed to get fs_event path')
+	}
+
+	unsafe {
+		return cstring_to_vstring(&buf[0])
+	}
+}
+
+// Destructor - automatic cleanup
+@[unsafe]
+pub fn (mut f FsEvent) free() {
+	if !isnil(f.handle) && !f.stopped {
+		C.uv_fs_event_stop(f.handle)
+		f.stopped = true
+	}
+}

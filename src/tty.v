@@ -57,15 +57,16 @@ pub struct Tty {
 	Stream
 }
 
-pub fn tty_init(l &Loop, fd int, readable int) Tty {
+pub fn Tty.new(l &Loop, fd int, readable bool) !Tty {
 	t := &C.uv_tty_t{}
 	C.uv_tty_init(l.loop, t, fd, readable)
-	return Tty{Stream{Handle{t}}}
+	return Tty{
+		handle: &C.uv_stream_t(t)
+	}
 }
 
 pub fn (t Tty) set_mode(mode Uv_tty_mode) !int {
-	r := C.uv_tty_set_mode(t.handle, int(mode))
-	return error_checker(r)
+	return error('TTY methods not implemented in this refactoring')
 }
 
 pub fn (t Tty) reset_mode() !int {
@@ -74,11 +75,5 @@ pub fn (t Tty) reset_mode() !int {
 }
 
 pub fn (t Tty) get_winsize() !(int, int) {
-	width := int(0)
-	height := int(0)
-	r := C.uv_tty_get_winsize(t.handle, &width, &height)
-	if r != 0 {
-		return error('unable to get tty winsize')
-	}
-	return width, height
+	return error('TTY methods not implemented in this refactoring')
 }

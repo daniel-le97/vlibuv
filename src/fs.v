@@ -2,13 +2,14 @@ module vlibuv
 
 // import os
 
-struct Fs {
-	Handle
+pub struct Fs {
+pub mut:
+	handle &C.uv_fs_t
 }
 
 pub fn fs_init(l &Loop) Fs {
 	f := &C.uv_fs_t{}
-	return Fs{Handle{f}}
+	return Fs{f}
 }
 
 // pub fn (f Fs) open(path string, flags int, mode int, callback fn (req &C.uv_fs_t)) {

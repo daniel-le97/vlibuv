@@ -97,30 +97,41 @@ context.task(
 			println('Building example: ${ex} - ${message}')
 		}
 	}
-)context.task(
+)
+
+context.task(
 	name: 'symlink'
 	help: 'Create a symlink to the libuv library'
 	run:  fn (self build.Task) ! {
 		cwd := os.getwd()
 		modules_dir := os.vmodules_dir()
 		symlink_path := '${modules_dir}/vlibuv'
-		print(symlink_path)
+		println('Creating symlink: ${symlink_path} -> ${cwd}')
+		
 		if exists(symlink_path) {
 			if is_dir(symlink_path) && !is_link(symlink_path) {
 				rmdir_all(symlink_path)!
 			} else {
 				rm(symlink_path)!
 			}
-			println('Removed existing symlink: ${symlink_path}')
+			println('Removed existing path: ${symlink_path}')
 		}
+		
 		if os.getenv('OS') == 'Windows_NT' {
-			// On Windows, copy the directory instead of symlinking
-			cp_all(cwd, symlink_path, true)!
+			// On Windows, use PowerShell to create a symlink (requires admin)
+			ps_cmd := 'New-Item -ItemType SymbolicLink -Path "${symlink_path}" -Target "${cwd}" -Force'
+			result := os.execute('powershell -Command "${ps_cmd}"')
+			if result.exit_code != 0 {
+				eprintln('Failed to create symlink. You may need to run as Administrator.')
+				eprintln('Error: ${result.output}')
+				return error('symlink creation failed')
+			}
+			println('Created Windows symlink: ${symlink_path}')
 		} else {
 			// On Unix-like systems, create a symlink
 			symlink(cwd, symlink_path)!
+			println('Created Unix symlink: ${symlink_path}')
 		}
-		println('Created symlink: ${symlink_path}')
 	}
 )
 
