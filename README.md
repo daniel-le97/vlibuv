@@ -8,10 +8,13 @@ v bindings for libuv
 v install --git https://github.com/daniel-le97/vlibuv.git
 ```
 
-you may need to run 'make update' before developing
+you may need to run "build.vsh update" and "build.vsh symlink" before developing
 
 ```bash
-make update
+v run build.vsh update
+```
+```bash
+v run build.vsh symlink
 ```
 
 ## version 0.0.2
@@ -37,6 +40,9 @@ new bindings are not fully complete i am missing the following, but may be missi
 
 ## note
 
-this currently compiles libuv from source or a static library on macos, other platforms have not yet been tested
+this currently compiles libuv from source on Ubuntu, macOS, and Windows, other platforms have not yet been tested
+
+V version: V 0.4.12, Commit: d0dc13e
+libuv version: branch v1.x, Commit: 8e02462
 
 passing -d uv_static, assumes libuv is installed as a static library at /usr/local/ or /opt/homebrew on macOS
