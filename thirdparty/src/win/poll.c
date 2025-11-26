@@ -20,6 +20,7 @@
  */
 
 #include <assert.h>
+#include <io.h>
 
 #include "uv.h"
 #include "internal.h"
@@ -210,14 +211,10 @@ static SOCKET uv__fast_poll_create_peer_socket(HANDLE iocp,
                     protocol_info->iProtocol,
                     protocol_info,
                     0,
-                    WSA_FLAG_OVERLAPPED);
+                    WSA_FLAG_OVERLAPPED | WSA_FLAG_NO_HANDLE_INHERIT);
   if (sock == INVALID_SOCKET) {
     return INVALID_SOCKET;
   }
-
-  if (!SetHandleInformation((HANDLE) sock, HANDLE_FLAG_INHERIT, 0)) {
-    goto error;
-  };
 
   if (CreateIoCompletionPort((HANDLE) sock,
                              iocp,
@@ -406,7 +403,12 @@ static void uv__slow_poll_process_poll_req(uv_loop_t* loop, uv_poll_t* handle,
 }
 
 
-int uv_poll_init(uv_loop_t* loop, uv_poll_t* handle,
+int uv_poll_init(uv_loop_t* loop, uv_poll_t* handle, int fd) {
+  return uv_poll_init_socket(loop, handle, (SOCKET) uv__get_osfhandle(fd));
+}
+
+
+int uv_poll_init_socket(uv_loop_t* loop, uv_poll_t* handle,
     uv_os_sock_t socket) {
   WSAPROTOCOL_INFOW protocol_info;
   int len;
@@ -418,8 +420,9 @@ int uv_poll_init(uv_loop_t* loop, uv_poll_t* handle,
   if (ioctlsocket(socket, FIONBIO, &yes) == SOCKET_ERROR)
     return uv_translate_sys_error(WSAGetLastError());
 
-  /* Try to obtain a base handle for the socket. This increases this chances
-   * that we find an AFD handle and are able to use the fast poll mechanism. */
+/* Try to obtain a base handle for the socket. This increases this chances that
+ * we find an AFD handle and are able to use the fast poll mechanism.
+ */
 #ifndef NDEBUG
   base_socket = INVALID_SOCKET;
 #endif
@@ -466,11 +469,11 @@ int uv_poll_init(uv_loop_t* loop, uv_poll_t* handle,
 
   /* Initialize 2 poll reqs. */
   handle->submitted_events_1 = 0;
-  UV_REQ_INIT(loop, &handle->poll_req_1, UV_POLL_REQ);
+  UV_REQ_INIT(&handle->poll_req_1, UV_POLL_REQ);
   handle->poll_req_1.data = handle;
 
   handle->submitted_events_2 = 0;
-  UV_REQ_INIT(loop, &handle->poll_req_2, UV_POLL_REQ);
+  UV_REQ_INIT(&handle->poll_req_2, UV_POLL_REQ);
   handle->poll_req_2.data = handle;
 
   return 0;

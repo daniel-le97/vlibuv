@@ -27,17 +27,32 @@
 #include <pthread.h>
 #endif
 
+#if defined(PTHREAD_BARRIER_SERIAL_THREAD)
+STATIC_ASSERT(sizeof(uv_barrier_t) == sizeof(pthread_barrier_t));
+#endif
+
 /* Note: guard clauses should match uv_barrier_t's in include/uv/unix.h. */
 #if defined(_AIX) || \
     defined(__OpenBSD__) || \
     !defined(PTHREAD_BARRIER_SERIAL_THREAD)
 int uv_barrier_init(uv_barrier_t* barrier, unsigned int count) {
   int rc;
+#ifdef _WIN32
   uv_barrier_t* b;
   b = barrier;
 
   if (barrier == NULL || count == 0)
     return UV_EINVAL;
+#else
+  struct _uv_barrier* b;
+
+  if (barrier == NULL || count == 0)
+    return UV_EINVAL;
+
+  b = uv__malloc(sizeof(*b));
+  if (b == NULL)
+    return UV_ENOMEM;
+#endif
 
   b->in = 0;
   b->out = 0;
@@ -47,23 +62,39 @@ int uv_barrier_init(uv_barrier_t* barrier, unsigned int count) {
   if (rc != 0)
     goto error2;
 
-  rc = uv_cond_init(&b->cond);
+  /* TODO(vjnash): remove these uv_cond_t casts in v2. */
+  rc = uv_cond_init((uv_cond_t*) &b->cond);
   if (rc != 0)
     goto error;
 
+#ifndef _WIN32
+  barrier->b = b;
+#endif
   return 0;
 
 error:
   uv_mutex_destroy(&b->mutex);
 error2:
+#ifndef _WIN32
+  uv__free(b);
+#endif
   return rc;
 }
 
 
 int uv_barrier_wait(uv_barrier_t* barrier) {
   int last;
+#ifdef _WIN32
   uv_barrier_t* b;
   b = barrier;
+#else
+  struct _uv_barrier* b;
+
+  if (barrier == NULL || barrier->b == NULL)
+    return UV_EINVAL;
+
+  b = barrier->b;
+#endif
 
   uv_mutex_lock(&b->mutex);
 
@@ -90,8 +121,13 @@ int uv_barrier_wait(uv_barrier_t* barrier) {
 
 
 void uv_barrier_destroy(uv_barrier_t* barrier) {
+#ifdef _WIN32
   uv_barrier_t* b;
   b = barrier;
+#else
+  struct _uv_barrier* b;
+  b = barrier->b;
+#endif
 
   uv_mutex_lock(&b->mutex);
 
@@ -105,11 +141,14 @@ void uv_barrier_destroy(uv_barrier_t* barrier) {
   uv_mutex_unlock(&b->mutex);
   uv_mutex_destroy(&b->mutex);
   uv_cond_destroy((uv_cond_t*) &b->cond);
+
+#ifndef  _WIN32
+  uv__free(barrier->b);
+  barrier->b = NULL;
+#endif
 }
 
 #else
-
-STATIC_ASSERT(sizeof(uv_barrier_t) == sizeof(pthread_barrier_t));
 
 int uv_barrier_init(uv_barrier_t* barrier, unsigned int count) {
   return UV__ERR(pthread_barrier_init(barrier, NULL, count));

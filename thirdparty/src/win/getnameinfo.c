@@ -20,6 +20,7 @@
 */
 
 #include <assert.h>
+#include <stdio.h>
 
 #include "uv.h"
 #include "internal.h"
@@ -122,11 +123,12 @@ int uv_getnameinfo(uv_loop_t* loop,
     return UV_EINVAL;
   }
 
-  UV_REQ_INIT(loop, req, UV_GETNAMEINFO);
+  UV_REQ_INIT(req, UV_GETNAMEINFO);
   uv__req_register(loop);
 
   req->getnameinfo_cb = getnameinfo_cb;
   req->flags = flags;
+  req->loop = loop;
   req->retcode = 0;
 
   if (getnameinfo_cb) {

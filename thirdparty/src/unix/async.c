@@ -81,7 +81,7 @@ int uv_async_init(uv_loop_t* loop, uv_async_t* handle, uv_async_cb async_cb) {
   uv__handle_init(loop, (uv_handle_t*)handle, UV_ASYNC);
   handle->async_cb = async_cb;
   handle->pending = 0;
-  handle->busy = 0;
+  handle->u.fd = 0; /* This will be used as a busy flag. */
 
   uv__queue_insert_tail(&loop->async_handles, &handle->queue);
   uv__handle_start(handle);
@@ -95,7 +95,7 @@ int uv_async_send(uv_async_t* handle) {
   _Atomic int* busy;
 
   pending = (_Atomic int*) &handle->pending;
-  busy = (_Atomic int*) &handle->busy;
+  busy = (_Atomic int*) &handle->u.fd;
 
   /* Do a cheap read first. */
   if (atomic_load_explicit(pending, memory_order_relaxed) != 0)
@@ -123,7 +123,7 @@ static void uv__async_spin(uv_async_t* handle) {
   int i;
 
   pending = (_Atomic int*) &handle->pending;
-  busy = (_Atomic int*) &handle->busy;
+  busy = (_Atomic int*) &handle->u.fd;
 
   /* Set the pending flag first, so no new events will be added by other
    * threads after this function returns. */
@@ -157,7 +157,7 @@ void uv__async_close(uv_async_t* handle) {
 }
 
 
-static void uv__async_io(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
+void uv__async_io(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
   char buf[1024];
   ssize_t r;
   struct uv__queue queue;
@@ -280,7 +280,7 @@ static int uv__async_start(uv_loop_t* loop) {
      * thus we create one for that, but this fd will not be actually used,
      * it's just a placeholder and magic number which is going to be closed
      * during the cleanup, as other FDs. */
-    err = uv__open_cloexec("/dev/null", O_RDONLY);
+    err = uv__open_cloexec("/", O_RDONLY);
     if (err < 0)
       return err;
 
@@ -308,8 +308,14 @@ static int uv__async_start(uv_loop_t* loop) {
     return err;
 #endif
 
-  uv__io_init(&loop->async_io_watcher, uv__async_io, pipefd[0]);
-  uv__io_start(loop, &loop->async_io_watcher, POLLIN);
+  err = uv__io_init_start(loop, &loop->async_io_watcher, UV__ASYNC_IO,
+                          pipefd[0], POLLIN);
+  if (err < 0) {
+    uv__close(pipefd[0]);
+    if (pipefd[1] != -1)
+      uv__close(pipefd[1]);
+    return err;
+  }
   loop->async_wfd = pipefd[1];
 
 #if UV__KQUEUE_EVFILT_USER
@@ -380,8 +386,8 @@ int uv__async_fork(uv_loop_t* loop) {
      * like libuv, and nothing interesting in pthreads is async-signal-safe.
      */
     h->pending = 0;
-    /* We just abruptly lost all other threads, so destroy their state too. */
-    h->busy = 0;
+    /* This is the busy flag, and we just abruptly lost all other threads. */
+    h->u.fd = 0;
   }
 
   /* Recreate these, since they still exist, but belong to the wrong pid now. */
@@ -403,7 +409,7 @@ static void uv__cpu_relax(void) {
 #if defined(__i386__) || defined(__x86_64__)
   __asm__ __volatile__ ("rep; nop" ::: "memory");  /* a.k.a. PAUSE */
 #elif (defined(__arm__) && __ARM_ARCH >= 7) || defined(__aarch64__)
-  __asm__ __volatile__ ("yield" ::: "memory");
+  __asm__ __volatile__ ("isb" ::: "memory");
 #elif (defined(__ppc__) || defined(__ppc64__)) && defined(__APPLE__)
   __asm volatile ("" : : : "memory");
 #elif !defined(__APPLE__) && (defined(__powerpc64__) || defined(__ppc64__) || defined(__PPC64__))

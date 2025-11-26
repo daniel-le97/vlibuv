@@ -6,7 +6,7 @@ fn C.uv_poll_init(loop &C.uv_loop_t, handle &C.uv_poll_t, fd int) int
 fn C.uv_poll_init_socket(loop &C.uv_loop_t, handle &C.uv_poll_t, socket int) int
 
 // pub fn poll_init_socket(loop &C.uv_loop_t, handle &C.uv_poll_t, socket int) int {
-// 	$if compile_static {
+// 	$if $d('uv_static', false) {
 // 		return C.uv_poll_init_socket(loop, handle, socket)
 // 	} $else {
 // 		panic('uv_poll_init_socket is not available when building from source')

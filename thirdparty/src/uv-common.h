@@ -31,6 +31,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "uv.h"
 #include "uv/tree.h"
@@ -45,6 +46,10 @@
 # define UV__ERR(x) (-(x))
 #else
 # define UV__ERR(x) (x)
+#endif
+
+#if !defined(snprintf) && defined(_MSC_VER) && _MSC_VER < 1900
+extern int snprintf(char*, size_t, const char*, ...);
 #endif
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
@@ -95,7 +100,7 @@ enum {
   UV_HANDLE_WRITABLE                    = 0x00008000,
   UV_HANDLE_READ_PENDING                = 0x00010000,
   UV_HANDLE_SYNC_BYPASS_IOCP            = 0x00020000,
-  /*UV_HANDLE_FLAG_UNUSED               = 0x00040000,*/
+  UV_HANDLE_ZERO_READ                   = 0x00040000,
   UV_HANDLE_EMULATE_IOCP                = 0x00080000,
   UV_HANDLE_BLOCKING_WRITES             = 0x00100000,
   UV_HANDLE_CANCELLATION_PENDING        = 0x00200000,
@@ -121,7 +126,7 @@ enum {
 
   /* Only used by uv_tty_t handles. */
   UV_HANDLE_TTY_READABLE                = 0x01000000,
-  UV_HANDLE_TTY_RAW                     = 0x02000000,
+  UV_HANDLE_UNUSED0                     = 0x02000000,
   UV_HANDLE_TTY_SAVED_POSITION          = 0x04000000,
   UV_HANDLE_TTY_SAVED_ATTRIBUTES        = 0x08000000,
 
@@ -135,6 +140,10 @@ enum {
   /* Only used by uv_process_t handles. */
   UV_HANDLE_REAP                        = 0x10000000
 };
+
+static inline int uv__is_raw_tty_mode(uv_tty_mode_t m) {
+  return m == UV_TTY_MODE_RAW || m == UV_TTY_MODE_RAW_VT;
+}
 
 int uv__loop_configure(uv_loop_t* loop, uv_loop_option option, va_list ap);
 
@@ -224,6 +233,10 @@ void uv__fs_scandir_cleanup(uv_fs_t* req);
 void uv__fs_readdir_cleanup(uv_fs_t* req);
 uv_dirent_type_t uv__fs_get_dirent_type(uv__dirent_t* dent);
 
+int uv__next_timeout(const uv_loop_t* loop);
+void uv__run_timers(uv_loop_t* loop);
+void uv__timer_close(uv_timer_t* handle);
+
 void uv__process_title_cleanup(void);
 void uv__signal_cleanup(void);
 void uv__threadpool_cleanup(void);
@@ -311,7 +324,7 @@ void uv__threadpool_cleanup(void);
   (((h)->flags & UV_HANDLE_REF) != 0)
 
 #if defined(_WIN32)
-# define uv__handle_platform_init(h)
+# define uv__handle_platform_init(h) ((h)->u.fd = -1)
 #else
 # define uv__handle_platform_init(h) ((h)->next_closing = NULL)
 #endif
@@ -330,17 +343,15 @@ void uv__threadpool_cleanup(void);
  * a circular dependency between src/uv-common.h and src/win/internal.h.
  */
 #if defined(_WIN32)
-# define UV_REQ_INIT(loop_, req, typ)                                         \
+# define UV_REQ_INIT(req, typ)                                                \
   do {                                                                        \
-    (req)->loop = (loop_);                                                    \
     (req)->type = (typ);                                                      \
     (req)->u.io.overlapped.Internal = 0;  /* SET_REQ_SUCCESS() */             \
   }                                                                           \
   while (0)
 #else
-# define UV_REQ_INIT(loop_, req, typ)                                         \
+# define UV_REQ_INIT(req, typ)                                                \
   do {                                                                        \
-    (req)->loop = (loop_);                                                    \
     (req)->type = (typ);                                                      \
   }                                                                           \
   while (0)
@@ -348,7 +359,7 @@ void uv__threadpool_cleanup(void);
 
 #define uv__req_init(loop, req, typ)                                          \
   do {                                                                        \
-    UV_REQ_INIT(loop, req, typ);                                              \
+    UV_REQ_INIT(req, typ);                                                    \
     uv__req_register(loop);                                                   \
   }                                                                           \
   while (0)
@@ -383,17 +394,6 @@ void uv__free(void* ptr);
 void* uv__realloc(void* ptr, size_t size);
 void* uv__reallocf(void* ptr, size_t size);
 
-/* Loop watcher prototypes */
-void uv__idle_close(uv_idle_t* handle);
-void uv__prepare_close(uv_prepare_t* handle);
-void uv__check_close(uv_check_t* handle);
-
-/* Timer prototypes */
-void uv__run_timers(uv_loop_t* loop);
-int uv__next_timeout(const uv_loop_t* loop);
-void uv__timer_close(uv_timer_t* handle);
-
-/* Metrics prototypes */
 typedef struct uv__loop_metrics_s uv__loop_metrics_t;
 typedef struct uv__loop_internal_fields_s uv__loop_internal_fields_t;
 
@@ -452,5 +452,23 @@ struct uv__loop_internal_fields_s {
 #else
 # define UV_PTHREAD_MAX_NAMELEN_NP 16
 #endif
+
+/* Open-coded so downstream users don't have to link libm. */
+static inline int uv__isinf(double d) {
+  uint64_t v;
+
+  STATIC_ASSERT(sizeof(v) == sizeof(d));
+  memcpy(&v, &d, sizeof(v));
+  return (v << 1 >> 53) == 2047 && !(v << 12);
+}
+
+/* Open-coded so downstream users don't have to link libm. */
+static inline int uv__isnan(double d) {
+  uint64_t v;
+
+  STATIC_ASSERT(sizeof(v) == sizeof(d));
+  memcpy(&v, &d, sizeof(v));
+  return (v << 1 >> 53) == 2047 && !!(v << 12);
+}
 
 #endif /* UV_COMMON_H_ */

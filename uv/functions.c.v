@@ -798,7 +798,7 @@ pub fn poll_init(loop &C.uv_loop_t, handle &C.uv_poll_t, fd int) int {
 fn C.uv_poll_init_socket(loop &C.uv_loop_t, handle &C.uv_poll_t, socket int) int
 
 pub fn poll_init_socket(loop &C.uv_loop_t, handle &C.uv_poll_t, socket int) int {
-	$if compile_static {
+	$if $d('uv_static', false) {
 		return C.uv_poll_init_socket(loop, handle, socket)
 	} $else {
 		panic('uv_poll_init_socket is not available when building from source')
@@ -1423,7 +1423,7 @@ pub fn fs_utime(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, atime f64, 
 fn C.uv_fs_utime_ex(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, btime f64, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) int
 
 pub fn fs_utime_ex(loop &C.uv_loop_t, req &C.uv_fs_t, const_path &char, btime f64, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) int {
-	$if !compile_static {
+	$if !$d('uv_static', false) {
 		return C.uv_fs_utime_ex(loop, req, const_path, btime, atime, mtime, cb)
 	} $else {
 		panic('uv_fs_utime_ex is not available in static build')
@@ -1437,13 +1437,13 @@ pub fn fs_futime(loop &C.uv_loop_t, req &C.uv_fs_t, file int, atime f64, mtime f
 	C.uv_fs_futime(loop, req, file, atime, mtime, cb)
 }
 
-// $if compile_static {
+// $if $d('uv_static', false) {
 
 // }
 fn C.uv_fs_futime_ex(loop &C.uv_loop_t, req &C.uv_fs_t, file int, btime f64, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) int
 
 pub fn fs_futime_ex(loop &C.uv_loop_t, req &C.uv_fs_t, file int, btime f64, atime f64, mtime f64, cb fn (req &C.uv_fs_t)) int {
-	$if !compile_static {
+	$if !$d('uv_static', false) {
 		return C.uv_fs_futime_ex(loop, req, file, btime, atime, mtime, cb)
 	} $else {
 		panic('uv_fs_futime_ex is not available in static build')
@@ -1721,7 +1721,7 @@ pub struct Uv_timespec {
 }
 
 pub fn clock_gettime(clock_id Uv_clock_id, ts &Uv_timespec) int {
-	$if compile_static {
+	$if $d('uv_static', false) {
 		return C.uv_clock_gettime(int(clock_id), &C.uv_timespec64_t(ts))
 	} $else {
 		return C.uv_clock_gettime(int(clock_id), &C.uv_timespec_t(ts))
@@ -1971,7 +1971,7 @@ fn C.uv_gettimeofday(tv &C.uv_timeval64_t) int
 // TODO i may be doing this wrong, the static library defines C.uv_timeval64_t and building from source
 // defines C.uv_timeval_t
 pub fn gettimeofday(tv &Uv_timeval) int {
-	$if compile_static {
+	$if $d('uv_static', false) {
 		return C.uv_gettimeofday(&C.uv_timeval64_t(tv))
 	} $else {
 		// panic('uv_gettimeofday is not available in static build')

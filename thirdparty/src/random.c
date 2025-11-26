@@ -61,7 +61,7 @@ static int uv__random(void* buf, size_t buflen) {
 # endif
 #elif defined(_WIN32)
   uv__once_init();
-  rc = uv__random_rtlgenrandom(buf, buflen);
+  rc = uv__random_winrandom(buf, buflen);
 #else
   rc = uv__random_devurandom(buf, buflen);
 #endif
@@ -107,6 +107,7 @@ int uv_random(uv_loop_t* loop,
     return uv__random(buf, buflen);
 
   uv__req_init(loop, req, UV_RANDOM);
+  req->loop = loop;
   req->status = 0;
   req->cb = cb;
   req->buf = buf;

@@ -34,6 +34,8 @@
  */
 const unsigned int uv_simultaneous_server_accepts = 32;
 
+/* A zero-size buffer for use by uv_tcp_read */
+static char uv_zero_[] = "";
 
 static int uv__tcp_nodelay(uv_tcp_t* handle, SOCKET socket, int enable) {
   if (setsockopt(socket,
@@ -47,28 +49,98 @@ static int uv__tcp_nodelay(uv_tcp_t* handle, SOCKET socket, int enable) {
 }
 
 
-static int uv__tcp_keepalive(uv_tcp_t* handle, SOCKET socket, int enable, unsigned int delay) {
+/*
+ * Check if Windows version is 10.0.16299 (Windows 10, version 1709) or later.
+ */
+static int uv__windows10_version1709(void) {
+  OSVERSIONINFOW os_info;
+  if (!pRtlGetVersion)
+    return 0;
+  pRtlGetVersion(&os_info);
+  if (os_info.dwMajorVersion < 10)
+    return 0;
+  if (os_info.dwMajorVersion > 10)
+    return 1;
+  if (os_info.dwMinorVersion > 0)
+    return 1;
+  return os_info.dwBuildNumber >= 16299;
+}
+
+
+static int uv__tcp_keepalive(uv_tcp_t* handle,
+                             SOCKET socket,
+                             int on,
+                             unsigned int idle,
+                             unsigned int intvl,
+                             unsigned int cnt) {
   if (setsockopt(socket,
                  SOL_SOCKET,
                  SO_KEEPALIVE,
-                 (const char*)&enable,
-                 sizeof enable) == -1) {
+                 (const char*)&on,
+                 sizeof on) == -1) {
     return WSAGetLastError();
   }
 
-  if (!enable)
+  if (!on)
     return 0;
 
-  if (delay < 1)
+  if (idle < 1 || intvl < 1 || cnt < 1)
     return UV_EINVAL;
 
-  if (setsockopt(socket,
-                 IPPROTO_TCP,
-                 TCP_KEEPALIVE,
-                 (const char*)&delay,
-                 sizeof delay) == -1) {
-    return WSAGetLastError();
+  /* Windows 10, version 1709 (build 10.0.16299) and later require second units
+   * for TCP keepalive options. */
+  if (uv__windows10_version1709()) {
+    if (setsockopt(socket,
+                   IPPROTO_TCP,
+                   TCP_KEEPIDLE,
+                   (const char*)&idle,
+                   sizeof idle) == -1) {
+      return WSAGetLastError();
+    }
+
+    if (setsockopt(socket,
+                   IPPROTO_TCP,
+                   TCP_KEEPINTVL,
+                   (const char*)&intvl,
+                   sizeof intvl) == -1) {
+      return WSAGetLastError();
+    }
+
+    if (setsockopt(socket,
+                   IPPROTO_TCP,
+                   TCP_KEEPCNT,
+                   (const char*)&cnt,
+                   sizeof cnt) == -1) {
+      return WSAGetLastError();
+    }
+
+    return 0;
   }
+
+  /* For those versions prior to Windows 10 version 1709,
+   * we fall back to SIO_KEEPALIVE_VALS that expects millisecond units.
+   * The SIO_KEEPALIVE_VALS IOCTL is supported on Windows 2000
+   * and later versions of the operating system. */
+  struct tcp_keepalive keepalive;
+  keepalive.onoff = on;
+  keepalive.keepalivetime = idle * 1000;
+  keepalive.keepaliveinterval = intvl * 1000;
+  /* On Windows Vista and later, the number of keep-alive probes
+   * (data retransmissions) is set to 10 and cannot be changed.
+   * On Windows Server 2003, Windows XP, and Windows 2000, the default setting
+   * for number of keep-alive probes is 5 and cannot be changed programmatically.
+   */
+  DWORD dummy;
+  if (WSAIoctl(socket,
+               SIO_KEEPALIVE_VALS,
+               (LPVOID) &keepalive,
+               sizeof keepalive,
+               NULL,
+               0,
+               &dummy,
+               NULL,
+               NULL) == -1)
+    return WSAGetLastError();
 
   return 0;
 }
@@ -130,7 +202,7 @@ static int uv__tcp_set_socket(uv_loop_t* loop,
 
   /* TODO: Use stored delay. */
   if (handle->flags & UV_HANDLE_TCP_KEEPALIVE) {
-    err = uv__tcp_keepalive(handle, socket, 1, 60);
+    err = uv__tcp_keepalive(handle, socket, 1, 60, 1, 10);
     if (err)
       return err;
   }
@@ -322,7 +394,8 @@ static int uv__tcp_try_bind(uv_tcp_t* handle,
     on = (flags & UV_TCP_IPV6ONLY) != 0;
 
     /* TODO: how to handle errors? This may fail if there is no ipv4 stack
-     * available. For now we're silently ignoring the error. */
+     * available, or when run on XP/2003 which have no support for dualstack
+     * sockets. For now we're silently ignoring the error. */
     setsockopt(handle->socket,
                IPPROTO_IPV6,
                IPV6_V6ONLY,
@@ -482,7 +555,9 @@ static void uv__tcp_queue_read(uv_loop_t* loop, uv_tcp_t* handle) {
 
   req = &handle->read_req;
   memset(&req->u.io.overlapped, 0, sizeof(req->u.io.overlapped));
-  buf.base = "";
+
+  handle->flags |= UV_HANDLE_ZERO_READ;
+  buf.base = (char*) &uv_zero_;
   buf.len = 0;
 
   /* Prepare the overlapped structure. */
@@ -599,7 +674,7 @@ int uv__tcp_listen(uv_tcp_t* handle, int backlog, uv_connection_cb cb) {
 
     for (i = 0; i < simultaneous_accepts; i++) {
       req = &handle->tcp.serv.accept_reqs[i];
-      UV_REQ_INIT(handle->loop, req, UV_ACCEPT);
+      UV_REQ_INIT(req, UV_ACCEPT);
       req->accept_socket = INVALID_SOCKET;
       req->data = handle;
 
@@ -621,7 +696,7 @@ int uv__tcp_listen(uv_tcp_t* handle, int backlog, uv_connection_cb cb) {
      * {uv_simultaneous_server_accepts} requests. */
     for (i = simultaneous_accepts; i < uv_simultaneous_server_accepts; i++) {
       req = &handle->tcp.serv.accept_reqs[i];
-      UV_REQ_INIT(handle->loop, req, UV_ACCEPT);
+      UV_REQ_INIT(req, UV_ACCEPT);
       req->accept_socket = INVALID_SOCKET;
       req->data = handle;
       req->wait_handle = INVALID_HANDLE_VALUE;
@@ -655,10 +730,10 @@ int uv__tcp_accept(uv_tcp_t* server, uv_tcp_t* client) {
   }
 
   err = uv__tcp_set_socket(client->loop,
-                           client,
-                           req->accept_socket,
-                           family,
-                           0);
+                          client,
+                          req->accept_socket,
+                          family,
+                          0);
   if (err) {
     closesocket(req->accept_socket);
   } else {
@@ -744,20 +819,6 @@ static int uv__is_loopback(const struct sockaddr_storage* storage) {
   return 0;
 }
 
-// Check if Windows version is 10.0.16299 or later
-static int uv__is_fast_loopback_fail_supported(void) {
-  OSVERSIONINFOW os_info;
-  if (!pRtlGetVersion)
-    return 0;
-  pRtlGetVersion(&os_info);
-  if (os_info.dwMajorVersion < 10)
-    return 0;
-  if (os_info.dwMajorVersion > 10)
-    return 1;
-  if (os_info.dwMinorVersion > 0)
-    return 1;
-  return os_info.dwBuildNumber >= 16299;
-}
 
 static int uv__tcp_try_connect(uv_connect_t* req,
                               uv_tcp_t* handle,
@@ -804,7 +865,7 @@ static int uv__tcp_try_connect(uv_connect_t* req,
    * is not reachable, instead of waiting for 2s. We do not care if this fails.
    * This only works on Windows version 10.0.16299 and later.
    */
-  if (uv__is_fast_loopback_fail_supported() && uv__is_loopback(&converted)) {
+  if (uv__windows10_version1709() && uv__is_loopback(&converted)) {
     memset(&retransmit_ioctl, 0, sizeof(retransmit_ioctl));
     retransmit_ioctl.Rtt = TCP_INITIAL_RTO_NO_SYN_RETRANSMISSIONS;
     retransmit_ioctl.MaxSynRetransmissions = TCP_INITIAL_RTO_NO_SYN_RETRANSMISSIONS;
@@ -821,7 +882,7 @@ static int uv__tcp_try_connect(uv_connect_t* req,
 
 out:
 
-  UV_REQ_INIT(loop, req, UV_CONNECT);
+  UV_REQ_INIT(req, UV_CONNECT);
   req->handle = (uv_stream_t*) handle;
   req->cb = cb;
   memset(&req->u.io.overlapped, 0, sizeof(req->u.io.overlapped));
@@ -892,7 +953,7 @@ int uv__tcp_write(uv_loop_t* loop,
   int result;
   DWORD bytes;
 
-  UV_REQ_INIT(loop, req, UV_WRITE);
+  UV_REQ_INIT(req, UV_WRITE);
   req->handle = (uv_stream_t*) handle;
   req->cb = cb;
 
@@ -986,10 +1047,12 @@ void uv__process_tcp_read_req(uv_loop_t* loop, uv_tcp_t* handle,
 
   if (!REQ_SUCCESS(req)) {
     /* An error occurred doing the read. */
-    if ((handle->flags & UV_HANDLE_READING) != 0) {
+    if ((handle->flags & UV_HANDLE_READING) ||
+        !(handle->flags & UV_HANDLE_ZERO_READ)) {
       handle->flags &= ~UV_HANDLE_READING;
       DECREASE_ACTIVE_COUNT(loop, handle);
-      buf = uv_buf_init(NULL, 0);
+      buf = (handle->flags & UV_HANDLE_ZERO_READ) ?
+            uv_buf_init(NULL, 0) : handle->tcp.conn.read_buffer;
 
       err = GET_REQ_SOCK_ERROR(req);
 
@@ -1005,6 +1068,31 @@ void uv__process_tcp_read_req(uv_loop_t* loop, uv_tcp_t* handle,
                       &buf);
     }
   } else {
+    if (!(handle->flags & UV_HANDLE_ZERO_READ)) {
+      /* The read was done with a non-zero buffer length. */
+      if (req->u.io.overlapped.InternalHigh > 0) {
+        /* Successful read */
+        handle->read_cb((uv_stream_t*)handle,
+                        req->u.io.overlapped.InternalHigh,
+                        &handle->tcp.conn.read_buffer);
+        /* Read again only if bytes == buf.len */
+        if (req->u.io.overlapped.InternalHigh < handle->tcp.conn.read_buffer.len) {
+          goto done;
+        }
+      } else {
+        /* Connection closed */
+        if (handle->flags & UV_HANDLE_READING) {
+          handle->flags &= ~UV_HANDLE_READING;
+          DECREASE_ACTIVE_COUNT(loop, handle);
+        }
+
+        buf.base = 0;
+        buf.len = 0;
+        handle->read_cb((uv_stream_t*)handle, UV_EOF, &handle->tcp.conn.read_buffer);
+        goto done;
+      }
+    }
+
     /* Do nonblocking reads until the buffer is empty */
     count = 32;
     while ((handle->flags & UV_HANDLE_READING) && (count-- > 0)) {
@@ -1064,6 +1152,7 @@ void uv__process_tcp_read_req(uv_loop_t* loop, uv_tcp_t* handle,
       }
     }
 
+done:
     /* Post another read if still reading and not closing. */
     if ((handle->flags & UV_HANDLE_READING) &&
         !(handle->flags & UV_HANDLE_READ_PENDING)) {
@@ -1302,22 +1391,30 @@ int uv_tcp_nodelay(uv_tcp_t* handle, int enable) {
 }
 
 
-int uv_tcp_keepalive(uv_tcp_t* handle, int enable, unsigned int delay) {
+int uv_tcp_keepalive(uv_tcp_t* handle, int on, unsigned int idle) {
+  return uv_tcp_keepalive_ex(handle, on, idle, 1, 10);
+}
+
+int uv_tcp_keepalive_ex(uv_tcp_t* handle,
+                        int on,
+                        unsigned int idle,
+                        unsigned int intvl,
+                        unsigned int cnt) {
   int err;
 
   if (handle->socket != INVALID_SOCKET) {
-    err = uv__tcp_keepalive(handle, handle->socket, enable, delay);
+    err = uv__tcp_keepalive(handle, handle->socket, on, idle, intvl, cnt);
     if (err)
       return uv_translate_sys_error(err);
   }
 
-  if (enable) {
+  if (on) {
     handle->flags |= UV_HANDLE_TCP_KEEPALIVE;
   } else {
     handle->flags &= ~UV_HANDLE_TCP_KEEPALIVE;
   }
 
-  /* TODO: Store delay if handle->socket isn't created yet. */
+  /* TODO: Store idle if handle->socket isn't created yet. */
 
   return 0;
 }

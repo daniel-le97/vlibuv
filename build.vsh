@@ -85,26 +85,26 @@ context.task(
 	}
 )
 
-context.task(
+	context.task(
 	name: 'examples'
 	help: 'build the examples'
 	run:  fn (self build.Task) ! {
 		examples := os.walk_ext('./examples', '.v')
 		for ex in examples {
-			code := execute('v ${ex}').exit_code
+			cc_flag := if os.getenv('OS') == 'Windows_NT' { '-cc gcc' } else { '' }
+			code := execute('v ${cc_flag} ${ex}').exit_code
 			message := if code == 0 { 'Success' } else { 'failed' }
 			println('Building example: ${ex} - ${message}')
 		}
 	}
-)
-
-context.task(
+)context.task(
 	name: 'symlink'
 	help: 'Create a symlink to the libuv library'
 	run:  fn (self build.Task) ! {
 		cwd := os.getwd()
 		modules_dir := os.vmodules_dir()
 		symlink_path := '${modules_dir}/vlibuv'
+		print(symlink_path)
 		if exists(symlink_path) {
 			if is_dir(symlink_path) && !is_link(symlink_path) {
 				rmdir_all(symlink_path)!
@@ -113,7 +113,13 @@ context.task(
 			}
 			println('Removed existing symlink: ${symlink_path}')
 		}
-		link(cwd, symlink_path) or { execute_or_panic('ln -s ${cwd} ${symlink_path}') }
+		if os.getenv('OS') == 'Windows_NT' {
+			// On Windows, copy the directory instead of symlinking
+			cp_all(cwd, symlink_path, true)!
+		} else {
+			// On Unix-like systems, create a symlink
+			symlink(cwd, symlink_path)!
+		}
 		println('Created symlink: ${symlink_path}')
 	}
 )
@@ -168,7 +174,7 @@ context.task(
 		file.writeln('*.pc*')!
 		file.writeln('!docs/src/')!
 		file.close()
-		system('cd ./thirdparty && git pull origin master')
+		system('cd ./thirdparty && git pull origin v1.x')
 		hash := execute('cd ./thirdparty && git rev-parse HEAD')
 		write_file('./commit.txt', hash.output.trim_space())!
 	}

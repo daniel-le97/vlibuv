@@ -26,20 +26,46 @@
 #include "handle-inl.h"
 #include "req-inl.h"
 
+#ifdef _MSC_VER /* MSVC */
+
+/* _InterlockedOr8 is supported by MSVC on x32 and x64. It is slightly less
+ * efficient than InterlockedExchange, but InterlockedExchange8 does not exist,
+ * and interlocked operations on larger targets might require the target to be
+ * aligned. */
+#pragma intrinsic(_InterlockedOr8)
+
+static char uv__atomic_exchange_set(char volatile* target) {
+  return _InterlockedOr8(target, 1);
+}
+
+#else /* GCC, Clang in mingw mode */
+
+static char uv__atomic_exchange_set(char volatile* target) {
+  return __sync_fetch_and_or(target, 1);
+}
+
+#endif  /* _MSC_VER */
 
 void uv__async_endgame(uv_loop_t* loop, uv_async_t* handle) {
-  assert(handle->flags & UV_HANDLE_CLOSING);
-  assert(!(handle->flags & UV_HANDLE_CLOSED));
-  uv__handle_close(handle);
+  if (handle->flags & UV_HANDLE_CLOSING &&
+      !handle->async_sent) {
+    assert(!(handle->flags & UV_HANDLE_CLOSED));
+    uv__handle_close(handle);
+  }
 }
 
 
 int uv_async_init(uv_loop_t* loop, uv_async_t* handle, uv_async_cb async_cb) {
+  uv_req_t* req;
+
   uv__handle_init(loop, (uv_handle_t*) handle, UV_ASYNC);
   handle->async_sent = 0;
   handle->async_cb = async_cb;
 
-  uv__queue_insert_tail(&loop->async_handles, &handle->queue);
+  req = &handle->async_req;
+  UV_REQ_INIT(req, UV_WAKEUP);
+  req->data = handle;
+
   uv__handle_start(handle);
 
   return 0;
@@ -47,46 +73,44 @@ int uv_async_init(uv_loop_t* loop, uv_async_t* handle, uv_async_cb async_cb) {
 
 
 void uv__async_close(uv_loop_t* loop, uv_async_t* handle) {
-  uv__queue_remove(&handle->queue);
-  uv__want_endgame(loop, (uv_handle_t*) handle);
+  if (!((uv_async_t*)handle)->async_sent) {
+    uv__want_endgame(loop, (uv_handle_t*) handle);
+  }
+
   uv__handle_closing(handle);
 }
 
 
 int uv_async_send(uv_async_t* handle) {
-  /* First do a cheap read. */
-  if (handle->async_sent != 0)
-    return 0;
+  uv_loop_t* loop = handle->loop;
 
-  if (InterlockedExchange(&handle->async_sent, 1) == 0) {
-    uv_loop_t* loop = handle->loop;
-    POST_COMPLETION_FOR_REQ(loop, &loop->async_req);
+  if (handle->type != UV_ASYNC) {
+    /* Can't set errno because that's not thread-safe. */
+    return -1;
+  }
+
+  /* The user should make sure never to call uv_async_send to a closing or
+   * closed handle. */
+  assert(!(handle->flags & UV_HANDLE_CLOSING));
+
+  if (!uv__atomic_exchange_set(&handle->async_sent)) {
+    POST_COMPLETION_FOR_REQ(loop, &handle->async_req);
   }
 
   return 0;
 }
 
 
-void uv__process_async_wakeup_req(uv_loop_t* loop,
-                                  uv_req_t* req) {
-  struct uv__queue queue;
-  struct uv__queue* q;
-  uv_async_t* h;
-
+void uv__process_async_wakeup_req(uv_loop_t* loop, uv_async_t* handle,
+    uv_req_t* req) {
+  assert(handle->type == UV_ASYNC);
   assert(req->type == UV_WAKEUP);
 
-  uv__queue_move(&loop->async_handles, &queue);
-  while (!uv__queue_empty(&queue)) {
-    q = uv__queue_head(&queue);
-    h = uv__queue_data(q, uv_async_t, queue);
+  handle->async_sent = 0;
 
-    uv__queue_remove(q);
-    uv__queue_insert_tail(&loop->async_handles, q);
-
-    if (InterlockedExchange(&h->async_sent, 0) == 0)
-      continue;
-
-    if (h->async_cb != NULL)
-      h->async_cb(h);
+  if (handle->flags & UV_HANDLE_CLOSING) {
+    uv__want_endgame(loop, (uv_handle_t*)handle);
+  } else if (handle->async_cb != NULL) {
+    handle->async_cb(handle);
   }
 }

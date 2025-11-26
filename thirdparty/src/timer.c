@@ -22,8 +22,16 @@
 #include "uv-common.h"
 #include "heap-inl.h"
 
-#include <assert.h>
 #include <limits.h>
+
+
+static struct heap *timer_heap(const uv_loop_t* loop) {
+#ifdef _WIN32
+  return (struct heap*) loop->timer_heap;
+#else
+  return (struct heap*) &loop->timer_heap;
+#endif
+}
 
 
 static int timer_less_than(const struct heap_node* ha,
@@ -77,7 +85,7 @@ int uv_timer_start(uv_timer_t* handle,
   /* start_id is the second index to be compared in timer_less_than() */
   handle->start_id = handle->loop->timer_counter++;
 
-  heap_insert((struct heap*) &handle->loop->timer_heap,
+  heap_insert(timer_heap(handle->loop),
               (struct heap_node*) &handle->node.heap,
               timer_less_than);
   uv__handle_start(handle);
@@ -88,7 +96,7 @@ int uv_timer_start(uv_timer_t* handle,
 
 int uv_timer_stop(uv_timer_t* handle) {
   if (uv__is_active(handle)) {
-    heap_remove((struct heap*) &handle->loop->timer_heap,
+    heap_remove(timer_heap(handle->loop),
                 (struct heap_node*) &handle->node.heap,
                 timer_less_than);
     uv__handle_stop(handle);
@@ -102,10 +110,13 @@ int uv_timer_stop(uv_timer_t* handle) {
 
 
 int uv_timer_again(uv_timer_t* handle) {
-  if (handle->timer_cb == NULL || handle->repeat == 0)
+  if (handle->timer_cb == NULL)
     return UV_EINVAL;
 
-  uv_timer_start(handle, handle->timer_cb, handle->repeat, handle->repeat);
+  if (handle->repeat) {
+    uv_timer_stop(handle);
+    uv_timer_start(handle, handle->timer_cb, handle->repeat, handle->repeat);
+  }
 
   return 0;
 }
@@ -134,7 +145,7 @@ int uv__next_timeout(const uv_loop_t* loop) {
   const uv_timer_t* handle;
   uint64_t diff;
 
-  heap_node = heap_min((const struct heap*) &loop->timer_heap);
+  heap_node = heap_min(timer_heap(loop));
   if (heap_node == NULL)
     return -1; /* block indefinitely */
 
@@ -159,7 +170,7 @@ void uv__run_timers(uv_loop_t* loop) {
   uv__queue_init(&ready_queue);
 
   for (;;) {
-    heap_node = heap_min((struct heap*) &loop->timer_heap);
+    heap_node = heap_min(timer_heap(loop));
     if (heap_node == NULL)
       break;
 

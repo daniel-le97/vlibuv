@@ -20,7 +20,6 @@
  */
 
 #include <assert.h>
-#include <stdio.h> /* printf */
 
 #include "uv.h"
 #include "internal.h"
@@ -48,6 +47,29 @@ int uv__getaddrinfo_translate_error(int sys_err) {
   }
 }
 
+
+/*
+ * MinGW is missing this
+ */
+#if !defined(_MSC_VER) && !defined(__MINGW64_VERSION_MAJOR)
+  typedef struct addrinfoW {
+    int ai_flags;
+    int ai_family;
+    int ai_socktype;
+    int ai_protocol;
+    size_t ai_addrlen;
+    WCHAR* ai_canonname;
+    struct sockaddr* ai_addr;
+    struct addrinfoW* ai_next;
+  } ADDRINFOW, *PADDRINFOW;
+
+  DECLSPEC_IMPORT int WSAAPI GetAddrInfoW(const WCHAR* node,
+                                          const WCHAR* service,
+                                          const ADDRINFOW* hints,
+                                          PADDRINFOW* result);
+
+  DECLSPEC_IMPORT void WSAAPI FreeAddrInfoW(PADDRINFOW pAddrInfo);
+#endif
 
 static size_t align_offset(size_t off, size_t alignment) {
   return ((off + alignment - 1) / alignment) * alignment;
@@ -234,9 +256,10 @@ int uv_getaddrinfo(uv_loop_t* loop,
     return UV_EINVAL;
   }
 
-  UV_REQ_INIT(loop, req, UV_GETADDRINFO);
+  UV_REQ_INIT(req, UV_GETADDRINFO);
   req->getaddrinfo_cb = getaddrinfo_cb;
   req->addrinfo = NULL;
+  req->loop = loop;
   req->retcode = 0;
 
   /* calculate required memory size for all input values */

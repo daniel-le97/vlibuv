@@ -20,6 +20,7 @@
  */
 
 #include <assert.h>
+#include <io.h>
 #include <stdlib.h>
 
 #include "uv.h"
@@ -27,12 +28,15 @@
 #include "handle-inl.h"
 
 
-uv_handle_type uv_guess_handle(uv_os_fd_t handle) {
+uv_handle_type uv_guess_handle(uv_file file) {
+  HANDLE handle;
   DWORD mode;
 
-  if (handle == INVALID_HANDLE_VALUE) {
+  if (file < 0) {
     return UV_UNKNOWN_HANDLE;
   }
+
+  handle = uv__get_osfhandle(file);
 
   switch (GetFileType(handle)) {
     case FILE_TYPE_CHAR:
@@ -93,25 +97,25 @@ void uv_close(uv_handle_t* handle, uv_close_cb cb) {
       return;
 
     case UV_TIMER:
-      uv__timer_close((uv_timer_t*)handle);
+      uv_timer_stop((uv_timer_t*)handle);
       uv__handle_closing(handle);
       uv__want_endgame(loop, handle);
       return;
 
     case UV_PREPARE:
-      uv__prepare_close((uv_prepare_t*) handle);
+      uv_prepare_stop((uv_prepare_t*)handle);
       uv__handle_closing(handle);
       uv__want_endgame(loop, handle);
       return;
 
     case UV_CHECK:
-      uv__check_close((uv_check_t*) handle);
+      uv_check_stop((uv_check_t*)handle);
       uv__handle_closing(handle);
       uv__want_endgame(loop, handle);
       return;
 
     case UV_IDLE:
-      uv__idle_close((uv_idle_t*) handle);
+      uv_idle_stop((uv_idle_t*)handle);
       uv__handle_closing(handle);
       uv__want_endgame(loop, handle);
       return;
@@ -146,4 +150,13 @@ void uv_close(uv_handle_t* handle, uv_close_cb cb) {
 
 int uv_is_closing(const uv_handle_t* handle) {
   return !!(handle->flags & (UV_HANDLE_CLOSING | UV_HANDLE_CLOSED));
+}
+
+
+uv_os_fd_t uv_get_osfhandle(int fd) {
+  return uv__get_osfhandle(fd);
+}
+
+int uv_open_osfhandle(uv_os_fd_t os_fd) {
+  return _open_osfhandle((intptr_t) os_fd, 0);
 }

@@ -1,11 +1,10 @@
 module vlibuv
 
 //  add -d uv_static to your v build command to use libuv static library instead of building from source
-const compile_static = $d('uv_static', false)
 
 const libuv_path = $env('LIBUV_PATH')
 
-$if compile_static {
+$if $d('uv_static', false) {
 	$if macos {
 		#flag -I /opt/homebrew/include
 		#flag -L /opt/homebrew/lib
@@ -36,9 +35,13 @@ $if compile_static {
 	#flag @VMODROOT/thirdparty/src/uv-common.o
 	#flag @VMODROOT/thirdparty/src/strscpy.o
 	#flag @VMODROOT/thirdparty/src/random.o
-	#flag @VMODROOT/thirdparty/src/loop-watcher.o
+	// #flag @VMODROOT/thirdparty/src/loop-watcher.o
 
 	$if windows {
+		#flag -lws2_32
+		#flag -liphlpapi
+		#flag -luserenv
+		#flag -lole32
 		#flag @VMODROOT/thirdparty/src/win/thread.o
 		#flag @VMODROOT/thirdparty/src/win/async.o
 		#flag @VMODROOT/thirdparty/src/win/process.o
@@ -74,7 +77,7 @@ $if compile_static {
 		#flag @VMODROOT/thirdparty/src/unix/getaddrinfo.o
 		#flag @VMODROOT/thirdparty/src/unix/getnameinfo.o
 		// #flag @VMODROOT/thirdparty/src/unix/internal.h
-		// #flag @VMODROOT/thirdparty/src/unix/loop-watcher.o
+		#flag @VMODROOT/thirdparty/src/unix/loop-watcher.o
 		#flag @VMODROOT/thirdparty/src/unix/loop.o
 		#flag @VMODROOT/thirdparty/src/unix/pipe.o
 		#flag @VMODROOT/thirdparty/src/unix/poll.o

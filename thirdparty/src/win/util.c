@@ -22,8 +22,10 @@
 #include <assert.h>
 #include <direct.h>
 #include <limits.h>
-#include <wchar.h> /* wmemcmp */
 #include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <wchar.h>
 
 #include "uv.h"
 #include "internal.h"
@@ -39,10 +41,6 @@
 /* clang-format on */
 #include <userenv.h>
 #include <math.h>
-
-#define SECURITY_WIN32
-#include <security.h>
-
 
 /*
  * Max title length; the only thing MSDN tells us about the maximum length
@@ -380,10 +378,15 @@ done:
 static int uv__get_process_title(void) {
   WCHAR title_w[MAX_TITLE_LENGTH];
   DWORD wlen;
+  DWORD err;
 
+  SetLastError(ERROR_SUCCESS);
   wlen = GetConsoleTitleW(title_w, sizeof(title_w) / sizeof(WCHAR));
-  if (wlen == 0)
-    return uv_translate_sys_error(GetLastError());
+  if (wlen == 0) {
+    err = GetLastError();
+    if (err != 0)
+      return uv_translate_sys_error(err);
+  }
 
   return uv__convert_utf16_to_utf8(title_w, wlen, &process_title);
 }
@@ -426,7 +429,8 @@ int uv_get_process_title(char* buffer, size_t size) {
 }
 
 
-int uv_clock_gettime(uv_clock_id clock_id, uv_timespec_t* ts) {
+/* https://github.com/libuv/libuv/issues/1674 */
+int uv_clock_gettime(uv_clock_id clock_id, uv_timespec64_t* ts) {
   FILETIME ft;
   int64_t t;
 
@@ -509,15 +513,15 @@ int uv_uptime(double* uptime) {
 unsigned int uv_available_parallelism(void) {
   DWORD_PTR procmask;
   DWORD_PTR sysmask;
-  int count;
-  int i;
+  unsigned count;
+  unsigned i;
 
   /* TODO(bnoordhuis) Use GetLogicalProcessorInformationEx() to support systems
    * with > 64 CPUs? See https://github.com/libuv/libuv/pull/3458
    */
   count = 0;
   if (GetProcessAffinityMask(GetCurrentProcess(), &procmask, &sysmask))
-    for (i = 0; i < 8 * sizeof(procmask); i++)
+    for (i = 0; i < 8u * sizeof(procmask); i++)
       count += 1 & (procmask >> i);
 
   if (count > 0)
@@ -851,15 +855,6 @@ int uv_interface_addresses(uv_interface_address_t** addresses_ptr,
         uv_address->netmask.netmask4.sin_family = AF_INET;
         uv_address->netmask.netmask4.sin_addr.s_addr = (prefix_len > 0) ?
             htonl(0xffffffff << (32 - prefix_len)) : 0;
-
-        /*
-         * This assumes contiguous bits in the netmask, which is asserted
-	 * in the calculation of the netmask above.
-         */
-        uv_address->broadcast.broadcast4.sin_family = AF_INET;
-        uv_address->broadcast.broadcast4.sin_addr.s_addr =
-             uv_address->address.address4.sin_addr.s_addr |
-            ~uv_address->netmask.netmask4.sin_addr.s_addr;
       }
 
       uv_address++;
@@ -874,12 +869,6 @@ int uv_interface_addresses(uv_interface_address_t** addresses_ptr,
   *count_ptr = count;
 
   return 0;
-}
-
-
-void uv_free_interface_addresses(uv_interface_address_t* addresses,
-    int count) {
-  uv__free(addresses);
 }
 
 
@@ -1026,6 +1015,7 @@ int uv_os_homedir(char* buffer, size_t* size) {
 
 
 int uv_os_tmpdir(char* buffer, size_t* size) {
+  int r;
   wchar_t *path;
   size_t len;
 
@@ -1064,7 +1054,9 @@ int uv_os_tmpdir(char* buffer, size_t* size) {
     path[len] = L'\0';
   }
 
-  return uv__copy_utf16_to_utf8(path, len, buffer, size);
+  r = uv__copy_utf16_to_utf8(path, len, buffer, size);
+  uv__free(path);
+  return r;
 }
 
 
@@ -1145,9 +1137,6 @@ static int uv__getpwuid_r(uv_passwd_t* pwd) {
   wchar_t username[UNLEN + 1];
   wchar_t *path;
   DWORD bufsize;
-  wchar_t* gecosbuf;
-  ULONG gecos_size;
-  EXTENDED_NAME_FORMAT name_format;
   int r;
 
   if (pwd == NULL)
@@ -1193,61 +1182,19 @@ static int uv__getpwuid_r(uv_passwd_t* pwd) {
     return uv_translate_sys_error(r);
   }
 
-  /* Set all of the pointers to NULL in case an error is encountered. */
   pwd->homedir = NULL;
-  pwd->username = NULL;
-  pwd->gecos = NULL;
-  gecosbuf = NULL;
-
-  /* Get the gecos using GetUserNameExW() */
-  gecos_size = 0;
-  /* Try using the display name first. */
-  GetUserNameExW(NameDisplay, NULL, &gecos_size);
-  if (GetLastError() == ERROR_MORE_DATA) {
-    name_format = NameDisplay;
-  } else {
-    /* NameDisplay not available, so try NameSamCompatible. */
-    GetUserNameExW(NameSamCompatible, NULL, &gecos_size);
-    if (GetLastError() == ERROR_MORE_DATA) {
-      name_format = NameSamCompatible;
-    } else {
-      /* Unsupported */
-      gecos_size = 0;
-    }
-  }
-
-  if (gecos_size > 0) {
-    gecosbuf = uv__malloc(sizeof(wchar_t) * gecos_size);
-    if (gecosbuf == NULL) {
-      r = UV_ENOMEM;
-      goto error;
-    }
-
-    if (GetUserNameExW(name_format, gecosbuf, &gecos_size) == 0) {
-      r = uv_translate_sys_error(GetLastError());
-      goto error;
-    }
-  }
-
-  /* Populate the uv_passwd_t structure. */
   r = uv__convert_utf16_to_utf8(path, -1, &pwd->homedir);
   uv__free(path);
 
   if (r != 0)
-    goto error;
+    return r;
 
+  pwd->username = NULL;
   r = uv__convert_utf16_to_utf8(username, -1, &pwd->username);
 
-  if (r != 0)
-    goto error;
-
-  if (gecosbuf != NULL) {
-    r = uv__convert_utf16_to_utf8(gecosbuf, -1, &pwd->gecos);
-
-    if (r != 0)
-      goto error;
-
-    uv__free(gecosbuf);
+  if (r != 0) {
+    uv__free(pwd->homedir);
+    return r;
   }
 
   pwd->shell = NULL;
@@ -1255,13 +1202,6 @@ static int uv__getpwuid_r(uv_passwd_t* pwd) {
   pwd->gid = -1;
 
   return 0;
-
-error:
-  uv__free(gecosbuf);
-  uv__free(pwd->homedir);
-  uv__free(pwd->username);
-  uv__free(pwd->gecos);
-  return r;
 }
 
 
@@ -1578,20 +1518,26 @@ int uv_os_setpriority(uv_pid_t pid, int priority) {
 }
 
 int uv_thread_getpriority(uv_thread_t tid, int* priority) {
+  DWORD err;
   int r;
 
   if (priority == NULL)
     return UV_EINVAL;
 
   r = GetThreadPriority(tid);
-  if (r == THREAD_PRIORITY_ERROR_RETURN)
-    return uv_translate_sys_error(GetLastError());
+  if (r == THREAD_PRIORITY_ERROR_RETURN) {
+    err = GetLastError();
+    if (err == ERROR_INVALID_HANDLE)
+      return UV_ESRCH;
+    return uv_translate_sys_error(err);
+  }
 
   *priority = r;
   return 0;
 }
 
 int uv_thread_setpriority(uv_thread_t tid, int priority) {
+  DWORD err;
   int r;
 
   switch (priority) {
@@ -1614,8 +1560,12 @@ int uv_thread_setpriority(uv_thread_t tid, int priority) {
       return 0;
   }
 
-  if (r == 0)
-    return uv_translate_sys_error(GetLastError());
+  if (r == 0) {
+    err = GetLastError();
+    if (err == ERROR_INVALID_HANDLE)
+      return UV_ESRCH;
+    return uv_translate_sys_error(err);
+  }
 
   return 0;
 }
@@ -1762,6 +1712,9 @@ int uv_os_uname(uv_utsname_t* buffer) {
     case PROCESSOR_ARCHITECTURE_ARM:
       uv__strscpy(buffer->machine, "arm", sizeof(buffer->machine));
       break;
+    case PROCESSOR_ARCHITECTURE_ARM64:
+      uv__strscpy(buffer->machine, "arm64", sizeof(buffer->machine));
+      break;
     default:
       uv__strscpy(buffer->machine, "unknown", sizeof(buffer->machine));
       break;
@@ -1777,7 +1730,7 @@ error:
   return r;
 }
 
-int uv_gettimeofday(uv_timeval_t* tv) {
+int uv_gettimeofday(uv_timeval64_t* tv) {
   /* Based on https://doxygen.postgresql.org/gettimeofday_8c_source.html */
   const uint64_t epoch = (uint64_t) 116444736000000000ULL;
   FILETIME file_time;
@@ -1794,8 +1747,11 @@ int uv_gettimeofday(uv_timeval_t* tv) {
   return 0;
 }
 
-int uv__random_rtlgenrandom(void* buf, size_t buflen) {
+int uv__random_winrandom(void* buf, size_t buflen) {
   if (buflen == 0)
+    return 0;
+
+  if (pProcessPrng != NULL && pProcessPrng(buf, buflen))
     return 0;
 
   if (SystemFunction036(buf, buflen) == FALSE)

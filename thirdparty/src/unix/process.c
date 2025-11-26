@@ -34,7 +34,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
-#include <sched.h>
 
 #if defined(__APPLE__)
 # include <spawn.h>
@@ -63,15 +62,6 @@ extern char **environ;
 
 #if defined(__MVS__)
 # include "zos-base.h"
-#endif
-
-#if defined(__linux__)
-# define uv__cpu_set_t cpu_set_t
-#elif defined(__FreeBSD__)
-# include <sys/param.h>
-# include <sys/cpuset.h>
-# include <pthread_np.h>
-# define uv__cpu_set_t cpuset_t
 #endif
 
 #ifdef UV_HAVE_KQUEUE
@@ -198,8 +188,12 @@ void uv__wait_children(uv_loop_t* loop) {
 static int uv__process_init_stdio(uv_stdio_container_t* container, int fds[2]) {
   int mask;
   int fd;
+  int ret;
+  int size;
+  int i;
 
   mask = UV_IGNORE | UV_CREATE_PIPE | UV_INHERIT_FD | UV_INHERIT_STREAM;
+  size = 64 * 1024;
 
   switch (container->flags & mask) {
   case UV_IGNORE:
@@ -209,13 +203,22 @@ static int uv__process_init_stdio(uv_stdio_container_t* container, int fds[2]) {
     assert(container->data.stream != NULL);
     if (container->data.stream->type != UV_NAMED_PIPE)
       return UV_EINVAL;
-    else
-      return uv_socketpair(SOCK_STREAM, 0, fds, 0, 0);
+    else {
+      ret = uv_socketpair(SOCK_STREAM, 0, fds, 0, 0);
+
+      if (ret == 0)
+        for (i = 0; i < 2; i++) {
+          setsockopt(fds[i], SOL_SOCKET, SO_RCVBUF, &size, sizeof(size));
+          setsockopt(fds[i], SOL_SOCKET, SO_SNDBUF, &size, sizeof(size));
+        }
+    }
+
+    return ret;
 
   case UV_INHERIT_FD:
   case UV_INHERIT_STREAM:
     if (container->flags & UV_INHERIT_FD)
-      fd = container->data.file;
+      fd = container->data.fd;
     else
       fd = uv__stream_fd(container->data.stream);
 
@@ -290,11 +293,6 @@ static void uv__process_child_init(const uv_process_options_t* options,
   int use_fd;
   int fd;
   int n;
-#if defined(__linux__) || defined(__FreeBSD__)
-  int i;
-  int cpumask_size;
-  uv__cpu_set_t cpuset;
-#endif
 
   /* Reset signal disposition first. Use a hard-coded limit because NSIG is not
    * fixed on Linux: it's either 32, 34 or 64, depending on whether RT signals
@@ -401,29 +399,6 @@ static void uv__process_child_init(const uv_process_options_t* options,
   if ((options->flags & UV_PROCESS_SETUID) && setuid(options->uid))
     uv__write_errno(error_fd);
 
-#if defined(__linux__) || defined(__FreeBSD__)
-  if (options->cpumask != NULL) {
-    cpumask_size = uv_cpumask_size();
-    assert(options->cpumask_size >= (size_t)cpumask_size);
-
-    CPU_ZERO(&cpuset);
-    for (i = 0; i < cpumask_size; ++i) {
-      if (options->cpumask[i]) {
-        CPU_SET(i, &cpuset);
-      }
-    }
-
-#if defined(__linux__)
-    if (sched_setaffinity(0, sizeof(cpuset), &cpuset))
-      uv__write_errno(error_fd);
-#else
-    n = pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset);
-    if (n)
-      uv__write_int(error_fd, UV__ERR(n));
-#endif
-  }
-#endif
-
   if (options->env != NULL)
     environ = options->env;
 
@@ -510,11 +485,6 @@ static int uv__spawn_set_posix_spawn_attrs(
      * posixspawn_attrs (set_groups_np, setuid_np, setgid_np), which deviates
      * from the normal specification of setuid (which also uses euid), and they
      * are also undocumented syscalls, so we do not use them. */
-    err = ENOSYS;
-    goto error;
-  }
-
-  if (options->cpumask != NULL) {
     err = ENOSYS;
     goto error;
   }
@@ -1008,16 +978,6 @@ int uv_spawn(uv_loop_t* loop,
   int exec_errorno;
   int i;
 
-  if (options->cpumask != NULL) {
-#if defined(__linux__) || defined(__FreeBSD__)
-    if (options->cpumask_size < (size_t)uv_cpumask_size()) {
-      return UV_EINVAL;
-    }
-#else
-    return UV_ENOTSUP;
-#endif
-  }
-
   assert(options->file != NULL);
   assert(!(options->flags & ~(UV_PROCESS_DETACHED |
                               UV_PROCESS_SETGID |
@@ -1026,8 +986,7 @@ int uv_spawn(uv_loop_t* loop,
                               UV_PROCESS_WINDOWS_HIDE |
                               UV_PROCESS_WINDOWS_HIDE_CONSOLE |
                               UV_PROCESS_WINDOWS_HIDE_GUI |
-                              UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS |
-                              UV_PROCESS_WINDOWS_USE_PARENT_ERROR_MODE)));
+                              UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS)));
 
   uv__handle_init(loop, (uv_handle_t*)process, UV_PROCESS);
   uv__queue_init(&process->queue);

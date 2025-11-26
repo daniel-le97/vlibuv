@@ -23,6 +23,7 @@
 #define UV_WIN_HANDLE_INL_H_
 
 #include <assert.h>
+#include <io.h>
 
 #include "uv.h"
 #include "internal.h"
@@ -94,70 +95,18 @@ INLINE static void uv__want_endgame(uv_loop_t* loop, uv_handle_t* handle) {
 }
 
 
-INLINE static void uv__process_endgames(uv_loop_t* loop) {
-  uv_handle_t* handle;
+INLINE static HANDLE uv__get_osfhandle(int fd)
+{
+  /* _get_osfhandle() raises an assert in debug builds if the FD is invalid.
+   * But it also correctly checks the FD and returns INVALID_HANDLE_VALUE for
+   * invalid FDs in release builds (or if you let the assert continue). So this
+   * wrapper function disables asserts when calling _get_osfhandle. */
 
-  while (loop->endgame_handles) {
-    handle = loop->endgame_handles;
-    loop->endgame_handles = handle->endgame_next;
-
-    handle->flags &= ~UV_HANDLE_ENDGAME_QUEUED;
-
-    switch (handle->type) {
-      case UV_TCP:
-        uv__tcp_endgame(loop, (uv_tcp_t*) handle);
-        break;
-
-      case UV_NAMED_PIPE:
-        uv__pipe_endgame(loop, (uv_pipe_t*) handle);
-        break;
-
-      case UV_TTY:
-        uv__tty_endgame(loop, (uv_tty_t*) handle);
-        break;
-
-      case UV_UDP:
-        uv__udp_endgame(loop, (uv_udp_t*) handle);
-        break;
-
-      case UV_POLL:
-        uv__poll_endgame(loop, (uv_poll_t*) handle);
-        break;
-
-      case UV_TIMER:
-      case UV_PREPARE:
-      case UV_CHECK:
-      case UV_IDLE:
-        assert(handle->flags & UV_HANDLE_CLOSING);
-        assert(!(handle->flags & UV_HANDLE_CLOSED));
-        uv__handle_close(handle);
-        break;
-
-      case UV_ASYNC:
-        uv__async_endgame(loop, (uv_async_t*) handle);
-        break;
-
-      case UV_SIGNAL:
-        uv__signal_endgame(loop, (uv_signal_t*) handle);
-        break;
-
-      case UV_PROCESS:
-        uv__process_endgame(loop, (uv_process_t*) handle);
-        break;
-
-      case UV_FS_EVENT:
-        uv__fs_event_endgame(loop, (uv_fs_event_t*) handle);
-        break;
-
-      case UV_FS_POLL:
-        uv__fs_poll_endgame(loop, (uv_fs_poll_t*) handle);
-        break;
-
-      default:
-        assert(0);
-        break;
-    }
-  }
+  HANDLE handle;
+  UV_BEGIN_DISABLE_CRT_ASSERT();
+  handle = (HANDLE) _get_osfhandle(fd);
+  UV_END_DISABLE_CRT_ASSERT();
+  return handle;
 }
 
 #endif /* UV_WIN_HANDLE_INL_H_ */

@@ -85,13 +85,10 @@
 struct uv__io_s;
 struct uv_loop_s;
 
-typedef void (*uv__io_cb)(struct uv_loop_s* loop,
-                          struct uv__io_s* w,
-                          unsigned int events);
 typedef struct uv__io_s uv__io_t;
 
 struct uv__io_s {
-  uv__io_cb cb;
+  uintptr_t bits;
   struct uv__queue pending_queue;
   struct uv__queue watcher_queue;
   unsigned int pevents; /* Pending event mask i.e. mask at next tick. */
@@ -122,6 +119,7 @@ typedef struct uv_buf_t {
   size_t len;
 } uv_buf_t;
 
+typedef int uv_file;
 typedef int uv_os_sock_t;
 typedef int uv_os_fd_t;
 typedef pid_t uv_pid_t;
@@ -140,12 +138,21 @@ typedef pthread_key_t uv_key_t;
 #if defined(_AIX) || \
     defined(__OpenBSD__) || \
     !defined(PTHREAD_BARRIER_SERIAL_THREAD)
-typedef struct {
+/* TODO(bnoordhuis) Merge into uv_barrier_t in v2. */
+struct _uv_barrier {
   uv_mutex_t mutex;
   uv_cond_t cond;
   unsigned threshold;
   unsigned in;
   unsigned out;
+};
+
+typedef struct {
+  struct _uv_barrier* b;
+# if defined(PTHREAD_BARRIER_SERIAL_THREAD)
+  /* TODO(bnoordhuis) Remove padding in v2. */
+  char pad[sizeof(pthread_barrier_t) - sizeof(struct _uv_barrier*)];
+# endif
 } uv_barrier_t;
 #else
 typedef pthread_barrier_t uv_barrier_t;
@@ -225,6 +232,7 @@ typedef struct {
   struct uv__queue check_handles;                                             \
   struct uv__queue idle_handles;                                              \
   struct uv__queue async_handles;                                             \
+  void (*async_unused)(void);  /* TODO(bnoordhuis) Remove in libuv v2. */     \
   uv__io_t async_io_watcher;                                                  \
   int async_wfd;                                                              \
   struct {                                                                    \
@@ -316,7 +324,6 @@ typedef struct {
 #define UV_ASYNC_PRIVATE_FIELDS                                               \
   uv_async_cb async_cb;                                                       \
   struct uv__queue queue;                                                     \
-  int busy;                                                                   \
   int pending;                                                                \
 
 #define UV_TIMER_PRIVATE_FIELDS                                               \
@@ -353,7 +360,7 @@ typedef struct {
 
 #define UV_FS_PRIVATE_FIELDS                                                  \
   const char *new_path;                                                       \
-  uv_os_fd_t file;                                                            \
+  uv_file file;                                                               \
   int flags;                                                                  \
   mode_t mode;                                                                \
   unsigned int nbufs;                                                         \
@@ -361,7 +368,6 @@ typedef struct {
   off_t off;                                                                  \
   uv_uid_t uid;                                                               \
   uv_gid_t gid;                                                               \
-  double btime;                                                               \
   double atime;                                                               \
   double mtime;                                                               \
   struct uv__work work_req;                                                   \

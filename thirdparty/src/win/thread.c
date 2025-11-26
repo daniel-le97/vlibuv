@@ -22,8 +22,6 @@
 #include <assert.h>
 #include <limits.h>
 #include <stdlib.h>
-#include <process.h> /* _beginthreadex */
-#include <errno.h> /* _beginthreadex errors */
 
 #if defined(__MINGW64_VERSION_MAJOR)
 /* MemoryBarrier expands to __mm_mfence in some cases (x86+sse2), which may
@@ -59,6 +57,9 @@ STATIC_ASSERT(sizeof(uv_thread_t) <= sizeof(void*));
 
 static uv_key_t uv__current_thread_key;
 static uv_once_t uv__current_thread_init_guard = UV_ONCE_INIT;
+static uv_once_t uv__thread_name_once = UV_ONCE_INIT;
+HRESULT (WINAPI *pGetThreadDescription)(HANDLE, PWSTR*);
+HRESULT (WINAPI *pSetThreadDescription)(HANDLE, PCWSTR);
 
 
 static void uv__init_current_thread_key(void) {
@@ -99,11 +100,10 @@ int uv_thread_create(uv_thread_t *tid, void (*entry)(void *arg), void *arg) {
 
 
 int uv_thread_detach(uv_thread_t *tid) {
-  int ret = 0;
   if (CloseHandle(*tid) == 0)
-    ret = uv_translate_sys_error(GetLastError());
-  *tid = 0;
-  return ret;
+    return uv_translate_sys_error(GetLastError());
+
+  return 0;
 }
 
 
@@ -170,7 +170,6 @@ int uv_thread_create_ex(uv_thread_t* tid,
   return UV_EIO;
 }
 
-
 int uv_thread_setaffinity(uv_thread_t* tid,
                           char* cpumask,
                           char* oldmask,
@@ -214,7 +213,6 @@ int uv_thread_setaffinity(uv_thread_t* tid,
   return 0;
 }
 
-
 int uv_thread_getaffinity(uv_thread_t* tid,
                           char* cpumask,
                           size_t mask_size) {
@@ -244,11 +242,9 @@ int uv_thread_getaffinity(uv_thread_t* tid,
   return 0;
 }
 
-
 int uv_thread_getcpu(void) {
   return GetCurrentProcessorNumber();
 }
-
 
 uv_thread_t uv_thread_self(void) {
   uv_thread_t key;
@@ -285,11 +281,27 @@ int uv_thread_equal(const uv_thread_t* t1, const uv_thread_t* t2) {
 }
 
 
+static void uv__thread_name_init_once(void) {
+  HMODULE m;
+
+  m = GetModuleHandleW(L"api-ms-win-core-processthreads-l1-1-3.dll");
+  if (m != NULL) {
+    pGetThreadDescription = (void*) GetProcAddress(m, "GetThreadDescription");
+    pSetThreadDescription = (void*) GetProcAddress(m, "SetThreadDescription");
+  }
+}
+
+
 int uv_thread_setname(const char* name) {
   HRESULT hr;
   WCHAR* namew;
   int err;
   char namebuf[UV_PTHREAD_MAX_NAMELEN_NP];
+
+  uv_once(&uv__thread_name_once, uv__thread_name_init_once);
+
+  if (pSetThreadDescription == NULL)
+    return UV_ENOSYS;
 
   if (name == NULL)
     return UV_EINVAL;
@@ -302,7 +314,7 @@ int uv_thread_setname(const char* name) {
   if (err)
     return err;
 
-  hr = SetThreadDescription(GetCurrentThread(), namew);
+  hr = pSetThreadDescription(GetCurrentThread(), namew);
   uv__free(namew);
   if (FAILED(hr))
     return uv_translate_sys_error(HRESULT_CODE(hr));
@@ -319,6 +331,11 @@ int uv_thread_getname(uv_thread_t* tid, char* name, size_t size) {
   int r;
   DWORD exit_code;
 
+  uv_once(&uv__thread_name_once, uv__thread_name_init_once);
+
+  if (pGetThreadDescription == NULL)
+    return UV_ENOSYS;
+
   if (name == NULL || size == 0)
     return UV_EINVAL;
 
@@ -331,7 +348,7 @@ int uv_thread_getname(uv_thread_t* tid, char* name, size_t size) {
 
   namew = NULL;
   thread_name = NULL;
-  hr = GetThreadDescription(*tid, &namew);
+  hr = pGetThreadDescription(*tid, &namew);
   if (FAILED(hr))
     return uv_translate_sys_error(HRESULT_CODE(hr));
 
@@ -383,9 +400,17 @@ void uv_mutex_unlock(uv_mutex_t* mutex) {
   LeaveCriticalSection(mutex);
 }
 
+/* Ensure that the ABI for this type remains stable in v1.x */
+#ifdef _WIN64
+STATIC_ASSERT(sizeof(uv_rwlock_t) == 80);
+#else
+STATIC_ASSERT(sizeof(uv_rwlock_t) == 48);
+#endif
+
 int uv_rwlock_init(uv_rwlock_t* rwlock) {
   memset(rwlock, 0, sizeof(*rwlock));
-  InitializeSRWLock(rwlock);
+  InitializeSRWLock(&rwlock->read_write_lock_);
+
   return 0;
 }
 
@@ -397,12 +422,12 @@ void uv_rwlock_destroy(uv_rwlock_t* rwlock) {
 
 
 void uv_rwlock_rdlock(uv_rwlock_t* rwlock) {
-  AcquireSRWLockShared(rwlock);
+  AcquireSRWLockShared(&rwlock->read_write_lock_);
 }
 
 
 int uv_rwlock_tryrdlock(uv_rwlock_t* rwlock) {
-  if (!TryAcquireSRWLockShared(rwlock))
+  if (!TryAcquireSRWLockShared(&rwlock->read_write_lock_))
     return UV_EBUSY;
 
   return 0;
@@ -410,17 +435,17 @@ int uv_rwlock_tryrdlock(uv_rwlock_t* rwlock) {
 
 
 void uv_rwlock_rdunlock(uv_rwlock_t* rwlock) {
-  ReleaseSRWLockShared(rwlock);
+  ReleaseSRWLockShared(&rwlock->read_write_lock_);
 }
 
 
 void uv_rwlock_wrlock(uv_rwlock_t* rwlock) {
-  AcquireSRWLockExclusive(rwlock);
+  AcquireSRWLockExclusive(&rwlock->read_write_lock_);
 }
 
 
 int uv_rwlock_trywrlock(uv_rwlock_t* rwlock) {
-  if (!TryAcquireSRWLockExclusive(rwlock))
+  if (!TryAcquireSRWLockExclusive(&rwlock->read_write_lock_))
     return UV_EBUSY;
 
   return 0;
@@ -428,7 +453,7 @@ int uv_rwlock_trywrlock(uv_rwlock_t* rwlock) {
 
 
 void uv_rwlock_wrunlock(uv_rwlock_t* rwlock) {
-  ReleaseSRWLockExclusive(rwlock);
+  ReleaseSRWLockExclusive(&rwlock->read_write_lock_);
 }
 
 
@@ -474,35 +499,35 @@ int uv_sem_trywait(uv_sem_t* sem) {
 
 
 int uv_cond_init(uv_cond_t* cond) {
-  InitializeConditionVariable(cond);
+  InitializeConditionVariable(&cond->cond_var);
   return 0;
 }
 
 
 void uv_cond_destroy(uv_cond_t* cond) {
-  /* Nothing to do. */
+  /* nothing to do */
   (void) &cond;
 }
 
 
 void uv_cond_signal(uv_cond_t* cond) {
-  WakeConditionVariable(cond);
+  WakeConditionVariable(&cond->cond_var);
 }
 
 
 void uv_cond_broadcast(uv_cond_t* cond) {
-  WakeAllConditionVariable(cond);
+  WakeAllConditionVariable(&cond->cond_var);
 }
 
 
 void uv_cond_wait(uv_cond_t* cond, uv_mutex_t* mutex) {
-  if (!SleepConditionVariableCS(cond, mutex, INFINITE))
+  if (!SleepConditionVariableCS(&cond->cond_var, mutex, INFINITE))
     abort();
 }
 
 
 int uv_cond_timedwait(uv_cond_t* cond, uv_mutex_t* mutex, uint64_t timeout) {
-  if (SleepConditionVariableCS(cond, mutex, (DWORD)(timeout / 1e6)))
+  if (SleepConditionVariableCS(&cond->cond_var, mutex, (DWORD)(timeout / 1e6)))
     return 0;
   if (GetLastError() != ERROR_TIMEOUT)
     abort();

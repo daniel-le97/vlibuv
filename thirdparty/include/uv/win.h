@@ -19,6 +19,10 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef _WIN32_WINNT
+# define _WIN32_WINNT   0x0A00
+#endif
+
 #if !defined(_SSIZE_T_) && !defined(_SSIZE_T_DEFINED)
 typedef intptr_t ssize_t;
 # define SSIZE_MAX INTPTR_MAX
@@ -43,6 +47,10 @@ typedef intptr_t ssize_t;
 #undef PTCP_INITIAL_RTO_PARAMETERS
 #include <windows.h>
 
+#include <process.h>
+#include <signal.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <stdint.h>
 
 #include "uv/tree.h"
@@ -59,18 +67,24 @@ typedef intptr_t ssize_t;
 # define S_IFIFO _S_IFIFO
 #endif
 
-/* Signals supported by uv_signal and or uv_kill */
+/* Additional signals supported by uv_signal and or uv_kill. The CRT defines
+ * the following signals already:
+ *
+ *   #define SIGINT           2
+ *   #define SIGILL           4
+ *   #define SIGABRT_COMPAT   6
+ *   #define SIGFPE           8
+ *   #define SIGSEGV         11
+ *   #define SIGTERM         15
+ *   #define SIGBREAK        21
+ *   #define SIGABRT         22
+ *
+ * The additional signals have values that are common on other Unix
+ * variants (Linux and Darwin)
+ */
 #define SIGHUP                1
-#define SIGINT                2
 #define SIGQUIT               3
-#define SIGILL                4
-#define SIGABRT_COMPAT        6
-#define SIGFPE                8
 #define SIGKILL               9
-#define SIGSEGV              11
-#define SIGTERM              15
-#define SIGBREAK             21
-#define SIGABRT              22
 #define SIGWINCH             28
 
 /* Redefine NSIG to take SIGWINCH into consideration */
@@ -79,6 +93,85 @@ typedef intptr_t ssize_t;
 #endif
 #ifndef NSIG
 # define NSIG SIGWINCH + 1
+#endif
+
+/* The CRT defines SIGABRT_COMPAT as 6, which equals SIGABRT on many unix-like
+ * platforms. However MinGW doesn't define it, so we do. */
+#ifndef SIGABRT_COMPAT
+# define SIGABRT_COMPAT       6
+#endif
+
+/*
+ * Guids and typedefs for winsock extension functions
+ * Mingw32 doesn't have these :-(
+ */
+#ifndef WSAID_ACCEPTEX
+# define WSAID_ACCEPTEX                                                       \
+         {0xb5367df1, 0xcbac, 0x11cf,                                         \
+         {0x95, 0xca, 0x00, 0x80, 0x5f, 0x48, 0xa1, 0x92}}
+
+# define WSAID_CONNECTEX                                                      \
+         {0x25a207b9, 0xddf3, 0x4660,                                         \
+         {0x8e, 0xe9, 0x76, 0xe5, 0x8c, 0x74, 0x06, 0x3e}}
+
+# define WSAID_GETACCEPTEXSOCKADDRS                                           \
+         {0xb5367df2, 0xcbac, 0x11cf,                                         \
+         {0x95, 0xca, 0x00, 0x80, 0x5f, 0x48, 0xa1, 0x92}}
+
+# define WSAID_DISCONNECTEX                                                   \
+         {0x7fda2e11, 0x8630, 0x436f,                                         \
+         {0xa0, 0x31, 0xf5, 0x36, 0xa6, 0xee, 0xc1, 0x57}}
+
+# define WSAID_TRANSMITFILE                                                   \
+         {0xb5367df0, 0xcbac, 0x11cf,                                         \
+         {0x95, 0xca, 0x00, 0x80, 0x5f, 0x48, 0xa1, 0x92}}
+
+  typedef BOOL (PASCAL *LPFN_ACCEPTEX)
+                      (SOCKET sListenSocket,
+                       SOCKET sAcceptSocket,
+                       PVOID lpOutputBuffer,
+                       DWORD dwReceiveDataLength,
+                       DWORD dwLocalAddressLength,
+                       DWORD dwRemoteAddressLength,
+                       LPDWORD lpdwBytesReceived,
+                       LPOVERLAPPED lpOverlapped);
+
+  typedef BOOL (PASCAL *LPFN_CONNECTEX)
+                      (SOCKET s,
+                       const struct sockaddr* name,
+                       int namelen,
+                       PVOID lpSendBuffer,
+                       DWORD dwSendDataLength,
+                       LPDWORD lpdwBytesSent,
+                       LPOVERLAPPED lpOverlapped);
+
+  typedef void (PASCAL *LPFN_GETACCEPTEXSOCKADDRS)
+                      (PVOID lpOutputBuffer,
+                       DWORD dwReceiveDataLength,
+                       DWORD dwLocalAddressLength,
+                       DWORD dwRemoteAddressLength,
+                       LPSOCKADDR* LocalSockaddr,
+                       LPINT LocalSockaddrLength,
+                       LPSOCKADDR* RemoteSockaddr,
+                       LPINT RemoteSockaddrLength);
+
+  typedef BOOL (PASCAL *LPFN_DISCONNECTEX)
+                      (SOCKET hSocket,
+                       LPOVERLAPPED lpOverlapped,
+                       DWORD dwFlags,
+                       DWORD reserved);
+
+  typedef BOOL (PASCAL *LPFN_TRANSMITFILE)
+                      (SOCKET hSocket,
+                       HANDLE hFile,
+                       DWORD nNumberOfBytesToWrite,
+                       DWORD nNumberOfBytesPerSend,
+                       LPOVERLAPPED lpOverlapped,
+                       LPTRANSMIT_FILE_BUFFERS lpTransmitBuffers,
+                       DWORD dwFlags);
+
+  typedef PVOID RTL_SRWLOCK;
+  typedef RTL_SRWLOCK SRWLOCK, *PSRWLOCK;
 #endif
 
 typedef int (WSAAPI* LPFN_WSARECV)
@@ -135,6 +228,7 @@ typedef struct uv_buf_t {
   char* base;
 } uv_buf_t;
 
+typedef int uv_file;
 typedef SOCKET uv_os_sock_t;
 typedef HANDLE uv_os_fd_t;
 typedef int uv_pid_t;
@@ -145,9 +239,32 @@ typedef HANDLE uv_sem_t;
 
 typedef CRITICAL_SECTION uv_mutex_t;
 
-typedef CONDITION_VARIABLE uv_cond_t;
+/* This condition variable implementation is based on the SetEvent solution
+ * (section 3.2) at http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
+ * We could not use the SignalObjectAndWait solution (section 3.4) because
+ * it want the 2nd argument (type uv_mutex_t) of uv_cond_wait() and
+ * uv_cond_timedwait() to be HANDLEs, but we use CRITICAL_SECTIONs.
+ */
 
-typedef SRWLOCK uv_rwlock_t;
+typedef union {
+  CONDITION_VARIABLE cond_var;
+  struct {
+    unsigned int waiters_count;
+    CRITICAL_SECTION waiters_count_lock;
+    HANDLE signal_event;
+    HANDLE broadcast_event;
+  } unused_; /* TODO: retained for ABI compatibility; remove me in v2.x. */
+} uv_cond_t;
+
+typedef struct {
+  SRWLOCK read_write_lock_;
+  /* TODO: retained for ABI compatibility; remove me in v2.x */
+#ifdef _WIN64
+  unsigned char padding_[72];
+#else
+  unsigned char padding_[44];
+#endif
+} uv_rwlock_t;
 
 typedef struct {
   unsigned threshold;
@@ -162,9 +279,10 @@ typedef struct {
   DWORD tls_index;
 } uv_key_t;
 
-#define UV_ONCE_INIT { INIT_ONCE_STATIC_INIT }
+#define UV_ONCE_INIT { 0, { NULL } }
 
 typedef struct uv_once_s {
+  unsigned char unused;
   INIT_ONCE init_once;
 } uv_once_t;
 
@@ -209,27 +327,31 @@ typedef struct {
   uv_req_t* pending_reqs_tail;                                                \
   /* Head of a single-linked list of closed handles */                        \
   uv_handle_t* endgame_handles;                                               \
-  /* Timers */                                                                \
-  struct {                                                                    \
-    void* min;                                                                \
-    unsigned int nelts;                                                       \
-  } timer_heap;                                                               \
-  uint64_t timer_counter;                                                     \
-  /* Lists of active loop (prepare / check / idle) watchers */                \
-  struct uv__queue prepare_handles;                                           \
-  struct uv__queue check_handles;                                             \
-  struct uv__queue idle_handles;                                              \
+  /* TODO(bnoordhuis) Stop heap-allocating |timer_heap| in libuv v2.x. */     \
+  void* timer_heap;                                                           \
+    /* Lists of active loop (prepare / check / idle) watchers */              \
+  uv_prepare_t* prepare_handles;                                              \
+  uv_check_t* check_handles;                                                  \
+  uv_idle_t* idle_handles;                                                    \
+  /* This pointer will refer to the prepare/check/idle handle whose */        \
+  /* callback is scheduled to be called next. This is needed to allow */      \
+  /* safe removal from one of the lists above while that list being */        \
+  /* iterated over. */                                                        \
+  uv_prepare_t* next_prepare_handle;                                          \
+  uv_check_t* next_check_handle;                                              \
+  uv_idle_t* next_idle_handle;                                                \
   /* This handle holds the peer sockets for the fast variant of uv_poll_t */  \
   SOCKET poll_peer_sockets[UV_MSAFD_PROVIDER_COUNT];                          \
+  /* No longer used. */                                                       \
+  unsigned int active_tcp_streams;                                            \
+  /* No longer used. */                                                       \
+  unsigned int active_udp_streams;                                            \
+  /* Counter to started timer */                                              \
+  uint64_t timer_counter;                                                     \
   /* Threadpool */                                                            \
   struct uv__queue wq;                                                        \
   uv_mutex_t wq_mutex;                                                        \
-  uv_async_t wq_async;                                                        \
-  /* Async handle */                                                          \
-  struct uv_req_s async_req;                                                  \
-  struct uv__queue async_handles;                                             \
-  /* Global queue of loops */                                                 \
-  struct uv__queue loops_queue;
+  uv_async_t wq_async;
 
 #define UV_REQ_TYPE_PRIVATE                                                   \
   /* TODO: remove the req suffix */                                           \
@@ -319,8 +441,7 @@ typedef struct {
   LPFN_ACCEPTEX func_acceptex;
 
 #define uv_tcp_connection_fields                                              \
-  uv_tcp_accept_t* dummy1; /* Mirror of union field, keep as NULL */          \
-  unsigned int dummy2; /* Mirror of union field, keep as 0 */                 \
+  uv_buf_t read_buffer;                                                       \
   LPFN_CONNECTEX func_connectex;
 
 #define UV_TCP_PRIVATE_FIELDS                                                 \
@@ -336,6 +457,7 @@ typedef struct {
   unsigned int reqs_pending;                                                  \
   int activecnt;                                                              \
   uv_req_t recv_req;                                                          \
+  uv_buf_t recv_buffer;                                                       \
   struct sockaddr_storage recv_from;                                          \
   int recv_from_len;                                                          \
   uv_udp_recv_cb recv_cb;                                                     \
@@ -350,9 +472,11 @@ typedef struct {
 
 #define uv_pipe_connection_fields                                             \
   uv_timer_t* eof_timer;                                                      \
+  uv_write_t dummy; /* TODO: retained for ABI compat; remove this in v2.x. */ \
   DWORD ipc_remote_pid;                                                       \
-  struct {                                                                    \
+  union {                                                                     \
     uint32_t payload_remaining;                                               \
+    uint64_t dummy; /* TODO: retained for ABI compat; remove this in v2.x. */ \
   } ipc_data_frame;                                                           \
   struct uv__queue ipc_xfer_queue;                                            \
   int ipc_xfer_queue_length;                                                  \
@@ -375,6 +499,11 @@ typedef struct {
   union {                                                                     \
     struct {                                                                  \
       /* Used for readable TTY handles */                                     \
+      union {                                                                 \
+        /* TODO: remove me in v2.x. */                                        \
+        HANDLE unused_;                                                       \
+        int mode;                                                             \
+      } mode;                                                                 \
       uv_buf_t read_line_buffer;                                              \
       HANDLE read_raw_wait;                                                   \
       /* Fields used for translating win keystrokes into vt100 characters */  \
@@ -416,30 +545,35 @@ typedef struct {
   unsigned char events;
 
 #define UV_TIMER_PRIVATE_FIELDS                                               \
-  uv_timer_cb timer_cb;                                                       \
   union {                                                                     \
     void* heap[3];                                                            \
     struct uv__queue queue;                                                   \
   } node;                                                                     \
+  int unused;                                                                 \
   uint64_t timeout;                                                           \
   uint64_t repeat;                                                            \
-  uint64_t start_id;
+  uint64_t start_id;                                                          \
+  uv_timer_cb timer_cb;
 
 #define UV_ASYNC_PRIVATE_FIELDS                                               \
-  struct uv__queue queue;                                                     \
+  struct uv_req_s async_req;                                                  \
   uv_async_cb async_cb;                                                       \
-  LONG volatile async_sent;
+  /* char to avoid alignment issues */                                        \
+  char volatile async_sent;
 
 #define UV_PREPARE_PRIVATE_FIELDS                                             \
-  struct uv__queue queue;                                                     \
+  uv_prepare_t* prepare_prev;                                                 \
+  uv_prepare_t* prepare_next;                                                 \
   uv_prepare_cb prepare_cb;
 
 #define UV_CHECK_PRIVATE_FIELDS                                               \
-  struct uv__queue queue;                                                     \
+  uv_check_t* check_prev;                                                     \
+  uv_check_t* check_next;                                                     \
   uv_check_cb check_cb;
 
 #define UV_IDLE_PRIVATE_FIELDS                                                \
-  struct uv__queue queue;                                                     \
+  uv_idle_t* idle_prev;                                                       \
+  uv_idle_t* idle_next;                                                       \
   uv_idle_cb idle_cb;
 
 #define UV_HANDLE_PRIVATE_FIELDS                                              \
@@ -485,21 +619,20 @@ typedef struct {
   union {                                                                     \
     /* TODO: remove me in 0.9. */                                             \
     WCHAR* pathw;                                                             \
-    HANDLE hFile;                                                             \
+    int fd;                                                                   \
   } file;                                                                     \
   union {                                                                     \
     struct {                                                                  \
       int mode;                                                               \
       WCHAR* new_pathw;                                                       \
       int file_flags;                                                         \
-      HANDLE hFile_out;                                                       \
+      int fd_out;                                                             \
       unsigned int nbufs;                                                     \
       uv_buf_t* bufs;                                                         \
       int64_t offset;                                                         \
       uv_buf_t bufsml[4];                                                     \
     } info;                                                                   \
     struct {                                                                  \
-      double btime;                                                           \
       double atime;                                                           \
       double mtime;                                                           \
     } time;                                                                   \
@@ -539,18 +672,18 @@ typedef struct {
 #endif
 
 /* fs open() flags supported on this platform: */
-#define UV_FS_O_APPEND       0x0008
-#define UV_FS_O_CREAT        0x0100
-#define UV_FS_O_EXCL         0x0400
+#define UV_FS_O_APPEND       _O_APPEND
+#define UV_FS_O_CREAT        _O_CREAT
+#define UV_FS_O_EXCL         _O_EXCL
 #define UV_FS_O_FILEMAP      0x20000000
-#define UV_FS_O_RANDOM       0x0010
-#define UV_FS_O_RDONLY       0x0000
-#define UV_FS_O_RDWR         0x0002
-#define UV_FS_O_SEQUENTIAL   0x0020
-#define UV_FS_O_SHORT_LIVED  0x1000
-#define UV_FS_O_TEMPORARY    0x0040
-#define UV_FS_O_TRUNC        0x0200
-#define UV_FS_O_WRONLY       0x0001
+#define UV_FS_O_RANDOM       _O_RANDOM
+#define UV_FS_O_RDONLY       _O_RDONLY
+#define UV_FS_O_RDWR         _O_RDWR
+#define UV_FS_O_SEQUENTIAL   _O_SEQUENTIAL
+#define UV_FS_O_SHORT_LIVED  _O_SHORT_LIVED
+#define UV_FS_O_TEMPORARY    _O_TEMPORARY
+#define UV_FS_O_TRUNC        _O_TRUNC
+#define UV_FS_O_WRONLY       _O_WRONLY
 
 /* fs open() flags supported on other platforms (or mapped on this platform): */
 #define UV_FS_O_DIRECT       0x02000000 /* FILE_FLAG_NO_BUFFERING */

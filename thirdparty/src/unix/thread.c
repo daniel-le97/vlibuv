@@ -214,7 +214,7 @@ int uv_thread_setaffinity(uv_thread_t* tid,
     if (cpumask[i])
       CPU_SET(i, &cpuset);
 
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(__OHOS__)
   if (sched_setaffinity(pthread_gettid_np(*tid), sizeof(cpuset), &cpuset))
     r = errno;
   else
@@ -242,7 +242,7 @@ int uv_thread_getaffinity(uv_thread_t* tid,
     return UV_EINVAL;
 
   CPU_ZERO(&cpuset);
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(__OHOS__)
   if (sched_getaffinity(pthread_gettid_np(*tid), sizeof(cpuset), &cpuset))
     r = errno;
   else
@@ -271,8 +271,7 @@ int uv_thread_getaffinity(uv_thread_t* tid,
                           size_t mask_size) {
   return UV_ENOTSUP;
 }
-#endif /* defined(UV__CPU_AFFINITY_SUPPORTED) */
-
+#endif /* defined(__linux__) || defined(UV_BSD_H) */
 
 int uv_thread_getcpu(void) {
 #if UV__CPU_AFFINITY_SUPPORTED
@@ -288,11 +287,9 @@ int uv_thread_getcpu(void) {
 #endif
 }
 
-
 uv_thread_t uv_thread_self(void) {
   return pthread_self();
 }
-
 
 int uv_thread_join(uv_thread_t *tid) {
   return UV__ERR(pthread_join(*tid, NULL));
