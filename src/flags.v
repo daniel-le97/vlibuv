@@ -67,6 +67,7 @@ $if $d('uv_static', false) {
 		#flag @VMODROOT/thirdparty/src/win/signal.o
 		#flag @VMODROOT/thirdparty/src/win/dl.o
 		#flag @VMODROOT/thirdparty/src/win/stream.o
+
 	}
 
 	// Unix-like specific source files (Linux, macOS, FreeBSD, OpenBSD)

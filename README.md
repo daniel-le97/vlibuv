@@ -2,22 +2,40 @@
 
 v bindings for libuv
 
-## install
+## note
+
+Please only use this if you know what you are doing. There will be breaking changes.
+
+this currently compiles libuv from source on Ubuntu, macOS, and Windows, other platforms have not yet been tested
+
+V version: V 0.4.12, Commit: d0dc13e
+libuv version: branch v1.x, Commit: 8e02462
+
+passing -d uv_static, assumes libuv is installed as a static library at /usr/local/ or /opt/homebrew on macOS
+
+using TCC is currently not supported on windows.
+
+## Install
 
 ```
 v install --git https://github.com/daniel-le97/vlibuv.git
 ```
 
+## Development
 you may need to run "build.vsh update" and "build.vsh symlink" before developing
 
 ```bash
 v run build.vsh update
 ```
+- updates libuv, only do this if you really need
+
 ```bash
+
 v run build.vsh symlink
 ```
-
-## version 0.0.2
+ - symlinks this project to ~/.vmodules
+ 
+## Version 0.0.3
 
 direct lower level bindings to libuv are in ./uv and these should be mostly complete
 
@@ -38,11 +56,4 @@ new bindings are not fully complete i am missing the following, but may be missi
 - dl
 - key
 
-## note
 
-this currently compiles libuv from source on Ubuntu, macOS, and Windows, other platforms have not yet been tested
-
-V version: V 0.4.12, Commit: d0dc13e
-libuv version: branch v1.x, Commit: 8e02462
-
-passing -d uv_static, assumes libuv is installed as a static library at /usr/local/ or /opt/homebrew on macOS

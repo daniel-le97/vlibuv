@@ -91,11 +91,11 @@ pub fn (l Loop) set_data(data voidptr) ! {
 	C.uv_loop_set_data(l.loop, data)
 }
 
-pub fn (l Loop) run(mode int) !int {
+pub fn (l Loop) run(mode Mode) !int {
 	if isnil(l.loop) {
 		return error('loop is nil')
 	}
-	result := C.uv_run(l.loop, mode)
+	result := C.uv_run(l.loop, mode.to_int())
 	if result < 0 {
 		return error_checker(result)
 	}

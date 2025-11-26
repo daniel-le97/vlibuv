@@ -59,7 +59,7 @@ context.task(
 	name: 'test'
 	help: 'Run the tests'
 	run:  fn (self build.Task) ! {
-		system('v -stats test tests/')
+		system('v -cc gcc -stats test tests/')
 	}
 )
 
@@ -107,7 +107,7 @@ context.task(
 		modules_dir := os.vmodules_dir()
 		symlink_path := '${modules_dir}/vlibuv'
 		println('Creating symlink: ${symlink_path} -> ${cwd}')
-		
+
 		if exists(symlink_path) {
 			if is_dir(symlink_path) && !is_link(symlink_path) {
 				rmdir_all(symlink_path)!
@@ -116,7 +116,7 @@ context.task(
 			}
 			println('Removed existing path: ${symlink_path}')
 		}
-		
+
 		if os.getenv('OS') == 'Windows_NT' {
 			// On Windows, use PowerShell to create a symlink (requires admin)
 			ps_cmd := 'New-Item -ItemType SymbolicLink -Path "${symlink_path}" -Target "${cwd}" -Force'

@@ -24,7 +24,7 @@ fn main() {
 	println('Timer started. Waiting for callback...')
 
 	// Run the event loop
-	loop.run(int(vlibuv.Mode.default)) or { panic(err) }
+	loop.run(.default) or { panic(err) }
 
 	println('Done! Timer was called ${counter.value} time(s)')
 	unsafe { free(counter) }

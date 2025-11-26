@@ -6,6 +6,11 @@ fn main() {
 	// Create a filesystem watcher
 	mut watcher := vlibuv.FsEvent.new(loop)!
 
+	defer {
+		watcher.stop() or {}
+		loop.close() or {}
+	}
+
 	// Watch the current directory for changes
 	watcher.start('.', 0, fn (path string, events []vlibuv.FsEventType, status int) {
 		if status < 0 {
@@ -26,11 +31,10 @@ fn main() {
 	println('Press Ctrl+C to stop')
 
 	// Run the event loop
-	loop.run(int(vlibuv.Mode.default))!
+	loop.run(.default)!
 
 	// Cleanup happens automatically via destructors
-	watcher.stop() or {}
-	loop.close() or {}
+
 
 	println('Done!')
 }

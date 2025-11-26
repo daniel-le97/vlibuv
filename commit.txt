@@ -1,1 +1,0 @@
-;, &&, || and \n are not allowed in shell commands

@@ -197,6 +197,10 @@ pub enum Mode {
 	nowait
 }
 
+fn (m Mode) to_int() int {
+	return int(m)
+}
+
 // pub enum Uv_handle_type {
 // 	unknown_handle = 0
 // 	async
