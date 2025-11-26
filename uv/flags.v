@@ -1,4 +1,4 @@
-module vlibuv
+module uv
 
 //  add -d uv_static to your v build command to use libuv static library instead of building from source
 
