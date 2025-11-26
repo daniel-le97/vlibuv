@@ -2,6 +2,7 @@
 
 import build
 import os
+import net.http.file
 
 // Define variables that can be used to change tasks in the build script
 const app_name = 'hello'
@@ -81,19 +82,28 @@ context.task(
 		system('v doc . -f markdown -o ./docs/markdown')
 		system('v doc . -f html -o ./docs/html')
 		rename('./docs/html/vlibuv.html', './docs/html/index.html')!
-		// system('v -e \'import net.http.file; file.serve(folder: "./docs/html", on: ":5002")\'')
 	}
 )
 
-	context.task(
+context.task(
+	name: 'docs.view'
+	help: 'build the documentation'
+	depends: ['docs']
+	run:  fn (self build.Task) ! {
+		println("look at the docs on http://localhost:8080")
+		file.serve(folder: "./docs/html", on: ":8080")
+	}
+)
+
+context.task(
 	name: 'examples'
 	help: 'build the examples'
 	run:  fn (self build.Task) ! {
 		examples := os.walk_ext('./examples', '.v')
 		for ex in examples {
 			cc_flag := if os.getenv('OS') == 'Windows_NT' { '-cc gcc' } else { '' }
-			code := execute('v ${cc_flag} ${ex}').exit_code
-			message := if code == 0 { 'Success' } else { 'failed' }
+			result := execute('v ${cc_flag} ${ex}')
+			message := if result.exit_code == 0 { 'Success' } else { 'failed' }
 			println('Building example: ${ex} - ${message}')
 		}
 	}
@@ -153,22 +163,22 @@ context.task(
 	name: 'update'
 	help: 'Update libuv'
 	run:  fn (self build.Task) ! {
+
+		pull := fn () ! {
+			branch := 'v1.x'
+			chdir("./thirdparty")!
+			output := execute('git pull origin ${branch}').output
+			if output.contains("Already up to date") {
+				println("Already up to date")
+				return
+			}
+		}
+
 		if exists('./thirdparty/.git') {
-			println('Updating libuv: git pull origin master')
-			pulled := execute('cd ./thirdparty && git pull origin master').output
-			if pulled.contains('Already up to date') {
-				return
-			}
-			hash := execute('cd ./thirdparty && git rev-parse HEAD')
-			if system('v -stats test tests/') != 0 {
-				println('Tests failed, reverting to previous commit')
-				old_hash := os.read_file('./commit.txt')!
-				system('cd ./thirdparty && git reset --hard ${old_hash.trim_space()}')
-				return
-			}
-			write_file('./commit.txt', hash.output.trim_space())!
+			pull()!
 			return
 		}
+
 		if !exists('./thirdparty') {
 			mkdir('./thirdparty') or { panic(err) }
 		}
@@ -177,17 +187,15 @@ context.task(
 		system('cd ./thirdparty && git remote add origin https://github.com/libuv/libuv.git')
 		system('cd ./thirdparty && git config core.sparseCheckout true')
 		// only include the files we need/want
-		mut file := create('./thirdparty/.git/info/sparse-checkout')!
-		file.writeln('include/')!
-		file.writeln('src/')!
-		file.writeln('LICENSE*')!
-		file.writeln('README*')!
-		file.writeln('*.pc*')!
-		file.writeln('!docs/src/')!
-		file.close()
-		system('cd ./thirdparty && git pull origin v1.x')
-		hash := execute('cd ./thirdparty && git rev-parse HEAD')
-		write_file('./commit.txt', hash.output.trim_space())!
+		mut checkout := create('./thirdparty/.git/info/sparse-checkout')!
+		checkout.writeln('include/')!
+		checkout.writeln('src/')!
+		checkout.writeln('LICENSE*')!
+		checkout.writeln('README*')!
+		checkout.writeln('*.pc*')!
+		checkout.writeln('!docs/src/')!
+		checkout.close()
+		pull()!
 	}
 )
 
