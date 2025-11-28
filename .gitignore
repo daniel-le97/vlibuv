@@ -35,4 +35,3 @@ examples/*
 
 # Except for .v/c files
 !examples/*.v
-

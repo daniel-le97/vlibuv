@@ -1,0 +1,35 @@
+vlibuv/
+├── src/          (shared binedings, loop should also be imported from this module "import vlibuv")
+│   ├── lib.v
+│   ├── loop.v
+│   └── handle.v
+├── timers/        ( import vlibuv.timers)
+│   └── timer.v
+├── fs/            ( import vlibuv.fs )
+│   ├── fs_event.v
+│   ├── fs_poll.v
+│   └── fs.v
+├── net/            ( import vlibuv.net)
+│   ├── stream.v
+│   ├── tcp.v
+│   ├── udp.v
+│   ├── pipe.v
+│   └── tty.v
+├── async/
+│   ├── async.v
+│   ├── idle.v
+│   ├── prepare.v
+│   └── check.v
+├── proc/                (NEW: combined concurrency)          (exports Thread, Process, Work, + sync primitives)
+│   ├── thread.v
+│   ├── process.v
+│   ├── work.v          (threadpool/work queue)
+│   ├── mutex.v
+│   ├── rwlock.v
+│   ├── sem.v
+│   ├── cond.v
+│   └── barrier.v
+├── signals/
+│   ├── lib.v
+│   └── signal.v
+└── [shared C bindings at src/ root]

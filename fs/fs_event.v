@@ -1,48 +1,67 @@
-module vlibuv
+module fs
 
-fn C.uv_fs_event_init(loop &C.uv_loop_t, handle &C.uv_fs_event_t) int
-fn C.uv_fs_event_start(handle &C.uv_fs_event_t, cb fn (handle &C.uv_fs_event_t, const_filename &char, events int, status int), const_path &char, flags int) int
-fn C.uv_fs_event_stop(handle &C.uv_fs_event_t) int
-fn C.uv_fs_event_getpath(handle &C.uv_fs_event_t, path &char, size &usize) int
-
-@[typedef]
-pub struct C.uv_fs_event_t {
-}
+import vlibuv.uv
+import vlibuv
 
 // High-level event type for users
-pub enum WatchEvent {
+pub enum EventType {
 	rename = 1
 	change = 2
 }
 
 pub struct Watcher {
 pub mut:
-	handle &C.uv_fs_event_t
+	handle &uv.Uv_fs_event_t
 mut:
 	path    string
 	stopped bool
 }
 
+pub enum WatcherType {
+	poll
+	event
+}
+
+pub type Looper = uv.Uv_loop_t | vlibuv.Loop
+
+pub fn new_watcher(loop Looper, watcher_type WatcherType) !Watcher {
+	$if watcher_type.event {
+		$if loop is &uv.Uv_loop_t {
+			return Watcher.new(loop)
+		} $else $if loop is &vlibuv.Loop {
+			c_loop := loop.get_c_loop()!
+			return Watcher.new(c_loop)
+		} $else {
+			return error('invalid loop type')
+		}
+	} $else $if watcher_type.poll {
+		
+		return error('fs_poll watcher type is not implemented in this function')
+	} $else {
+		return error('invalid watcher type')
+	}
+}
 
 // Create a new filesystem event watcher
-pub fn Watcher.new(loop Loop) !Watcher {
-	c_loop := loop.get_c_loop()
-	if isnil(c_loop) {
+pub fn Watcher.new(loop &uv.Uv_loop_t) !Watcher {
+	if isnil(loop) {
 		return error('loop is nil')
 	}
 
-	handle := &C.uv_fs_event_t{}
-	result := C.uv_fs_event_init(c_loop, handle)
+	handle := uv.Uv_fs_event_t{}
+	fs_event_handle := unsafe { &uv.Uv_fs_event_t(handle) }
+
+	result := uv.fs_event_init(loop, fs_event_handle)
 	if result < 0 {
 		unsafe { free(handle) }
 		return error('failed to initialize fs_event')
 	}
 
-	return Watcher{handle, '', false}
+	return Watcher{fs_event_handle, '', false}
 }
 
 // Start watching a path for filesystem events
-pub fn (mut f Watcher) start(path string, flags int, callback fn (path string, events []WatchEvent)) ! {
+pub fn (mut f Watcher) start(path string, flags int, callback fn (path string, events []EventType, status int)) ! {
 	if isnil(f.handle) || f.stopped {
 		return error('fs_event is invalid or stopped')
 	}
@@ -50,13 +69,9 @@ pub fn (mut f Watcher) start(path string, flags int, callback fn (path string, e
 	f.path = path
 
 	// Wrap C callback to call V callback
-	c_callback := fn [callback] (handle &C.uv_fs_event_t, const_filename &char, events int, status int) {
-		if status < 0 {
-			// Handle error if needed
-			return
-		}
+	c_callback := fn [callback] (handle &uv.Uv_fs_event_t, const_filename &char, events int, status int) {
 		// Parse events into V enum
-		mut event_types := []WatchEvent{}
+		mut event_types := []EventType{}
 		if events & 1 != 0 {
 			event_types << .rename
 		}
@@ -71,10 +86,10 @@ pub fn (mut f Watcher) start(path string, flags int, callback fn (path string, e
 			unsafe { cstring_to_vstring(const_filename) }
 		}
 
-		callback(filename, event_types)
+		callback(filename, event_types, status)
 	}
 
-	result := C.uv_fs_event_start(f.handle, c_callback, charptr(path.str), flags)
+	result := uv.fs_event_start(f.handle, c_callback, charptr(path.str), flags)
 	if result < 0 {
 		return error('failed to start fs_event')
 	}
@@ -86,7 +101,7 @@ pub fn (mut f Watcher) stop() ! {
 		return error('fs_event is invalid or stopped')
 	}
 
-	result := C.uv_fs_event_stop(f.handle)
+	result := uv.fs_event_stop(f.handle)
 	if result < 0 {
 		return error('failed to stop fs_event')
 	}
@@ -103,7 +118,7 @@ pub fn (f Watcher) get_path() !string {
 	mut buf := [4096]char{}
 	mut size := usize(4096)
 
-	result := C.uv_fs_event_getpath(f.handle, unsafe { &buf[0] }, &size)
+	result := uv.fs_event_getpath(f.handle, unsafe { &buf[0] }, &size)
 	if result < 0 {
 		return error('failed to get fs_event path')
 	}
@@ -117,7 +132,7 @@ pub fn (f Watcher) get_path() !string {
 @[unsafe]
 pub fn (mut f Watcher) free() {
 	if !isnil(f.handle) && !f.stopped {
-		C.uv_fs_event_stop(f.handle)
+		uv.fs_event_stop(f.handle)
 		f.stopped = true
 	}
 }
