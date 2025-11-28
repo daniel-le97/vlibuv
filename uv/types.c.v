@@ -46,3 +46,21 @@ pub type Sockaddr_in = C.sockaddr_in
 
 // Alias for the respective VLang structs
 pub type Uv_loop_t = C.uv_loop_t
+
+pub type Uv_lib_t = C.uv_lib_t
+pub type Uv_mutex_t = C.uv_mutex_t
+pub type Uv_rwlock_t = C.uv_rwlock_t
+pub type Uv_sem_t = C.uv_sem_t
+pub type Uv_barrier_t = C.uv_barrier_t
+pub type Uv_cond_t = C.uv_cond_t
+
+pub type Uv_once_t = C.uv_once_t
+pub type Uv_key_t = C.uv_key_t
+pub type Uv_thread_t = C.uv_thread_t
+pub type Uv_thread_options_t = C.uv_thread_options_t
+
+
+pub type Uv_uid_t = C.uv_uid_t
+
+
+

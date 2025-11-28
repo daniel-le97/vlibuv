@@ -15,14 +15,14 @@ module uv
 // }
 
 // note C. structs do not allow embedding other structs like v structs do
-// struct Handle_fields {
+// struct Uv_handle_t_fields {
 // 	loop &C.uv_loop_t
 // pub mut:
 // 	data voidptr
 // 	// type Uv_handle_type
 // }
 
-// struct Stream_fields {
+// struct Uv_stream_t_fields {
 // pub mut:
 // 	write_queue_size usize
 // 	alloc_cb         ?Alloc_cb
