@@ -1,5 +1,5 @@
 vlibuv/
-├── src/          (shared binedings, loop should also be imported from this module "import vlibuv")
+├── src/          (most important bindings, bindings that dont make sense to go into another module, loop should also be imported from this module "import vlibuv")
 │   ├── lib.v
 │   ├── loop.v
 │   └── handle.v
@@ -29,6 +29,7 @@ vlibuv/
 │   ├── sem.v
 │   ├── cond.v
 │   └── barrier.v
+
 ├── signals/
 │   ├── lib.v
 │   └── signal.v
