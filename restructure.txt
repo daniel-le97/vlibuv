@@ -32,4 +32,4 @@ vlibuv/
 ├── signals/
 │   ├── lib.v
 │   └── signal.v
-└── [shared C bindings at src/ root]
+└── uv [shared libuv v wrapper bindings]

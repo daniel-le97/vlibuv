@@ -311,11 +311,11 @@ pub fn req_get_type(const_req &Uv_req_t) Uv_req_type {
 	}
 }
 
-fn Uv_req_type_name(req_type int) &char
+fn C.uv_req_type_name(req_type int) &char
 
 pub fn req_type_name(const_req_type Uv_req_type) string {
 	unsafe {
-		return cstring_to_vstring(Uv_req_type_name(int(const_req_type)))
+		return cstring_to_vstring(C.uv_req_type_name(int(const_req_type)))
 	}
 }
 
@@ -627,10 +627,10 @@ pub fn udp_send(req &Uv_udp_send_t, handle &Uv_udp_t, const_bufs &Uv_buf_t, nbuf
 	return C.uv_udp_send(req, handle, const_bufs, nbufs, addr, cb)
 }
 
-fn Uv_udp_try_send(handle &Uv_udp_t, const_bufs &Uv_buf_t, nbufs u32, addr &C.sockaddr) int
+fn C.uv_udp_try_send(handle &Uv_udp_t, const_bufs &Uv_buf_t, nbufs u32, addr &C.sockaddr) int
 
 pub fn udp_try_send(handle &Uv_udp_t, const_bufs &Uv_buf_t, nbufs u32, const_sockaddr &C.sockaddr) int {
-	return Uv_udp_try_send(handle, const_bufs, nbufs, const_sockaddr)
+	return C.uv_udp_try_send(handle, const_bufs, nbufs, const_sockaddr)
 }
 
 fn C.uv_udp_recv_start(handle &Uv_udp_t, alloc_cb fn (handle &Uv_handle_t, suggested_size usize, buf &Uv_buf_t), recv_cb fn (handle &Uv_udp_t, nread isize, buf &Uv_buf_t, addr &C.sockaddr, flags u32)) int
@@ -840,22 +840,22 @@ pub fn prepare_stop(handle &Uv_prepare_t) int {
 
 // check functions
 
-fn Uv_check_init(loop &Uv_loop_t, handle &Uv_check_t) int
+fn C.uv_check_init(loop &Uv_loop_t, handle &Uv_check_t) int
 
 pub fn check_init(loop &Uv_loop_t, handle &Uv_check_t) int {
-	return Uv_check_init(loop, handle)
+	return C.uv_check_init(loop, handle)
 }
 
-fn Uv_check_start(handle &Uv_check_t, cb fn (handle &Uv_check_t)) int
+fn C.uv_check_start(handle &Uv_check_t, cb fn (handle &Uv_check_t)) int
 
 pub fn check_start(handle &Uv_check_t, cb fn (handle &Uv_check_t)) int {
-	return Uv_check_start(handle, cb)
+	return C.uv_check_start(handle, cb)
 }
 
-fn Uv_check_stop(handle &Uv_check_t) int
+fn C.uv_check_stop(handle &Uv_check_t) int
 
 pub fn check_stop(handle &Uv_check_t) int {
-	return Uv_check_stop(handle)
+	return C.uv_check_stop(handle)
 }
 
 // idle functions

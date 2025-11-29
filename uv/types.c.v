@@ -14,6 +14,7 @@ pub type Uv_check_t = C.uv_check_t
 pub type Uv_idle_t = C.uv_idle_t
 pub type Uv_async_t = C.uv_async_t
 pub type Uv_process_t = C.uv_process_t
+pub type Uv_process_options_t = C.uv_process_options_t
 pub type Uv_fs_event_t = C.uv_fs_event_t
 pub type Uv_fs_poll_t = C.uv_fs_poll_t
 pub type Uv_signal_t = C.uv_signal_t
@@ -37,7 +38,9 @@ pub type Uv_passwd_t = C.uv_passwd_t
 pub type Uv_group_t = C.uv_group_t
 pub type Uv_utsname_t = C.uv_utsname_t
 pub type Uv_statfs_t = C.uv_statfs_t
+pub type Uv_stat_t = C.uv_stat_t
 pub type Uv_metrics_t = C.uv_metrics_t
+pub type Uv_rusage_t = C.uv_rusage_t
 
 pub type Uv_buf_t = C.uv_buf_t
 
