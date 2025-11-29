@@ -38,7 +38,7 @@ pub fn (mut l Loop) free() {
 			l.loop = nil
 		}
 	}
-}
+}	
 
 // Manually close the loop (optional - free() will be called automatically)
 pub fn (mut l Loop) close() ! {

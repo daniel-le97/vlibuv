@@ -980,16 +980,16 @@ pub fn getnameinfo(loop &C.uv_loop_t, req &C.uv_getnameinfo_t, cb fn (req &C.uv_
 
 // work functions
 // @[keep_args_alive]
-fn C.uv_queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int)) int
+// fn C.uv_queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int)) int
 
-// @[keep_args_alive]
-pub fn queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int)) !int {
-	// gc_disable()
-	res := C.uv_queue_work(loop, work, work_cb, after_work_cb)
-	// gc_enable()
-	return error_checker(res)
-	// return error_checker(C.uv_queue_work(loop, work, work_cb, after_work_cb))
-}
+// // @[keep_args_alive]
+// pub fn queue_work(loop &C.uv_loop_t, work &C.uv_work_t, work_cb fn (work &C.uv_work_t), after_work_cb fn (work &C.uv_work_t, status int)) !int {
+// 	// gc_disable()
+// 	res := C.uv_queue_work(loop, work, work_cb, after_work_cb)
+// 	// gc_enable()
+// 	return error_checker(res)
+// 	// return error_checker(C.uv_queue_work(loop, work, work_cb, after_work_cb))
+// }
 
 fn C.uv_cancel(req &C.uv_req_t) int
 
@@ -1116,41 +1116,41 @@ pub fn getrusage(rusage &C.uv_rusage_t) int {
 
 // cpu functions
 
-fn C.uv_thread_getpriority(tid C.uv_thread_t, priority &int) int
+// fn C.uv_thread_getpriority(tid C.uv_thread_t, priority &int) int
 
-pub fn thread_getpriority(tid C.uv_thread_t, priority &int) int {
-	return C.uv_thread_getpriority(tid, priority)
-}
+// pub fn thread_getpriority(tid C.uv_thread_t, priority &int) int {
+// 	return C.uv_thread_getpriority(tid, priority)
+// }
 
-fn C.uv_thread_setpriority(tid C.uv_thread_t, priority Uv_thread_priority) int
+// fn C.uv_thread_setpriority(tid C.uv_thread_t, priority Uv_thread_priority) int
 
-pub fn thread_setpriority(tid C.uv_thread_t, priority Uv_thread_priority) int {
-	return C.uv_thread_setpriority(tid, priority)
-}
+// pub fn thread_setpriority(tid C.uv_thread_t, priority Uv_thread_priority) int {
+// 	return C.uv_thread_setpriority(tid, priority)
+// }
 
-fn C.uv_available_parallelism() usize
+// fn C.uv_available_parallelism() usize
 
-pub fn available_parallelism() usize {
-	return C.uv_available_parallelism()
-}
+// pub fn available_parallelism() usize {
+// 	return C.uv_available_parallelism()
+// }
 
-fn C.uv_cpu_info(cpu_infos &&C.uv_cpu_info_t, count &int) int
+// fn C.uv_cpu_info(cpu_infos &&C.uv_cpu_info_t, count &int) int
 
-pub fn cpu_info(cpu_infos &&C.uv_cpu_info_t, count &int) int {
-	return C.uv_cpu_info(cpu_infos, count)
-}
+// pub fn cpu_info(cpu_infos &&C.uv_cpu_info_t, count &int) int {
+// 	return C.uv_cpu_info(cpu_infos, count)
+// }
 
-fn C.uv_free_cpu_info(cpu_infos &C.uv_cpu_info_t, count int)
+// fn C.uv_free_cpu_info(cpu_infos &C.uv_cpu_info_t, count int)
 
-pub fn free_cpu_info(cpu_infos &C.uv_cpu_info_t, count int) {
-	C.uv_free_cpu_info(cpu_infos, count)
-}
+// pub fn free_cpu_info(cpu_infos &C.uv_cpu_info_t, count int) {
+// 	C.uv_free_cpu_info(cpu_infos, count)
+// }
 
-fn C.uv_cpumask_size() int
+// fn C.uv_cpumask_size() int
 
-pub fn cpumask_size() int {
-	return C.uv_cpumask_size()
-}
+// pub fn cpumask_size() int {
+// 	return C.uv_cpumask_size()
+// }
 
 fn C.uv_interface_addresses(addresses &&C.uv_interface_address_t, count &int) int
 
@@ -1161,55 +1161,56 @@ pub fn interface_addresses(addresses &&C.uv_interface_address_t, count &int) int
 fn C.uv_free_interface_addresses(addresses &&C.uv_interface_address_t, count int)
 
 pub fn free_interface_addresses(addresses &C.uv_interface_address_t, count int) {
-	C.uv_free_interface_addresses(addresses, count)
+	C.uv_free_interface_addresses(&addresses, count)
 }
 
-// env functions
+// // env functions
 
-fn C.uv_os_environ(env_items &&C.uv_env_item_t, count &int) int
+// fn C.uv_os_environ(env_items &&C.uv_env_item_t, count &int) int
 
-pub fn os_environ(env_items &&C.uv_env_item_t, count &int) int {
-	return C.uv_os_environ(env_items, count)
-}
+// pub fn os_environ(env_items &&C.uv_env_item_t, count &int) int {
+// 	return C.uv_os_environ(env_items, count)
+// }
 
-fn C.uv_os_free_environ(env_items &C.uv_env_item_t, count int)
+// fn C.uv_os_free_environ(env_items &C.uv_env_item_t, count int)
 
-pub fn os_free_environ(env_items &C.uv_env_item_t, count int) {
-	C.uv_os_free_environ(env_items, count)
-}
+// pub fn os_free_environ(env_items &C.uv_env_item_t, count int) {
+// 	C.uv_os_free_environ(env_items, count)
+// }
 
-fn C.uv_os_getenv(const_name &char, buffer &char, size &usize) int
+// fn C.uv_os_getenv(const_name &char, buffer &char, size &usize) int
 
-pub fn os_getenv(const_name &char, buffer &char, size &usize) int {
-	return C.uv_os_getenv(const_name, buffer, size)
-}
+// pub fn os_getenv(const_name &char, buffer &char, size &usize) int {
+// 	return C.uv_os_getenv(const_name, buffer, size)
+// }
 
-fn C.uv_os_setenv(const_name &char, const_value &char) int
+// fn C.uv_os_setenv(const_name &char, const_value &char) int
 
-pub fn os_setenv(const_name &char, const_value &char) int {
-	return C.uv_os_setenv(const_name, const_value)
-}
+// pub fn os_setenv(const_name &char, const_value &char) int {
+// 	return C.uv_os_setenv(const_name, const_value)
+// }
 
-fn C.uv_os_unsetenv(const_name &char) int
+// fn C.uv_os_unsetenv(const_name &char) int
 
-pub fn os_unsetenv(const_name &char) int {
-	return C.uv_os_unsetenv(const_name)
-}
+// pub fn os_unsetenv(const_name &char) int {
+// 	return C.uv_os_unsetenv(const_name)
+// }
+
+
+
+// fn C.uv_os_gethostname(buffer &char, size &usize) int
+
+// pub fn os_gethostname(buffer &char, size &usize) int {
+// 	return C.uv_os_gethostname(buffer, size)
+// }
+
+// fn C.uv_os_uname(buffer &C.uv_utsname_t) int
+
+// pub fn os_uname(buffer &C.uv_utsname_t) int {
+// 	return C.uv_os_uname(buffer)
+//
 
 // metrics functions
-
-fn C.uv_os_gethostname(buffer &char, size &usize) int
-
-pub fn os_gethostname(buffer &char, size &usize) int {
-	return C.uv_os_gethostname(buffer, size)
-}
-
-fn C.uv_os_uname(buffer &C.uv_utsname_t) int
-
-pub fn os_uname(buffer &C.uv_utsname_t) int {
-	return C.uv_os_uname(buffer)
-}
-
 fn C.uv_metrics_info(loop &C.uv_loop_t, metrics &C.uv_metrics_t) int
 
 pub fn metrics_info(loop &C.uv_loop_t, metrics &C.uv_metrics_t) int {

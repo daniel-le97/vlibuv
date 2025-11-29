@@ -999,9 +999,9 @@ pub fn setup_args(argc int, argv &&char) &&char {
 	return C.uv_setup_args(argc, argv)
 }
 
-fn C.uv_get_process_title(title &char, size usize) int
+fn C.uv_get_process_title(title &char, size &usize) int
 
-pub fn get_process_title(title &char, size usize) int {
+pub fn get_process_title(title &char, size &usize) int {
 	return C.uv_get_process_title(title, size)
 }
 
@@ -1538,6 +1538,34 @@ pub fn fs_poll_getpath(handle &Uv_fs_poll_t, path &char, size &usize) int {
 	return C.uv_fs_poll_getpath(handle, path, size)
 }
 
+
+// fs event functions
+
+fn C.uv_fs_event_init(loop &Uv_loop_t, handle &Uv_fs_event_t) int
+
+pub fn fs_event_init(loop &Uv_loop_t, handle &Uv_fs_event_t) int {
+	return C.uv_fs_event_init(loop, handle)
+}
+
+fn C.uv_fs_event_start(handle &Uv_fs_event_t, cb fn (handle &Uv_fs_event_t, const_filename &char, events int, status int), const_path &char, flags int) int
+
+pub fn fs_event_start(handle &Uv_fs_event_t, cb fn (handle &Uv_fs_event_t, const_filename &char, events int, status int), const_path &char, flags int) int {
+	return C.uv_fs_event_start(handle, cb, const_path, flags)
+}
+
+fn C.uv_fs_event_stop(handle &Uv_fs_event_t) int
+
+pub fn fs_event_stop(handle &Uv_fs_event_t) int {
+	return C.uv_fs_event_stop(handle)
+}
+
+fn C.uv_fs_event_getpath(handle &Uv_fs_event_t, path &char, size &usize) int
+
+pub fn fs_event_getpath(handle &Uv_fs_event_t, path &char, size &usize) int {
+	return C.uv_fs_event_getpath(handle, path, size)
+}
+
+
 // signal functions
 
 fn C.uv_signal_init(loop &Uv_loop_t, handle &Uv_signal_t) int
@@ -1570,31 +1598,6 @@ pub fn loadavg(avg &f64) {
 	C.uv_loadavg(avg)
 }
 
-// fs event functions
-
-fn C.uv_fs_event_init(loop &Uv_loop_t, handle &Uv_fs_event_t) int
-
-pub fn fs_event_init(loop &Uv_loop_t, handle &Uv_fs_event_t) int {
-	return C.uv_fs_event_init(loop, handle)
-}
-
-fn C.uv_fs_event_start(handle &Uv_fs_event_t, cb fn (handle &Uv_fs_event_t, const_filename &char, events int, status int), const_path &char, flags int) int
-
-pub fn fs_event_start(handle &Uv_fs_event_t, cb fn (handle &Uv_fs_event_t, const_filename &char, events int, status int), const_path &char, flags int) int {
-	return C.uv_fs_event_start(handle, cb, const_path, flags)
-}
-
-fn C.uv_fs_event_stop(handle &Uv_fs_event_t) int
-
-pub fn fs_event_stop(handle &Uv_fs_event_t) int {
-	return C.uv_fs_event_stop(handle)
-}
-
-fn C.uv_fs_event_getpath(handle &Uv_fs_event_t, path &char, size &usize) int
-
-pub fn fs_event_getpath(handle &Uv_fs_event_t, path &char, size &usize) int {
-	return C.uv_fs_event_getpath(handle, path, size)
-}
 
 // ip functions
 

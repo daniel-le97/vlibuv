@@ -15,7 +15,7 @@ fn listen_callback(server vlibuv.Stream, status int) {
 }
 
 fn main() {
-	mut loop := vlibuv.Loop.default()
+	_ := vlibuv.Loop.default()
 	println('HTTP server example - high-level API not yet fully implemented')
 	println('Use http_server_uv.v for a complete TCP server example')
 }

@@ -1,7 +1,6 @@
-module vlibuv
+module os
 
 import vlibuv.uv
-
 
 
 // Priority levels for process priority
@@ -252,41 +251,4 @@ pub fn uptime() !f64 {
 		return error(uv.get_error_message(ret))
 	}
 	return up
-}
-
-
-//TODO implement the following functions:
-
-pub fn os_get_passwd(pwd &uv.Uv_passwd_t) int {
-	return uv.os_get_passwd(pwd)
-}
-
-pub fn os_free_passwd(pwd &uv.Uv_passwd_t) {
-	uv.os_free_passwd(pwd)
-}
-
-pub fn os_get_passwd2(pwd &uv.Uv_passwd_t, uid uv.Uv_uid_t) int {
-	return uv.os_get_passwd2(pwd, uid)
-}
-
-pub fn os_get_group(group &uv.Uv_group_t, gid uv.Uv_uid_t) int {
-	return uv.os_get_group(group, gid)
-}
-
-pub fn os_free_group(group &uv.Uv_group_t) {
-	uv.os_free_group(group)
-}
-
-pub fn free_cpu_info(cpu_infos &uv.Uv_cpu_info_t, count int) {
-	uv.free_cpu_info(cpu_infos, count)
-}
-
-pub fn cpumask_size() int {
-	return uv.cpumask_size()
-}
-
-// memory functions
-
-fn getrusage(rusage &uv.Uv_rusage_t) int {
-	return uv.getrusage(rusage)
 }

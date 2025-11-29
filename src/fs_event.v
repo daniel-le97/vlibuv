@@ -1,14 +1,6 @@
 module vlibuv
 
-fn C.uv_fs_event_init(loop &C.uv_loop_t, handle &C.uv_fs_event_t) int
-fn C.uv_fs_event_start(handle &C.uv_fs_event_t, cb fn (handle &C.uv_fs_event_t, const_filename &char, events int, status int), const_path &char, flags int) int
-fn C.uv_fs_event_stop(handle &C.uv_fs_event_t) int
-fn C.uv_fs_event_getpath(handle &C.uv_fs_event_t, path &char, size &usize) int
-
-@[typedef]
-pub struct C.uv_fs_event_t {
-}
-
+import vlibuv.uv
 // High-level event type for users
 pub enum WatchEvent {
 	rename = 1
@@ -17,7 +9,7 @@ pub enum WatchEvent {
 
 pub struct Watcher {
 pub mut:
-	handle &C.uv_fs_event_t
+	handle &uv.Uv_fs_event_t
 mut:
 	path    string
 	stopped bool
@@ -31,7 +23,7 @@ pub fn Watcher.new(loop Loop) !Watcher {
 		return error('loop is nil')
 	}
 
-	handle := &C.uv_fs_event_t{}
+	handle := &uv.Uv_fs_event_t{}
 	result := C.uv_fs_event_init(c_loop, handle)
 	if result < 0 {
 		unsafe { free(handle) }
@@ -50,7 +42,7 @@ pub fn (mut f Watcher) start(path string, flags int, callback fn (path string, e
 	f.path = path
 
 	// Wrap C callback to call V callback
-	c_callback := fn [callback] (handle &C.uv_fs_event_t, const_filename &char, events int, status int) {
+	c_callback := fn [callback] (handle &uv.Uv_fs_event_t, const_filename &char, events int, status int) {
 		if status < 0 {
 			// Handle error if needed
 			return

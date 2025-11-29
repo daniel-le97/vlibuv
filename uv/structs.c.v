@@ -343,10 +343,10 @@ pub struct C.uv_env_item_t {
 pub struct C.uv_cpu_info_t {
 	model     &char
 	speed     int
-	cpu_times &C.uv_cpu_times_s
+	cpu_times C.uv_cpu_times_s
 }
 
-struct C.uv_cpu_times_s {
+pub struct C.uv_cpu_times_s {
 	user u64
 	nice u64
 	sys  u64
@@ -394,6 +394,9 @@ pub struct C.uv_group_t {
 	gid       u64
 	members   &&char
 }
+
+@[typedef]
+pub struct C.uv_gid_t {}
 
 @[typedef]
 pub struct C.uv_utsname_t {
@@ -514,19 +517,19 @@ pub struct C.uv_env_item_t {
 
 // sync primative fields dont need to be defined
 @[typedef]
-struct C.uv_mutex_t {}
+pub struct C.uv_mutex_t {}
 
 @[typedef]
-struct C.uv_rwlock_t {}
+pub struct C.uv_rwlock_t {}
 
 @[typedef]
-struct C.uv_sem_t {}
+pub struct C.uv_sem_t {}
 
 @[typedef]
-struct C.uv_cond_t {}
+pub struct C.uv_cond_t {}
 
 @[typedef]
-struct C.uv_barrier_t {
+pub struct C.uv_barrier_t {
 	mutex      &C.uv_mutex_t
 	cond       &C.uv_cond_t
 	threshhold usize
@@ -535,13 +538,13 @@ struct C.uv_barrier_t {
 }
 
 @[typedef]
-struct C.uv_once_t {}
+pub struct C.uv_once_t {}
 
 @[typedef]
-struct C.uv_key_t {}
+pub struct C.uv_key_t {}
 
 @[typedef]
-struct C.uv_lib_t {}
+pub struct C.uv_lib_t {}
 
 // Import necessary C functions and structures
 

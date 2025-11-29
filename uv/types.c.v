@@ -39,6 +39,7 @@ pub type Uv_group_t = C.uv_group_t
 pub type Uv_utsname_t = C.uv_utsname_t
 pub type Uv_statfs_t = C.uv_statfs_t
 pub type Uv_stat_t = C.uv_stat_t
+pub type Uv_gid_t = C.uv_gid_t
 pub type Uv_metrics_t = C.uv_metrics_t
 pub type Uv_rusage_t = C.uv_rusage_t
 
