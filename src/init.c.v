@@ -21,6 +21,14 @@ pub fn replace_allocator(malloc_fn Malloc_fn, realloc_cb Realloc_fn, calloc_cb C
 	return C.uv_replace_allocator(malloc_fn, realloc_cb, calloc_cb, free_cb)
 }
 
+
+fn C.uv_setup_args(argc int, argv &&char) &&char
+
+pub fn setup_args(argc int, argv &&char) &&char {
+	return C.uv_setup_args(argc, argv)
+}
+
+
 fn init() {
 	C.uv_replace_allocator(malloc, v_realloc, calloc_fn, free)
 	C.uv_setup_args(g_main_argc, g_main_argv)
