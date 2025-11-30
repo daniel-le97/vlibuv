@@ -21,16 +21,6 @@ pub mut:
 	stream &uv.Uv_stream_t
 }
 
-// @[typedef]
-// pub struct C.uv_stream_t {
-// 	// 	loop &uv.Uv_loop_t
-// 	// pub mut:
-// 	// 	write_queue_size usize
-// 	// 	alloc_cb         Alloc_cb
-// 	// 	read_cb          Read_cb
-// 	// 	data             voidptr
-// }
-
 pub fn (s Stream) listen(backlog int, callback fn (stream Stream, status int)) !int {
 	return error_checker(C.uv_listen(s.to_stream(), backlog, fn [callback] (stream &uv.Uv_stream_t, status int) {
 		unsafe {
