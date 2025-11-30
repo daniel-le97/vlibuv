@@ -22,15 +22,9 @@ pub mut:
 }
 
 pub fn (s Stream) listen(backlog int, callback fn (stream Stream, status int)) !int {
-	return error_checker(C.uv_listen(s.to_stream(), backlog, fn [callback] (stream &uv.Uv_stream_t, status int) {
+	return error_checker(C.uv_listen(s.to_stream(), backlog, fn [callback, s] (stream &uv.Uv_stream_t, status int) {
 		unsafe {
-			callback(Stream{
-				Handle: Handle{
-					handle: &uv.Uv_handle_t(stream)
-					closed: false
-				}
-				stream: stream
-			}, status)
+			callback(s, status)
 		}
 	}))
 }
@@ -41,33 +35,24 @@ pub fn (s Stream) accept(client &Stream) int {
 
 pub fn (s Stream) read_start(alloc_cb AllocationCb, read_cb ReadCb) !int {
 	// Wrap the user's allocation callback to convert raw handle and buf to wrapper types
-	c_alloc_callback := fn [alloc_cb] (handle &uv.Uv_handle_t, suggested_size usize, buf &uv.Uv_buf_t) {
+	c_alloc_callback := fn [alloc_cb, s] (handle &uv.Uv_handle_t, suggested_size usize, buf &uv.Uv_buf_t) {
 		unsafe {
 			user_buf := &Buffer{
 				base: []u8{}
 				buf:  *buf
 			}
-			alloc_cb(Handle{
-				handle: handle
-				closed: false
-			}, suggested_size, user_buf)
+			alloc_cb(s.Handle, suggested_size, user_buf)
 		}
 	}
 
 	// Wrap the user's read callback to convert raw stream and buf to wrapper types
-	c_read_callback := fn [read_cb] (stream &uv.Uv_stream_t, nread isize, buf &uv.Uv_buf_t) {
+	c_read_callback := fn [read_cb, s] (stream &uv.Uv_stream_t, nread isize, buf &uv.Uv_buf_t) {
 		unsafe {
 			user_buf := &Buffer{
 				base: []u8{}
 				buf:  *buf
 			}
-			read_cb(Stream{
-				Handle: Handle{
-					handle: &uv.Uv_handle_t(stream)
-					closed: false
-				}
-				stream: stream
-			}, nread, user_buf)
+			read_cb(s, nread, user_buf)
 		}
 	}
 	return error_checker(C.uv_read_start(s.to_stream(), c_alloc_callback, c_read_callback))
@@ -85,18 +70,9 @@ pub type WriteCb = fn (stream Stream, status int)
 pub fn (s Stream) write(buffer &Buffer, callback WriteCb) !int {
 	write_req := &uv.Uv_write_t{}
 
-	// Wrap user callback to convert raw stream pointer to Stream wrapper
-	c_write_callback := fn [callback] (req &uv.Uv_write_t, status int) {
-		unsafe {
-			stream_ptr := &uv.Uv_stream_t(req.stream)
-			callback(Stream{
-				Handle: Handle{
-					handle: &uv.Uv_handle_t(stream_ptr)
-					closed: false
-				}
-				stream: stream_ptr
-			}, status)
-		}
+	// Wrap user callback - just pass the captured Stream instead of reconstructing
+	c_write_callback := fn [callback, s] (req &uv.Uv_write_t, status int) {
+		callback(s, status)
 	}
 
 	raw_buf := buffer.get_raw()
@@ -129,18 +105,9 @@ pub fn (s Stream) write_buffers(buffers []&Buffer, callback WriteCb) !int {
 		raw_bufs[i] = buf.get_raw()
 	}
 
-	// Wrap user callback
-	c_write_callback := fn [callback] (req &uv.Uv_write_t, status int) {
-		unsafe {
-			stream_ptr := &uv.Uv_stream_t(req.stream)
-			callback(Stream{
-				Handle: Handle{
-					handle: &uv.Uv_handle_t(stream_ptr)
-					closed: false
-				}
-				stream: stream_ptr
-			}, status)
-		}
+	// Wrap user callback - just pass the captured Stream instead of reconstructing
+	c_write_callback := fn [callback, s] (req &uv.Uv_write_t, status int) {
+		callback(s, status)
 	}
 
 	return error_checker(C.uv_write(write_req, s.to_stream(), raw_bufs.data, usize(buffers.len),
@@ -171,4 +138,36 @@ pub fn to_stream(ptr voidptr) &uv.Uv_stream_t {
 		return &uv.Uv_stream_t(ptr)
 	}
 	// return &uv.Uv_stream_t(ptr)
+}
+
+// ============================================================================
+// Context-based API for better ergonomics with libuv callbacks
+// ============================================================================
+
+// StreamContext is a helper for managing stream read/write operations with state
+pub struct StreamContext {
+pub mut:
+	stream    &Stream
+	user_data voidptr
+}
+
+// read_start_ctx starts reading with context-based callbacks
+// This approach stores the context in handle->data and uses stateless C callbacks
+pub fn (s Stream) read_start_ctx(user_data voidptr, alloc_fn fn (ctx voidptr, suggested_size usize) []u8, read_fn fn (ctx voidptr, nread isize, data []u8)) !int {
+	// Store user data in handle for callbacks to retrieve
+	s.Handle.set_data(user_data)!
+
+	// For now, return error - this needs more careful implementation
+	// The challenge is that we need to bridge V closures with C callbacks
+	return error('Context-based API is WIP - use low-level wrapper for now')
+}
+
+// set_data stores arbitrary data associated with this stream
+pub fn (s Stream) set_data(data voidptr) ! {
+	s.Handle.set_data(data)!
+}
+
+// get_data_raw retrieves raw voidptr data associated with this stream
+pub fn (s Stream) get_data_raw() voidptr {
+	return uv.handle_get_data(s.Handle.to_handle())
 }

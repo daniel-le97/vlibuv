@@ -12,11 +12,11 @@ pub mut:
 
 // new_buffer creates a new buffer with the given capacity
 pub fn new_buffer(capacity usize) Buffer {
-	mut base := []u8{len: capacity}
+	mut base := []u8{len: int(capacity)}
 	buf := uv.buf_init(base.data, capacity)
 	return Buffer{
 		base: base
-		buf: buf
+		buf:  buf
 	}
 }
 
@@ -24,8 +24,8 @@ pub fn new_buffer(capacity usize) Buffer {
 pub fn buffer_from_string(s string) Buffer {
 	buf := uv.buf_init(s.str, usize(s.len))
 	return Buffer{
-		base: unsafe { []u8{len: s.len, cap: s.len, data: &u8(s.str)} }
-		buf: buf
+		base: s.bytes()
+		buf:  buf
 	}
 }
 
@@ -35,7 +35,7 @@ pub fn buffer_from_bytes(bytes []u8) Buffer {
 	buf := uv.buf_init(data.data, usize(data.len))
 	return Buffer{
 		base: data
-		buf: buf
+		buf:  buf
 	}
 }
 

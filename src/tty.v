@@ -1,36 +1,38 @@
 module vlibuv
 
+import vlibuv.uv
+
 // // tty functions
 
-// fn C.uv_tty_init(loop &C.uv_loop_t, handle &C.uv_tty_t, fd int, readable int) int
+// fn uv.tty_init(loop &C.uv_loop_t, handle &uv.Uv_tty_t, fd int, readable int) int
 
-// // pub fn tty_init(loop &C.uv_loop_t, handle &C.uv_tty_t, fd int, readable int) int {
-// // 	return C.uv_tty_init(loop, handle, fd, readable)
+// // pub fn tty_init(loop &C.uv_loop_t, handle &uv.Uv_tty_t, fd int, readable int) int {
+// // 	return uv.tty_init(loop, handle, fd, readable)
 // // }
 
-// fn C.uv_tty_set_mode(handle &C.uv_tty_t, mode int) int
+// fn uv.tty_set_mode(handle &uv.Uv_tty_t, mode int) int
 
-// fn C.uv_tty_reset_mode() int
+// fn uv.tty_reset_mode() int
 
 // pub fn tty_reset_mode() int {
-// 	return C.uv_tty_reset_mode()
+// 	return uv.tty_reset_mode()
 // }
 
-// fn C.uv_tty_get_winsize(handle &C.uv_tty_t, width &int, height &int) int
+// fn uv.tty_get_winsize(handle &uv.Uv_tty_t, width &int, height &int) int
 
-// fn C.uv_tty_set_vterm_state(state int)
+// fn uv.tty_set_vterm_state(state int)
 
 // // pub fn tty_set_vterm_state(state Uv_tty_vtermstate) {
-// // 	C.uv_tty_set_vterm_state(int(state))
+// // 	uv.tty_set_vterm_state(int(state))
 // // }
 
-// // fn C.uv_tty_get_vterm_state(state int) int
+// // fn uv.tty_get_vterm_state(state int) int
 
 // // pub fn tty_get_vterm_state(state Uv_tty_vtermstate) !int {
 // // 	$if !windows {
 // // 		return error('not supported on this platform')
 // // 	}
-// // 	return C.uv_tty_get_vterm_state(int(state))
+// // 	return uv.tty_get_vterm_state(int(state))
 // // }
 
 // @[flags]
@@ -53,27 +55,39 @@ module vlibuv
 // 	io
 // }
 
-// pub struct Tty {
-// 	Stream
-// }
+pub struct Tty {
+	Stream
+}
 
-// pub fn Tty.new(l &Loop, fd int, readable bool) !Tty {
-// 	t := &C.uv_tty_t{}
-// 	C.uv_tty_init(l.loop, t, fd, readable)
-// 	return Tty{
-// 		handle: &C.uv_stream_t(t)
-// 	}
-// }
+pub fn Tty.new(l &Loop, fd int, readable bool) !Tty {
+	t := &uv.Uv_tty_t{}
+	uv.tty_init(l.loop, t, fd, bool_to_int(readable))
+	return Tty{
+		Stream: Stream{
+			Handle: Handle{
+				handle: unsafe {&uv.Uv_handle_t(t)}
+				closed: false
+			}
+			stream: unsafe {&uv.Uv_stream_t(t)}
+		}
+	}
+}
 
-// pub fn (t Tty) set_mode(mode Uv_tty_mode) !int {
-// 	return error('TTY methods not implemented in this refactoring')
-// }
+pub fn (t Tty) set_mode(mode uv.Uv_tty_mode) !int {
+	return error('TTY methods not implemented in this refactoring')
+}
 
-// pub fn (t Tty) reset_mode() !int {
-// 	r := C.uv_tty_reset_mode()
-// 	return error_checker(r)
-// }
+pub fn (t Tty) reset_mode() !int {
+	r := uv.tty_reset_mode()
+	return error_checker(r)
+}
 
-// pub fn (t Tty) get_winsize() !(int, int) {
-// 	return error('TTY methods not implemented in this refactoring')
-// }
+pub fn (t Tty) get_winsize() !(int, int) {
+	return error('TTY methods not implemented in this refactoring')
+}
+
+$if windows {
+	pub fn (t Tty) set_vterm_state(state uv.Uv_tty_vtermstate) ! {
+		return error('TTY methods not implemented in this refactoring')
+	}
+}

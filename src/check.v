@@ -26,11 +26,14 @@ pub fn (c Check) start(callback fn (check Check)) !int {
 	c_callback := fn [callback, c] (handle &uv.Uv_check_t) {
 		callback(c)
 	}
-	r := uv.check_start(c.handle, callback)
+	r := uv.check_start(c.handle, c_callback)
 	return error_checker(r)
 }
 
 pub fn (c Check) stop() !int {
 	r := uv.check_stop(c.handle)
 	return error_checker(r)
+}
+pub fn (c &Check) raw() &uv.Uv_check_t {
+	return c.handle
 }

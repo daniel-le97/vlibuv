@@ -47,10 +47,10 @@ fn on_new_connection(server &uv.Uv_stream_t, status int) {
 	}
 	client := &uv.Uv_tcp_t{}
 	uv.tcp_init(uv.default_loop(), client)
-	if uv.accept(server, unsafe { &uv.Uv_stream_t(client) }) == 0 {
-		uv.read_start(unsafe { &uv.Uv_stream_t(client) }, alloc_buffer, on_read)
+	if uv.accept(server, client.to_stream()) == 0 {
+		uv.read_start(client.to_stream(), alloc_buffer, on_read)
 	} else {
-		uv.close(unsafe { &uv.Uv_handle_t(client) }, on_close_cb)
+		uv.close(client.to_handle(), on_close_cb)
 	}
 }
 

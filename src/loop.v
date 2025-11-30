@@ -62,7 +62,7 @@ pub fn (l Loop) get_data[T]() ?T {
 	if isnil(data) {
 		return none
 	}
-	return T(data)
+	return unsafe { *(&T(data)) }
 }
 
 pub fn (l Loop) set_data(data voidptr) ! {

@@ -1608,11 +1608,11 @@ pub fn ip4_addr(const_ip &char, port int, addr &C.sockaddr_in) int {
 }
 
 // TODO must use 'struct' tag to refer to type 'sockaddr_in6'
-// fn C.uv_ip6_addr(const_ip &char, port int, addr &C.sockaddr_in6) int
+fn C.uv_ip6_addr(const_ip &char, port int, addr &C.sockaddr_in6) int
 
-// pub fn ip6_addr(const_ip &char, port int, addr &C.sockaddr_in6) int {
-// 	return C.uv_ip6_addr(const_ip, port, addr)
-// }
+pub fn ip6_addr(const_ip &char, port int, addr &C.sockaddr_in6) int {
+	return C.uv_ip6_addr(const_ip, port, addr)
+}
 
 fn C.uv_ip4_name(const_src &C.sockaddr_in, dst &char, size usize) int
 

@@ -1,116 +1,133 @@
 module vlibuv
 
 import vlibuv.uv
-// @[typedef]
-// pub struct uv.Uv_tcp_t {
-// 	// 	loop &uv.loop_t
-// 	// pub mut:
-// 	// 	write_queue_size usize
-// 	// 	alloc_cb         Alloc_cb
-// 	// 	read_cb          Read_cb
-// 	// 	data             voidptr
-// }
 
-// @[typedef]
-// pub struct uv.Uv_connect_t {
-// 	// 	handle &uv.Uv_stream_t
-// 	// 	loop   &uv.loop_t
-// 	// pub mut:
-// 	// 	data voidptr
-// }
+pub struct C.sockaddr {}
 
-// // tcp functions
+// Note: bool_to_int and error_checker are imported from util.v (same module)
 
-// fn uv.tcp_init(loop &uv.loop_t, handle &uv.Uv_tcp_t) int
+// ConnectCb callback type for connection operations
+// status: 0 on successful connection, error code otherwise
+pub type ConnectCb = fn (tcp Tcp, status int)
 
-// fn uv.tcp_init_ex(loop &uv.loop_t, handle &uv.Uv_tcp_t, flags usize) int
+// TCP is a subclass of Stream (embedded), which is a subclass of Handle (embedded),
+// meaning it inherits all methods of Stream and Handle
+pub struct Tcp {
+	Stream
+pub mut:
+	tcp &uv.Uv_tcp_t = unsafe { nil }
+}
 
-// fn uv.tcp_open(handle &uv.Uv_tcp_t, sock int) int
+// Create a new TCP handle
+pub fn Tcp.new(loop &Loop) !Tcp {
+	return new_tcp(loop)
+}
 
-// fn uv.tcp_nodelay(handle &uv.Uv_tcp_t, enable int) int
+// Create a new TCP handle with flags (e.g., UV_TCP_IPV6ONLY)
+pub fn Tcp.new_ex(loop &Loop, flags u8) !Tcp {
+	return new_tcp_ex(loop, flags)
+}
 
-// fn uv.tcp_keepalive(handle &uv.Uv_tcp_t, enable int, delay u32) int
+fn new_tcp(loop &Loop) !Tcp {
+	tcp_handle := &uv.Uv_tcp_t{}
+	result := uv.tcp_init(loop.get_c_loop(), tcp_handle)
+	error_checker(result)!
+	unsafe {
+		handle := &Handle{
+				handle: &uv.Uv_handle_t(tcp_handle)
+				closed: false
+			}
+		return Tcp{
+			Stream: Stream{
+				Handle: handle
+				stream: &uv.Uv_stream_t(tcp_handle)
+			}
+			tcp:    tcp_handle
+		}
+	}
+}
 
-// fn uv.tcp_simultaneous_accepts(handle &uv.Uv_tcp_t, enable int) int
+fn new_tcp_ex(loop &Loop, flags u8) !Tcp {
+	tcp_handle := &uv.Uv_tcp_t{}
+	result := uv.tcp_init_ex(loop.get_c_loop(), tcp_handle, usize(flags))
+	error_checker(result)!
+	unsafe {
+		handle := &Handle{
+				handle: &uv.Uv_handle_t(tcp_handle)
+				closed: false
+			}
+		return Tcp{
+			Handle: handle
+			Stream: Stream{
+				Handle: handle
+				stream: &uv.Uv_stream_t(tcp_handle)
+			}
+			tcp:    tcp_handle
+		}
+	}
+}
 
-// fn uv.tcp_bind(handle &uv.Uv_tcp_t, const_addr &C.sockaddr, flags u32) int
+// bind associates the TCP handle with a local address
+// flags: 0 for normal mode, UV_TCP_IPV6ONLY for IPv6-only
+pub fn (mut t Tcp) bind(addr Address, flags u32) !int {
+	result := uv.tcp_bind(t.tcp, addr.addr, int(flags))
+	return error_checker(result)
+}
 
-// fn uv.tcp_getsockname(handle &uv.Uv_tcp_t, name &C.sockaddr, namelen &int) int
+// connect establishes a connection to a remote address
+pub fn (mut t Tcp) connect(addr Address, callback ConnectCb) !int {
+	req := &uv.Uv_connect_t{}
 
-// fn uv.tcp_getpeername(handle &uv.Uv_tcp_t, name &C.sockaddr, namelen &int) int
+	// Wrap user callback - just pass the captured Tcp instead of reconstructing
+	c_connect_callback := fn [callback, t] (req &uv.Uv_connect_t, status int) {
+		callback(t, status)
+	}
 
-// fn uv.tcp_connect(req &uv.Uv_connect_t, handle &uv.Uv_tcp_t, addr &C.sockaddr, cb fn (req &uv.Uv_connect_t, status int)) int
+	result := uv.tcp_connect(req, t.tcp, addr.addr, c_connect_callback)
+	return error_checker(result)
+}
 
-// TCP is subclass of Stream, which is subclass of Handle,
-// meaning it has all the methods of Stream and Handle
-// pub struct Tcp {
-// 	Stream // tcp uv.Uv_tcp_t
-// mut:
-// 	addr &C.sockaddr = unsafe { nil }
-// }
+// nodelay controls whether Nagle's algorithm is used
+// enable: true to disable Nagle's algorithm (TCP_NODELAY), false to enable it
+pub fn (t &Tcp) nodelay(enable bool) !int {
+	result := uv.tcp_nodelay(t.tcp, bool_to_int(enable))
+	return error_checker(result)
+}
 
-// pub struct C.sockaddr {}
+// keepalive enables TCP keepalive
+// enable: true to enable keepalive
+// delay: delay in seconds before first keepalive probe is sent (only used if enable is true)
+pub fn (t &Tcp) keepalive(enable bool, delay u32) !int {
+	enable_int := bool_to_int(enable)
+	result := uv.tcp_keepalive(t.tcp, enable_int, delay)
+	return error_checker(result)
+}
 
-// pub fn tcp_init(l Loop) !Tcp {
-// 	tcp := &uv.Uv_tcp_t{}
-// 	res := uv.tcp_init(l.loop, tcp)
-// 	if res != 0 {
-// 		return error('failed to initialize tcp')
-// 	}
-// 	return Tcp{
-// 		handle: unsafe {&uv.Uv_stream_t(tcp)}
-// 		addr: unsafe { nil }
-// 	}
-// }
+// simultaneous_accepts controls whether multiple threads can accept connections simultaneously
+// enable: true to enable simultaneous accepts
+pub fn (t &Tcp) simultaneous_accepts(enable bool) !int {
+	result := uv.tcp_simultaneous_accepts(t.tcp, bool_to_int(enable))
+	return error_checker(result)
+}
 
-// pub fn tcp_init_ex(l &Loop, flags u8) Tcp {
-// 	tcp := &uv.Uv_tcp_t{}
-// 	uv.tcp_init_ex(l.loop, tcp, usize(flags))
-// 	return Tcp{
-// 		handle: unsafe{&uv.Uv_stream_t(tcp)}
-// 		addr: unsafe { nil }
-// 	}
-// }
+// open takes an existing socket descriptor and associates it with a TCP handle
+pub fn (t &Tcp) open(fd int) !int {
+	result := uv.tcp_open(t.tcp, fd)
+	return error_checker(result)
+}
 
-// // if flags is 1 it will be set to ipv6 only
-// pub fn (mut t Tcp) bind(addr Address, flags int) !int {
-// 	return error('TCP methods not implemented in this refactoring')
-// 	// unsafe {
-// 	// 	t.addr = addr.addr
-// 	// }
-// 	// return error_checker(uv.tcp_bind(t.handle, addr.addr, flags))
-// }
+// getsockname returns the local address associated with this TCP handle
+pub fn (t &Tcp) getsockname() !(string, int) {
+	// Note: This is a simplified implementation
+	// In production, you'd want to parse the sockaddr structure properly
+	// For now, we'll return an error indicating this needs full implementation
+	return error('getsockname not fully implemented - requires sockaddr parsing')
+}
 
-// pub fn (t &Tcp) connect(addr Address, callback fn (req &uv.Uv_connect_t, status int)) {
-// 	req := &uv.Uv_connect_t{}
-// 	uv.tcp_connect(req, t.handle, addr.addr, callback)
-// }
-
-// pub fn (t &Tcp) nodelay(enable bool) !int {
-// 	r := uv.tcp_nodelay(t.handle, bool_to_int(enable))
-// 	return error_checker(r)
-// }
-
-// pub fn (t &Tcp) keepalive(enable bool, delay u32) !int {
-// 	as_int := if enable { 1 } else { 0 }
-// 	r := uv.tcp_keepalive(t.handle, as_int, delay)
-// 	return error_checker(r)
-// }
-
-// pub fn (t &Tcp) simultaneous_accepts(enable bool) !int {
-// 	r := uv.tcp_simultaneous_accepts(t.handle, bool_to_int(enable))
-// 	return error_checker(r)
-// }
-
-// pub fn (t &Tcp) getsockname() {
-// 	uv.tcp_getsockname(t.handle, t.addr, t.addr.str().len)
-// }
-
-// pub fn (t &Tcp) getpeername() {
-// 	// return tcp_getpeername(t.handle)
-// }
-
-// pub fn (t &Tcp) open(fd int) !int {
-// 	r := uv.tcp_open(t.handle, fd)
-// 	return error_checker(r)
-// }
+// getpeername returns the remote address associated with this TCP handle
+pub fn (t &Tcp) getpeername() !(string, int) {
+	// Note: This is a simplified implementation
+	// In production, you'd want to parse the sockaddr structure properly
+	// For now, we'll return an error indicating this needs full implementation
+	return error('getpeername not fully implemented - requires sockaddr parsing')
+}

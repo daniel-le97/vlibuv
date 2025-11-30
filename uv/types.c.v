@@ -16,6 +16,14 @@ pub type Uv_handle_t = C.uv_handle_t
 // Stream handles (bidirectional data flow)
 pub type Uv_stream_t = C.uv_stream_t
 pub type Uv_tcp_t = C.uv_tcp_t
+
+pub fn (t &Uv_tcp_t) to_stream() &Uv_stream_t {
+	return unsafe{&Uv_stream_t(t)}
+}
+
+pub fn (t &Uv_tcp_t) to_handle() &Uv_handle_t {
+	return unsafe{&Uv_handle_t(t)}
+}
 pub type Uv_pipe_t = C.uv_pipe_t
 pub type Uv_tty_t = C.uv_tty_t
 

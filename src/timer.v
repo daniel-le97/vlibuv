@@ -53,7 +53,7 @@ pub fn (mut t Timer) start(timeout u64, repeat u64, callback fn(timer Timer)) ! 
 
 	cb := fn [callback, t] (handle &uv.Uv_timer_t) {
 		callback(Timer{
-			handle: handle
+			handle: unsafe { handle }
 			stopped: t.stopped
 		})
 	}

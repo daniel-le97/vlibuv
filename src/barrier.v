@@ -28,3 +28,7 @@ pub fn (b &Barrier) destroy() {
 pub fn (b &Barrier) wait() {
 	uv.barrier_wait(b.handle)
 }
+
+pub fn (b &Barrier) raw() &uv.Uv_barrier_t {
+	return b.handle
+}

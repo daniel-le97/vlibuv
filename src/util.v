@@ -34,14 +34,14 @@ fn int_to_bool(i int) bool {
 const path_max = 4096
 
 @[inline]
-fn new_buffer(size int) (&char, usize) {
+fn new_buffer_raw(size int) (&char, usize) {
 	buf := []char{len: size}
 	return &buf[0], usize(buf.len)
 }
 
 @[inline]
 fn call_fn(func fn (buffer &char, size &usize) int) string {
-	buf, size := new_buffer(path_max)
+	buf, size := new_buffer_raw(path_max)
 	unsafe {
 		func(buf, size)
 		return cstring_to_vstring(&buf[0])
