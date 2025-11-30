@@ -1,17 +1,17 @@
 module vlibuv
 
-// semaphore functions
-fn C.uv_sem_init(sem &C.uv_sem_t, value usize) int
-fn C.uv_sem_destroy(sem &C.uv_sem_t)
-fn C.uv_sem_post(sem &C.uv_sem_t)
-fn C.uv_sem_wait(sem &C.uv_sem_t)
-fn C.uv_sem_trywait(sem &C.uv_sem_t) int
+// // semaphore functions
+// fn C.uv_sem_init(sem &C.uv_sem_t, value usize) int
+// fn C.uv_sem_destroy(sem &C.uv_sem_t)
+// fn C.uv_sem_post(sem &C.uv_sem_t)
+// fn C.uv_sem_wait(sem &C.uv_sem_t)
+// fn C.uv_sem_trywait(sem &C.uv_sem_t) int
 
 struct Semaphore {
 	sem &C.uv_sem_t
 }
 
-pub fn sem_init(value int) Semaphore {
+pub fn new_sem(value int) Semaphore {
 	s := &C.uv_sem_t(unsafe { nil })
 	C.uv_sem_init(s, usize(value))
 	return Semaphore{s}

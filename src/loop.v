@@ -38,7 +38,7 @@ pub fn (mut l Loop) free() {
 			l.loop = nil
 		}
 	}
-}	
+}
 
 // Manually close the loop (optional - free() will be called automatically)
 pub fn (mut l Loop) close() ! {
@@ -54,7 +54,7 @@ pub fn (mut l Loop) close() ! {
 	}
 }
 
-pub fn (l Loop) get_data() ?voidptr {
+pub fn (l Loop) get_data[T]() ?T {
 	if isnil(l.loop) {
 		return none
 	}
@@ -62,7 +62,7 @@ pub fn (l Loop) get_data() ?voidptr {
 	if isnil(data) {
 		return none
 	}
-	return data
+	return T(data)
 }
 
 pub fn (l Loop) set_data(data voidptr) ! {
@@ -127,4 +127,41 @@ pub fn (l Loop) backend_timeout() !int {
 
 pub fn (l Loop) get_c_loop() &uv.Uv_loop_t {
 	return l.loop
+}
+
+// ============================================================================
+
+pub fn now(l Loop) !u64 {
+	if isnil(l.loop) {
+		return error('loop is nil')
+	}
+	return uv.now(l.loop)
+}
+
+pub fn stop(l Loop) {
+	if !isnil(l.loop) {
+		uv.stop(l.loop)
+	}
+}
+
+pub fn backend_fd(l Loop) !int {
+	if isnil(l.loop) {
+		return error('loop is nil')
+	}
+	fd := uv.backend_fd(l.loop)
+	if fd < 0 {
+		return error('failed to get backend fd')
+	}
+	return fd
+}
+
+pub fn backend_timeout(l Loop) !int {
+	if isnil(l.loop) {
+		return error('loop is nil')
+	}
+	timeout := uv.backend_timeout(l.loop)
+	if timeout < 0 {
+		return error('failed to get backend timeout')
+	}
+	return timeout
 }

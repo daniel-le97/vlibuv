@@ -1,28 +1,25 @@
 module vlibuv
 
-// prepare functions
-
-fn C.uv_prepare_init(loop &C.uv_loop_t, handle &C.uv_prepare_t) int
-fn C.uv_prepare_start(handle &C.uv_prepare_t, cb fn (handle &C.uv_prepare_t)) int
-fn C.uv_prepare_stop(handle &C.uv_prepare_t) int
+import vlibuv.uv
+// // prepare functions
 
 pub struct Prepare {
 pub mut:
-	handle &C.uv_prepare_t
+	handle &uv.Uv_prepare_t
 }
 
 pub fn prepare_init(l &Loop) Prepare {
-	p := &C.uv_prepare_t{}
-	C.uv_prepare_init(l.loop, p)
+	p := &uv.Uv_prepare_t{}
+	uv.prepare_init(l.loop, p)
 	return Prepare{p}
 }
 
-pub fn (p Prepare) start(callback fn (handle &C.uv_prepare_t)) !int {
-	r := C.uv_prepare_start(p.handle, callback)
+pub fn (p Prepare) start(callback fn (handle &uv.Uv_prepare_t)) !int {
+	r := uv.prepare_start(p.handle, callback)
 	return error_checker(r)
 }
 
 pub fn (p Prepare) stop() !int {
-	r := C.uv_prepare_stop(p.handle)
+	r := uv.prepare_stop(p.handle)
 	return error_checker(r)
 }

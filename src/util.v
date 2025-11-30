@@ -1,8 +1,10 @@
 module vlibuv
 
+import vlibuv.uv
+
 pub fn get_error_message(i int) string {
 	unsafe {
-		return cstring_to_vstring(C.uv_strerror(i))
+		return cstring_to_vstring(uv.strerror(i).str)
 	}
 }
 
@@ -10,7 +12,7 @@ pub fn get_error_message(i int) string {
 pub fn error_checker(i int) !int {
 	if i < 0 {
 		unsafe {
-			return error(cstring_to_vstring(C.uv_err_name(i)))
+			return error(cstring_to_vstring(uv.err_name(i).str))
 		}
 	}
 	return i

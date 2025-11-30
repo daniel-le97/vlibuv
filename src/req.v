@@ -1,47 +1,20 @@
 module vlibuv
 
-// request functions
+import vlibuv.uv
 
-fn C.uv_req_size(req_type int) usize
-
-pub fn req_size(req_type Uv_req_type) usize {
-	return C.uv_req_size(int(req_type))
-}
-
-fn C.uv_req_get_data(const_req &C.uv_req_t) voidptr
-
-pub fn req_get_data(const_req &C.uv_req_t) voidptr {
-	return C.uv_req_get_data(const_req)
-}
-
-fn C.uv_req_set_data(req &C.uv_req_t, data voidptr)
-
-pub fn req_set_data(req &C.uv_req_t, data voidptr) {
-	C.uv_req_set_data(req, data)
-}
-
-// fn C.uv_req_get_type(const_req &C.uv_req_t) Uv_req_type
-
-// pub fn req_get_type(const_req &C.uv_req_t) Uv_req_type {
-// 	unsafe {
-// 		return Uv_req_type(C.uv_req_get_type(const_req))
-// 	}
-// }
-
-// fn C.uv_req_type_name(const_req_type int) &char
-
-// pub fn req_type_name(const_req_type Uv_req_type) string {
-// 	unsafe {
-// 		return cstring_to_vstring(C.uv_req_type_name(int(const_req_type)))
-// 	}
-// }
-
-fn C.uv_req_get_loop(const_req &C.uv_req_t) &C.uv_loop_t
-
+// // request functions
 struct Req {
 	req voidptr
 pub mut:
 	data voidptr
+}
+
+pub fn Req.new() Req {
+	return new_req()
+}
+
+pub fn new_req() Req {
+	return Req{unsafe { nil }, unsafe { nil }}
 }
 
 pub fn (r Req) get_data() voidptr {
@@ -68,23 +41,19 @@ pub fn (r Req) to_req() &C.uv_req_t {
 	}
 }
 
-// pub fn (r Req) get_type() Uv_req_type {
-// 	unsafe {
-// 		return Uv_req_type(C.uv_req_get_type(r.req))
-// 	}
-// }
-
-// pub fn (r Req) type_name() string {
-// 	unsafe {
-// 		return cstring_to_vstring(C.uv_req_type_name(int(r.get_type())))
-// 	}
-// }
-
-// pub fn (r Req) size() usize {
-// 	return C.uv_req_size(r.get_type().str().int())
-// }
-
-pub fn (r Req) get_loop() Loop {
-	l := C.uv_req_get_loop(r.req)
-	return Loop{l, false, false}
+pub fn (r Req) get_type() uv.Uv_req_type {
+	unsafe {
+		return uv.Uv_req_type(C.uv_req_get_type(r.req))
+	}
 }
+
+pub fn (r Req) type_name() string {
+	unsafe {
+		return cstring_to_vstring(uv.req_type_name(r.get_type()).str)
+	}
+}
+
+pub fn (r Req) size() usize {
+	return uv.req_size(r.get_type())
+}
+

@@ -1,125 +1,184 @@
 module vlibuv
 
-fn C.uv_stream_get_write_queue_size(const_stream &C.uv_stream_t) usize
+import vlibuv.uv
 
-// pub fn stream_get_write_queue_size(const_stream &C.uv_stream_t) usize {
-// 	return C.uv_stream_get_write_queue_size(const_stream)
+// Callback types for idiomatic API
+pub type AllocationCb = fn (handle Handle, suggested_size usize, buf &Buffer)
+
+pub type ReadCb = fn (stream Stream, nread isize, buf &Buffer)
+
+// pub enum StreamType {
+// 	tcp
+// 	pipe
+// 	tty
 // }
-
-fn C.uv_listen(stream &C.uv_stream_t, backlog int, cb Connection_cb) int
-
-// pub fn listen(stream &C.uv_stream_t, backlog int, cb Connection_cb) int {
-// 	return C.uv_listen(stream, backlog, cb)
-// }
-
-fn C.uv_accept(server &C.uv_stream_t, client &C.uv_stream_t) int
-
-// pub fn accept(server &C.uv_stream_t, client &C.uv_stream_t) int {
-// 	return C.uv_accept(server, client)
-// }
-
-fn C.uv_read_start(stream &C.uv_stream_t, alloc_cb Alloc_cb, read_cb Read_cb) int
-
-// pub fn read_start(stream &C.uv_stream_t, alloc_cb Alloc_cb, read_cb Read_cb) int {
-// 	return C.uv_read_start(stream, alloc_cb, read_cb)
-// }
-
-fn C.uv_read_stop(stream &C.uv_stream_t) int
-
-// pub fn read_stop(stream &C.uv_stream_t) int {
-// 	return C.uv_read_stop(stream)
-// }
-
-pub enum StreamType {
-	tcp
-	pipe
-	tty
-}
 
 // stream is a subclass of handle,
 // stream is a parent class of tcp, pipe, tty
 pub struct Stream {
+	Handle
 pub mut:
-	handle &C.uv_stream_t
+	stream &uv.Uv_stream_t
 }
 
-// pub type Handler = C.uv_tcp_t | C.uv_pipe_t | C.uv_tty_t
-
-@[typedef]
-pub struct C.uv_stream_t {
-	// 	loop &C.uv_loop_t
-	// pub mut:
-	// 	write_queue_size usize
-	// 	alloc_cb         Alloc_cb
-	// 	read_cb          Read_cb
-	// 	data             voidptr
-}
+// @[typedef]
+// pub struct C.uv_stream_t {
+// 	// 	loop &uv.Uv_loop_t
+// 	// pub mut:
+// 	// 	write_queue_size usize
+// 	// 	alloc_cb         Alloc_cb
+// 	// 	read_cb          Read_cb
+// 	// 	data             voidptr
+// }
 
 pub fn (s Stream) listen(backlog int, callback fn (stream Stream, status int)) !int {
-	// return error_checker(C.uv_listen(s.to_stream(), backlog, callback))
-	return error_checker(C.uv_listen(s.to_stream(), backlog, fn [callback] (stream &C.uv_stream_t, status int) {
+	return error_checker(C.uv_listen(s.to_stream(), backlog, fn [callback] (stream &uv.Uv_stream_t, status int) {
 		unsafe {
-			callback(Stream{stream}, status)
+			callback(Stream{
+				Handle: Handle{
+					handle: &uv.Uv_handle_t(stream)
+					closed: false
+				}
+				stream: stream
+			}, status)
 		}
 	}))
 }
 
 pub fn (s Stream) accept(client &Stream) int {
-	return C.uv_accept(s.to_stream(), client.to_stream())
+	return uv.accept(s.to_stream(), client.to_stream())
 }
 
-pub fn (s Stream) read_start(alloc_cb fn (handle &C.uv_handle_t, suggested_size usize, buf &Buf), read_cb fn (stream Stream, nread isize, buf &C.uv_buf_t)) !int {
-	callback := fn [read_cb] (stream &C.uv_stream_t, nread isize, buf &Buf) {
+pub fn (s Stream) read_start(alloc_cb AllocationCb, read_cb ReadCb) !int {
+	// Wrap the user's allocation callback to convert raw handle and buf to wrapper types
+	c_alloc_callback := fn [alloc_cb] (handle &uv.Uv_handle_t, suggested_size usize, buf &uv.Uv_buf_t) {
 		unsafe {
-			read_cb(Stream{stream}, nread, buf)
+			user_buf := &Buffer{
+				base: []u8{}
+				buf:  *buf
+			}
+			alloc_cb(Handle{
+				handle: handle
+				closed: false
+			}, suggested_size, user_buf)
 		}
 	}
-	return error_checker(C.uv_read_start(s.to_stream(), alloc_cb, callback))
+
+	// Wrap the user's read callback to convert raw stream and buf to wrapper types
+	c_read_callback := fn [read_cb] (stream &uv.Uv_stream_t, nread isize, buf &uv.Uv_buf_t) {
+		unsafe {
+			user_buf := &Buffer{
+				base: []u8{}
+				buf:  *buf
+			}
+			read_cb(Stream{
+				Handle: Handle{
+					handle: &uv.Uv_handle_t(stream)
+					closed: false
+				}
+				stream: stream
+			}, nread, user_buf)
+		}
+	}
+	return error_checker(C.uv_read_start(s.to_stream(), c_alloc_callback, c_read_callback))
 }
 
 pub fn (s Stream) read_stop() int {
-	return C.uv_read_stop(s.to_stream())
+	return uv.read_stop(s.to_stream())
 }
 
-pub fn (s Stream) write(buf &C.uv_buf_t, nbufs usize, callback fn (write_req &C.uv_write_t, status int)) {
-	write_req := &C.uv_write_t{}
-	C.uv_write(write_req, s.to_stream(), buf, nbufs, callback)
+// WriteCb callback type for idiomatic write operations
+// status: 0 on success, error code on failure
+pub type WriteCb = fn (stream Stream, status int)
+
+// write sends data from a single buffer over the stream
+pub fn (s Stream) write(buffer &Buffer, callback WriteCb) !int {
+	write_req := &uv.Uv_write_t{}
+
+	// Wrap user callback to convert raw stream pointer to Stream wrapper
+	c_write_callback := fn [callback] (req &uv.Uv_write_t, status int) {
+		unsafe {
+			stream_ptr := &uv.Uv_stream_t(req.stream)
+			callback(Stream{
+				Handle: Handle{
+					handle: &uv.Uv_handle_t(stream_ptr)
+					closed: false
+				}
+				stream: stream_ptr
+			}, status)
+		}
+	}
+
+	raw_buf := buffer.get_raw()
+	return error_checker(C.uv_write(write_req, s.to_stream(), &raw_buf, 1, c_write_callback))
 }
 
-pub fn (s Stream) write_client(resp string, callback fn (write_req &C.uv_write_t, status int)) {
-	write_req := &C.uv_write_t{}
-	buf := buf_init(resp.str, usize(resp.len))
-	C.uv_write(write_req, s.to_stream(), &buf, 1, callback)
+// write_string sends a string as data over the stream
+pub fn (s Stream) write_string(data string, callback WriteCb) !int {
+	buffer := buffer_from_string(data)
+	return s.write(&buffer, callback)
+}
+
+// write_bytes sends byte data over the stream
+pub fn (s Stream) write_bytes(data []u8, callback WriteCb) !int {
+	buffer := buffer_from_bytes(data)
+	return s.write(&buffer, callback)
+}
+
+// write_buffers sends multiple buffers over the stream in a single operation
+pub fn (s Stream) write_buffers(buffers []&Buffer, callback WriteCb) !int {
+	if buffers.len == 0 {
+		return error('cannot write 0 buffers')
+	}
+
+	write_req := &uv.Uv_write_t{}
+
+	// Convert Buffer wrappers to raw uv buffers
+	mut raw_bufs := []uv.Uv_buf_t{len: buffers.len}
+	for i, buf in buffers {
+		raw_bufs[i] = buf.get_raw()
+	}
+
+	// Wrap user callback
+	c_write_callback := fn [callback] (req &uv.Uv_write_t, status int) {
+		unsafe {
+			stream_ptr := &uv.Uv_stream_t(req.stream)
+			callback(Stream{
+				Handle: Handle{
+					handle: &uv.Uv_handle_t(stream_ptr)
+					closed: false
+				}
+				stream: stream_ptr
+			}, status)
+		}
+	}
+
+	return error_checker(C.uv_write(write_req, s.to_stream(), raw_bufs.data, usize(buffers.len),
+		c_write_callback))
 }
 
 pub fn (s Stream) is_readable() bool {
-	return C.uv_is_readable(s.to_stream()) == 1
+	return uv.is_readable(s.to_stream()) == 1
 }
 
 pub fn (s Stream) is_writable() bool {
-	return C.uv_is_writable(s.to_stream()) == 1
+	return uv.is_writable(s.to_stream()) == 1
 }
 
 pub fn (s Stream) set_blocking(blocking bool) {
-	C.uv_stream_set_blocking(s.to_stream(), bool_to_int(blocking))
+	uv.stream_set_blocking(s.to_stream(), bool_to_int(blocking))
 }
 
-// pub fn listen_refl[T]() {
-// 	$for field in T.fields {
-// 		println(field)
-// 	}
-// }
-
-pub fn (s Stream) to_stream() &C.uv_stream_t {
+pub fn (s Stream) to_stream() &uv.Uv_stream_t {
 	unsafe {
-		return &C.uv_stream_t(s.handle)
+		return &uv.Uv_stream_t(s.stream)
 	}
 }
 
 @[inline]
-pub fn to_stream(ptr voidptr) &C.uv_stream_t {
+pub fn to_stream(ptr voidptr) &uv.Uv_stream_t {
 	unsafe {
-		return &C.uv_stream_t(ptr)
+		return &uv.Uv_stream_t(ptr)
 	}
-	// return &C.uv_stream_t(ptr)
+	// return &uv.Uv_stream_t(ptr)
 }

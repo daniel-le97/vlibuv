@@ -1,4 +1,4 @@
-module osv
+module vlibuv
 
 fn test_write_and_read_file() {
 	// Create a test file
