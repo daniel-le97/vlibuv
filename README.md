@@ -34,7 +34,7 @@ v run build.vsh update
 v run build.vsh symlink
 ```
  - symlinks this project to ~/.vmodules
- 
+
 ## Version 0.0.3
 
 direct lower level bindings to libuv are in ./uv and these should be mostly complete
@@ -43,17 +43,10 @@ direct lower level bindings to libuv are in ./uv and these should be mostly comp
 import vlibuv.uv
 ```
 
-higher level bindings are available via the main vlibuv module, but these are not fully complete
+higher level bindings are available via the main vlibuv module, but these are not fully complete and should not be used for now.
 
 ```
 import vlibuv
 ```
-
-new bindings are not fully complete i am missing the following, but may be missing more
-
-- fs
-- pipe
-- dl
-- key
 
 
