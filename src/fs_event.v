@@ -2,6 +2,7 @@ module vlibuv
 
 import vlibuv.uv
 // High-level event type for users
+
 pub enum WatchEvent {
 	rename = 1
 	change = 2
@@ -15,6 +16,9 @@ mut:
 	stopped bool
 }
 
+pub fn new_watcher(loop Loop) !Watcher {
+	return Watcher.new(loop)
+}
 
 // Create a new filesystem event watcher
 pub fn Watcher.new(loop Loop) !Watcher {

@@ -14,8 +14,12 @@ pub type ConnectCb = fn (tcp Tcp, status int)
 // meaning it inherits all methods of Stream and Handle
 pub struct Tcp {
 	Stream
-pub mut:
-	tcp &uv.Uv_tcp_t = unsafe { nil }
+}
+
+pub fn (t Tcp) to_tcp() &uv.Uv_tcp_t {
+	unsafe {
+		return &uv.Uv_tcp_t(t.handle)
+	}
 }
 
 // Create a new TCP handle
@@ -40,9 +44,7 @@ pub fn new_tcp(loop &Loop) !Tcp {
 		return Tcp{
 			Stream: Stream{
 				Handle: handle
-				stream: &uv.Uv_stream_t(tcp_handle)
 			}
-			tcp:    tcp_handle
 		}
 	}
 }
@@ -58,11 +60,9 @@ pub fn new_tcp_ex(loop &Loop, flags u8) !Tcp {
 		}
 		return Tcp{
 			Handle: handle
-			Stream: Stream{
-				Handle: handle
-				stream: &uv.Uv_stream_t(tcp_handle)
-			}
-			tcp:    tcp_handle
+			// Stream: Stream{
+			// 	Handle: handle
+			// }
 		}
 	}
 }
@@ -71,10 +71,9 @@ pub fn new_tcp_ex(loop &Loop, flags u8) !Tcp {
 // flags: 0 for normal mode, UV_TCP_IPV6ONLY for IPv6-only
 // Returns: this TCP instance for method chaining (always call .listen() after bind)
 @[inline]
-pub fn (mut t Tcp) bind(addr Address, flags u32) !&Tcp {
-	result := uv.tcp_bind(t.tcp, addr.addr, int(flags))
+pub fn (mut t Tcp) bind(addr Address, flags u32) ! {
+	result := uv.tcp_bind(t.to_tcp(), addr.addr, int(flags))
 	error_checker(result)!
-	return t
 }
 
 // connect establishes a connection to a remote address
@@ -88,7 +87,7 @@ pub fn (mut t Tcp) connect(addr Address, callback ConnectCb) !int {
 		callback(t, status)
 	}
 
-	result := uv.tcp_connect(req, t.tcp, addr.addr, c_connect_callback)
+	result := uv.tcp_connect(req, t.to_tcp(), addr.addr, c_connect_callback)
 	return error_checker(result)
 }
 
@@ -96,10 +95,9 @@ pub fn (mut t Tcp) connect(addr Address, callback ConnectCb) !int {
 // enable: true to disable Nagle's algorithm (TCP_NODELAY), false to enable it
 // Returns: this TCP instance for method chaining
 @[inline]
-pub fn (mut t Tcp) nodelay(enable bool) !&Tcp {
-	result := uv.tcp_nodelay(t.tcp, bool_to_int(enable))
+pub fn (mut t Tcp) nodelay(enable bool) ! {
+	result := uv.tcp_nodelay(t.to_tcp(), bool_to_int(enable))
 	error_checker(result)!
-	return t
 }
 
 // keepalive enables TCP keepalive with configurable delay
@@ -107,26 +105,24 @@ pub fn (mut t Tcp) nodelay(enable bool) !&Tcp {
 // delay: delay in seconds before first keepalive probe is sent (only used if enable is true)
 // Returns: this TCP instance for method chaining
 @[inline]
-pub fn (mut t Tcp) keepalive(enable bool, delay u32) !&Tcp {
+pub fn (mut t Tcp) keepalive(enable bool, delay u32) ! {
 	enable_int := bool_to_int(enable)
-	result := uv.tcp_keepalive(t.tcp, enable_int, delay)
+	result := uv.tcp_keepalive(t.to_tcp(), enable_int, delay)
 	error_checker(result)!
-	return t
 }
 
 // simultaneous_accepts controls whether multiple threads can accept connections simultaneously
 // enable: true to enable simultaneous accepts (performance optimization on some platforms)
 // Returns: this TCP instance for method chaining
 @[inline]
-pub fn (mut t Tcp) simultaneous_accepts(enable bool) !&Tcp {
-	result := uv.tcp_simultaneous_accepts(t.tcp, bool_to_int(enable))
+pub fn (mut t Tcp) simultaneous_accepts(enable bool) ! {
+	result := uv.tcp_simultaneous_accepts(t.to_tcp(), bool_to_int(enable))
 	error_checker(result)!
-	return t
 }
 
 // open takes an existing socket descriptor and associates it with a TCP handle
 pub fn (t &Tcp) open(fd int) !int {
-	result := uv.tcp_open(t.tcp, fd)
+	result := uv.tcp_open(t.to_tcp(), fd)
 	return error_checker(result)
 }
 

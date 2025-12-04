@@ -56,4 +56,3 @@ pub fn (r Req) type_name() string {
 pub fn (r Req) size() usize {
 	return uv.req_size(r.get_type())
 }
-

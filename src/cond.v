@@ -44,6 +44,7 @@ pub fn (c &Condition) broadcast() {
 pub fn (c &Condition) timed_wait(m Mutex, timeout u64) {
 	uv.cond_timedwait(c.cond, m.mutex, timeout)
 }
+
 pub fn (c &Condition) raw() &uv.Uv_cond_t {
 	return c.cond
 }

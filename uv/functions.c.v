@@ -1538,7 +1538,6 @@ pub fn fs_poll_getpath(handle &Uv_fs_poll_t, path &char, size &usize) int {
 	return C.uv_fs_poll_getpath(handle, path, size)
 }
 
-
 // fs event functions
 
 fn C.uv_fs_event_init(loop &Uv_loop_t, handle &Uv_fs_event_t) int
@@ -1564,7 +1563,6 @@ fn C.uv_fs_event_getpath(handle &Uv_fs_event_t, path &char, size &usize) int
 pub fn fs_event_getpath(handle &Uv_fs_event_t, path &char, size &usize) int {
 	return C.uv_fs_event_getpath(handle, path, size)
 }
-
 
 // signal functions
 
@@ -1597,7 +1595,6 @@ fn C.uv_loadavg(avg &f64)
 pub fn loadavg(avg &f64) {
 	C.uv_loadavg(avg)
 }
-
 
 // ip functions
 

@@ -27,7 +27,7 @@ pub fn (s Signal) start(signum int, callback fn (handle &uv.Uv_signal_t, signum 
 
 pub fn (s Signal) start_oneshot(signum int, callback fn (handle Signal, signum int)) !int {
 	c_callback := fn [callback] (handle &uv.Uv_signal_t, signum int) {
-		signal := Signal{unsafe{handle}}
+		signal := Signal{unsafe { handle }}
 		callback(signal, signum)
 	}
 	r := C.uv_signal_start_oneshot(s.handle, c_callback, signum)

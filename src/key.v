@@ -27,9 +27,11 @@ pub fn new_key() Key {
 pub fn (k &Key) delete() {
 	uv.key_delete(k.key)
 }
+
 pub fn (k &Key) set(value voidptr) {
 	uv.key_set(k.key, value)
 }
+
 pub fn (k &Key) get[T]() &T {
 	return uv.key_get(k.key)
 }

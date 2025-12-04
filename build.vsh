@@ -86,12 +86,12 @@ context.task(
 )
 
 context.task(
-	name: 'docs.view'
-	help: 'build the documentation'
+	name:    'docs.view'
+	help:    'build the documentation'
 	depends: ['docs']
-	run:  fn (self build.Task) ! {
-		println("look at the docs on http://localhost:8080")
-		file.serve(folder: "./docs/html", on: ":8080")
+	run:     fn (self build.Task) ! {
+		println('look at the docs on http://localhost:8080')
+		file.serve(folder: './docs/html', on: ':8080')
 	}
 )
 
@@ -163,13 +163,12 @@ context.task(
 	name: 'update'
 	help: 'Update libuv'
 	run:  fn (self build.Task) ! {
-
 		pull := fn () ! {
 			branch := 'v1.x'
-			chdir("./thirdparty")!
+			chdir('./thirdparty')!
 			output := execute('git pull origin ${branch}').output
-			if output.contains("Already up to date") {
-				println("Already up to date")
+			if output.contains('Already up to date') {
+				println('Already up to date')
 				return
 			}
 		}

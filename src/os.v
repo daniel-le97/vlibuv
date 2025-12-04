@@ -2,8 +2,6 @@ module vlibuv
 
 import vlibuv.uv
 
-
-
 // Priority levels for process priority
 pub enum Priority {
 	high   = -20
@@ -41,12 +39,11 @@ pub:
 // HostInfo holds hostname information
 pub struct HostInfo {
 pub:
-	sysname  string
-	release  string
-	version  string
-	machine  string
+	sysname string
+	release string
+	version string
+	machine string
 }
-
 
 // homedir returns the home directory of the current user
 pub fn homedir() !string {
@@ -176,7 +173,6 @@ pub fn cpus() ![]CpuInfo {
 			result << info
 		}
 	}
-
 	return result
 }
 
@@ -212,7 +208,6 @@ pub fn environ() ![]Env {
 			}
 		}
 	}
-
 	return result
 }
 
@@ -225,14 +220,12 @@ pub fn uname() !HostInfo {
 	}
 
 	return HostInfo{
-		sysname:  unsafe { cstring_to_vstring(&char(&utsname.sysname[0])) }
-		release:  unsafe { cstring_to_vstring(&char(&utsname.release[0])) }
-		version:  unsafe { cstring_to_vstring(&char(&utsname.version[0])) }
-		machine:  unsafe { cstring_to_vstring(&char(&utsname.machine[0])) }
+		sysname: unsafe { cstring_to_vstring(&char(&utsname.sysname[0])) }
+		release: unsafe { cstring_to_vstring(&char(&utsname.release[0])) }
+		version: unsafe { cstring_to_vstring(&char(&utsname.version[0])) }
+		machine: unsafe { cstring_to_vstring(&char(&utsname.machine[0])) }
 	}
 }
-
-
 
 // resident_set_memory returns the resident set memory size in bytes
 pub fn resident_set_memory() !u64 {
@@ -254,8 +247,7 @@ pub fn uptime() !f64 {
 	return up
 }
 
-
-//TODO implement the following functions:
+// TODO implement the following functions:
 
 pub fn os_get_passwd(pwd &uv.Uv_passwd_t) int {
 	return uv.os_get_passwd(pwd)

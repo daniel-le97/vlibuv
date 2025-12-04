@@ -1,6 +1,5 @@
 module vlibuv
 
-
 fn test_homedir() ! {
 	home := homedir()!
 	assert home.len > 0

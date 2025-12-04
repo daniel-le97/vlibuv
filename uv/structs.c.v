@@ -145,7 +145,6 @@ pub mut:
 @[typedef]
 pub struct C.uv_udp_t {}
 
-
 @[typedef]
 pub struct C.uv_pipe_t {
 	loop &C.uv_loop_t

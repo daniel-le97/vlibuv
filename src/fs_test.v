@@ -163,16 +163,17 @@ fn test_is_functions() {
 fn test_read_dir() {
 	test_dir := 'test_read_dir'
 
-    defer {
-        // Cleanup
-        files := read_dir(test_dir) or { []DirEntry{} }
-        for file in files {
-            if file.is_file {
-                remove_file(test_dir + '\\' + file.name) or {}
-            }
-        }
-        remove_dir(test_dir) or {}
-    }	create_dir(test_dir, 0o755) or { panic(err) }
+	defer {
+		// Cleanup
+		files := read_dir(test_dir) or { []DirEntry{} }
+		for file in files {
+			if file.is_file {
+				remove_file(test_dir + '\\' + file.name) or {}
+			}
+		}
+		remove_dir(test_dir) or {}
+	}
+	create_dir(test_dir, 0o755) or { panic(err) }
 	write_file(test_dir + '\\file1.txt', 'test'.bytes()) or { panic(err) }
 	write_file(test_dir + '\\file2.txt', 'test'.bytes()) or { panic(err) }
 

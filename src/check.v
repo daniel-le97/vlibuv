@@ -34,6 +34,7 @@ pub fn (c Check) stop() !int {
 	r := uv.check_stop(c.handle)
 	return error_checker(r)
 }
+
 pub fn (c &Check) raw() &uv.Uv_check_t {
 	return c.handle
 }

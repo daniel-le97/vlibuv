@@ -65,10 +65,9 @@ pub fn Tty.new(l &Loop, fd int, readable bool) !Tty {
 	return Tty{
 		Stream: Stream{
 			Handle: Handle{
-				handle: unsafe {&uv.Uv_handle_t(t)}
+				handle: unsafe { &uv.Uv_handle_t(t) }
 				closed: false
 			}
-			stream: unsafe {&uv.Uv_stream_t(t)}
 		}
 	}
 }

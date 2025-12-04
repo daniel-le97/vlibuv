@@ -1,4 +1,5 @@
 module vlibuv
+
 import vlibuv.uv
 
 // fn uv.timer_init(loop &uv.loop_t, handle &uv.Uv_timer_t) int
@@ -46,14 +47,14 @@ pub fn new_timer(loop Loop) !Timer {
 	return Timer.new(loop)
 }
 
-pub fn (mut t Timer) start(timeout u64, repeat u64, callback fn(timer Timer)) ! {
+pub fn (mut t Timer) start(timeout u64, repeat u64, callback fn (timer Timer)) ! {
 	if isnil(t.handle) || t.stopped {
 		return error('timer is invalid or stopped')
 	}
 
 	cb := fn [callback, t] (handle &uv.Uv_timer_t) {
 		callback(Timer{
-			handle: unsafe { handle }
+			handle:  unsafe { handle }
 			stopped: t.stopped
 		})
 	}

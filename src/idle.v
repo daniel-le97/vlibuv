@@ -23,7 +23,7 @@ pub fn new_idle(l &Loop) Idle {
 }
 
 pub fn (i Idle) start(callback fn (idle Idle)) !int {
-	c_callback := fn [callback,i] (handle &uv.Uv_idle_t) {
+	c_callback := fn [callback, i] (handle &uv.Uv_idle_t) {
 		callback(i)
 	}
 	r := uv.idle_start(i.handle, c_callback)
