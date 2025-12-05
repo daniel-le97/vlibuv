@@ -3,6 +3,7 @@ module vlibuv
 import vlibuv.uv
 
 pub struct Address {
+pub:
 	addr    &C.sockaddr
 	is_ipv6 bool
 }

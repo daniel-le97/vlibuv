@@ -3,9 +3,12 @@ module vlibuv
 import vlibuv.uv
 
 // Callback types for idiomatic API
+// These are low-level C callbacks - high-level wrappers convert types
 pub type AllocationCb = fn (mut handle Handle, suggested_size usize, buf &uv.Uv_buf_t)
 
 pub type ReadCb = fn (mut stream Stream, nread isize, buf &uv.Uv_buf_t)
+
+pub type WriteCb = fn (mut stream Stream, status int)
 
 // pub enum StreamType {
 // 	tcp
@@ -17,6 +20,108 @@ pub type ReadCb = fn (mut stream Stream, nread isize, buf &uv.Uv_buf_t)
 // stream is a parent class of tcp, pipe, tty
 pub struct Stream {
 	Handle
+}
+
+pub struct Request {
+	data   []u8
+	stream Stream
+}
+
+pub struct Response {
+mut:
+	stream Stream
+}
+
+pub fn (mut r Response) write(data string) ! {
+	r.stream.write_string(data)!
+}
+
+pub fn (mut r Response) end(data string) ! {
+	r.stream.write_string(data)!
+	r.stream.close()!
+}
+
+pub fn (mut s Stream) read_start_simple(read_cb fn (stream Stream, data []u8)) ! {
+	// Internally manage buffer allocation/deallocation using malloc/free
+	// This ensures libuv has control over the memory lifetime
+	c_alloc_callback := fn (mut handle Handle, suggested_size usize, buf &uv.Uv_buf_t) {
+		unsafe {
+			// Use malloc directly for C interop - V won't touch this memory
+			buf.base = &char(malloc(suggested_size))
+			buf.len = suggested_size
+		}
+	}
+
+	c_read_callback := fn [read_cb, mut s] (mut stream Stream, nread isize, buf &uv.Uv_buf_t) {
+		unsafe {
+			if nread > 0 {
+				// Create a V slice from the allocated buffer
+				// buf.base is &char, convert to []u8 via pointer
+				ptr := &u8(buf.base)
+				data := []u8{len: int(nread), cap: int(nread)}
+				// Manually set the data pointer
+				(&data).data = ptr
+				read_cb(s, data)
+			}
+			if nread != 0 { // 0 means read again, <0 means error
+				// Free the malloc'd memory when done reading
+				free(buf.base)
+			}
+		}
+	}
+
+	s.read_start(c_alloc_callback, c_read_callback)!
+}
+
+// On Stream/TCP
+pub fn (mut s Stream) listen_simple(backlog int, callback fn (mut req Request, mut res Response)) ! {
+	// Wrap the complex callback logic internally
+	s.listen(backlog, fn [callback, mut s] (stream Stream, status int) {
+		if status < 0 {
+			eprintln('Listen error: ${status}')
+			return
+		}
+
+		loop := stream.get_loop() or { return }
+		mut client := Tcp.new(loop) or { return }
+
+		stream.accept(client.Stream)
+
+		// Create allocation callback that allocates buffers
+		alloc_cb := fn (mut handle Handle, suggested_size usize, buf &uv.Uv_buf_t) {
+			unsafe {
+				buf.base = &char(malloc(suggested_size))
+				buf.len = suggested_size
+			}
+		}
+
+		// Create read callback that handles incoming data
+		read_cb := fn [callback] (mut stream Stream, nread isize, buf &uv.Uv_buf_t) {
+			unsafe {
+				if nread > 0 {
+					// Convert buffer to V slice
+					ptr := &u8(buf.base)
+					data := []u8{len: int(nread), cap: int(nread)}
+					(&data).data = ptr
+
+					req := Request{
+						data:   data
+						stream: stream
+					}
+					res := Response{
+						stream: stream
+					}
+					callback( mut req, mut res)
+				}
+				if nread != 0 {
+					free(buf.base)
+				}
+			}
+		}
+
+		mut client_stream := client.Stream
+		client_stream.read_start(alloc_cb, read_cb) or {}
+	})!
 }
 
 pub fn (s Stream) listen(backlog int, callback fn (stream Stream, status int)) !int {
@@ -63,10 +168,6 @@ pub fn (s Stream) read_start(alloc_cb AllocationCb, read_cb ReadCb) !int {
 pub fn (s Stream) read_stop() int {
 	return uv.read_stop(s.to_stream())
 }
-
-// WriteCb callback type for idiomatic write operations
-// status: 0 on success, error code on failure
-pub type WriteCb = fn (mut stream Stream, status int)
 
 // write sends data from a single buffer over the stream
 pub fn (mut s Stream) write(buffer &Buffer, callback WriteCb) !int {
