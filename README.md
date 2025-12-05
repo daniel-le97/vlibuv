@@ -3,9 +3,6 @@
 v bindings for libuv
 
 ## note
-
-Please only use this if you know what you are doing. There will be breaking changes.
-
 this currently compiles libuv from source on Ubuntu, macOS, and Windows, other platforms have not yet been tested
 
 V version: V 0.4.12, Commit: d0dc13e
@@ -19,6 +16,10 @@ using TCC is currently not supported on windows.
 
 ```
 v install --git https://github.com/daniel-le97/vlibuv.git
+```
+or
+```
+git clone https://github.com/daniel-le97/vlibuv.git ~/.vmodules/vlibuv
 ```
 
 ## Development
@@ -35,7 +36,7 @@ v run build.vsh symlink
 ```
  - symlinks this project to ~/.vmodules
 
-## Version 0.0.3
+## Version 0.0.4
 
 direct lower level bindings to libuv are in ./uv and these should be mostly complete
 
@@ -43,10 +44,20 @@ direct lower level bindings to libuv are in ./uv and these should be mostly comp
 import vlibuv.uv
 ```
 
-higher level bindings are available via the main vlibuv module, but these are not fully complete and should not be used for now.
+higher level bindings are available via the main vlibuv module, but these are not fully complete.
+
+the higher level bindings are made with the lower level bindings so there are plenty of escape hatches
 
 ```
 import vlibuv
 ```
+
+
+missing:
+ - udp
+ - thread
+ - os
+ - fs
+
 
 
