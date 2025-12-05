@@ -111,7 +111,7 @@ pub fn (mut s Stream) listen_simple(backlog int, callback fn (mut req Request, m
 					res := Response{
 						stream: stream
 					}
-					callback( mut req, mut res)
+					callback(mut req, mut res)
 				}
 				if nread != 0 {
 					free(buf.base)

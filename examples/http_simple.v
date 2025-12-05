@@ -14,9 +14,9 @@ fn main() {
 	server.bind(addr, 0)!
 
 	// Listen for incoming connections
-	server.listen_simple(128, fn ( mut req vlibuv.Request, mut res vlibuv.Response,) {
+	server.listen_simple(128, fn (mut req vlibuv.Request, mut res vlibuv.Response) {
 		response := 'HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\nHello, World!'
-		res.write(response) or {  }
+		res.write(response) or {}
 	}) or { panic(err) }
 
 	println('HTTP server listening on http://127.0.0.1:8080')
