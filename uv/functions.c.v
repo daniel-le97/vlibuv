@@ -2050,6 +2050,14 @@ pub fn thread_equal(const_t1 &Uv_thread_t, const_t2 &Uv_thread_t) int {
 	return C.uv_thread_equal(const_t1, const_t2)
 }
 
+fn C.uv_thread_detach(tid &Uv_thread_t) int
+
+pub fn thread_detach(tid &Uv_thread_t) int {
+	return C.uv_thread_detach(tid)
+}
+
+// UV_EXTERN int uv_thread_detach(uv_thread_t* tid);
+
 // loop functions 2nd
 
 fn C.uv_loop_get_data(const_loop &Uv_loop_t) &voidptr

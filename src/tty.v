@@ -85,8 +85,8 @@ pub fn (t Tty) get_winsize() !(int, int) {
 	return error('TTY methods not implemented in this refactoring')
 }
 
-$if windows {
-	pub fn (t Tty) set_vterm_state(state uv.Uv_tty_vtermstate) ! {
-		return error('TTY methods not implemented in this refactoring')
-	}
-}
+// $if windows {
+// 	pub fn (t Tty) set_vterm_state(state uv.Uv_tty_vtermstate) ! {
+// 		return error('TTY methods not implemented in this refactoring')
+// 	}
+// }
