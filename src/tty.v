@@ -73,7 +73,8 @@ pub fn Tty.new(l &Loop, fd int, readable bool) !Tty {
 }
 
 pub fn (t Tty) set_mode(mode uv.Uv_tty_mode) !int {
-	return error('TTY methods not implemented in this refactoring')
+	r := uv.tty_set_mode(t.to_tty(), mode)
+	return error_checker(r)
 }
 
 pub fn (t Tty) reset_mode() !int {
@@ -82,11 +83,22 @@ pub fn (t Tty) reset_mode() !int {
 }
 
 pub fn (t Tty) get_winsize() !(int, int) {
-	return error('TTY methods not implemented in this refactoring')
+	width := 0
+	height := 0
+	r := uv.tty_get_winsize(t.to_tty(), &width, &height)
+	error_checker(r)!
+	return width, height
 }
 
-// $if windows {
-// 	pub fn (t Tty) set_vterm_state(state uv.Uv_tty_vtermstate) ! {
-// 		return error('TTY methods not implemented in this refactoring')
-// 	}
-// }
+pub fn (t Tty) set_vterm_state(state uv.Uv_tty_vtermstate) ! {
+	$if !windows {
+		return error('not supported on this platform')
+	}
+	uv.tty_set_vterm_state(state)
+}
+
+pub fn (t Tty) to_tty() &uv.Uv_tty_t {
+	unsafe {
+		return &uv.Uv_tty_t(t.handle)
+	}
+}

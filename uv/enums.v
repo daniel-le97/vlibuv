@@ -63,7 +63,7 @@ pub enum Uv_udp_flags {
 	udp_recvmmsg = 256
 }
 
-pub enum Uv_tty_mode {
+pub enum Uv_tty_mode as int {
 	// Initial/normal terminal mode
 	tty_mode_normal = 0
 	// Raw input mode (On Windows, ENABLE_WINDOW_INPUT is also enabled)
